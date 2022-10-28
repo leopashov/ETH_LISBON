@@ -15,8 +15,14 @@ contract IndexContract {
 
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
-        currentTokenSupply = tokenContract.totalSupply(); // check this - something with interface
-        // just need to access standard erc20 functions
+    }
+
+    /// @Notice: call outside of constructor
+    function updateTotalSupply() public {
+        // updates currentTokenSupply
+        // Comment: I think we can avoid this compelety by
+        // tokenContract.totalSupply() directly for calculation
+        currentTokenSupply = tokenContract.totalSupply();
     }
 
     function receive_funds() public payable {
