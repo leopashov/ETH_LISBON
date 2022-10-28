@@ -15,7 +15,7 @@ contract IndexContract {
 
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
-        currentTokenSupply = _tokenContract.totalSupply(); // check this - something with interface
+        currentTokenSupply = tokenContract.totalSupply(); // check this - something with interface
         // just need to access standard erc20 functions
     }
 
@@ -41,7 +41,7 @@ contract IndexContract {
             return (1);
         } else {
             // adding eth to the index returns
-            return (_ethReceived / poolValue);
+            return (currentTokenSupply * (_ethReceived / poolValue));
         }
     }
 
