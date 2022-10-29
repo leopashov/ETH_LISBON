@@ -1,16 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 interface IIndexToken {
     // interface to interact with token contract
-    // function...
     function mint(address to, uint256 amount) external;
+
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
+
+    // function burn(uint256 amount) external virtual {
+    //     _burn(_msgSender(), amount);
+    // }
 
     function totalSupply() external view returns (uint256);
 }
 
 contract IndexContract {
-    // Dfeine 'global' variables
+    // Define 'global' variables
     IIndexToken public tokenContract;
     address[] private _tokens;
     uint256 public poolValue; // pool value quoted in eth
@@ -26,7 +42,7 @@ contract IndexContract {
         // consider minting one token and adding eth to pool here
     }
 
-    /// @Notice: call outside of constructor
+    // @Notice: call outside of constructor
     function updateTotalSupply() external {
         currentTokenSupply = tokenContract.totalSupply();
         // updates currentTokenSupply
@@ -90,9 +106,9 @@ contract IndexContract {
         tokenContract.transferFrom(msg.sender, address(this), amount);
         emit liquidtyRemoved(amount);
         // burn returned index tokens
-        tokenContract.burn(amount);
+        // tokenContract.burn(amount);
         // #call token balancing function to decide where best to remove tokens from
-        getIndexBalance()
+        // getIndexBalance()
         // get number of tokens belonging to this address in a vault.
         // unstake tokens
         // switch tokens to eth (if required)
@@ -102,11 +118,16 @@ contract IndexContract {
 
     function getIndexBalance() public {
         // gets current balance of index tokens
-        for (uint8 i=0; i < _tokens.length(); i++){
+        for (uint8 i = 0; i < _tokens.length; i++) {
+            address token = _tokens[i];
             //calculate value of token in vault
-            
-            tokenIndexValues[_tokens[i]] = 
+            uint256 tokenVaultValue = calculateTokenVaultValue(token);
+            tokenIndexValues[token] = tokenVaultValue;
         }
+    }
+
+    function calculateTokenVaultValue(address token) {
+        uint256 vaultTokensHeld = IERC20(token).balanceOf(address(this));
     }
 
     function swapEthForToken() public {}
