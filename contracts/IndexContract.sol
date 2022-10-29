@@ -18,12 +18,12 @@ contract IndexContract {
     // Define 'global' variables
     IIndexToken public tokenContract;
 
-    address[] private _tokens;
     address[] private _vaultTokens;
-    uint256 public poolValue; // pool value quoted in eth
+    uint256 public indexValue; // index value quoted in eth
     uint256 public currentTokenSupply;
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
-
+    mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
+    mapping(address => uint256) public tokenIndexProportion;
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
@@ -55,14 +55,14 @@ contract IndexContract {
         view
         returns (uint256 tokensToMint)
     {
-        if (poolValue == 0) {
+        if (indexValue == 0) {
             // if pool empty, just mint 1 token irrespective of what was contributed
             // this will just affect the rate at which pool tokens are created
             // ie order of magnitude of max supply
             return (1);
         } else {
             // adding eth to the index returns
-            return (currentTokenSupply * (_ethReceived / poolValue));
+            return (currentTokenSupply * (_ethReceived / indexValue));
             //think of eth recvieved in terms of pool value
             // potnetial issue with small contributions - small number/large number
             // no decimals in solidity
@@ -106,13 +106,16 @@ contract IndexContract {
         payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
-    function getIndexBalance() public {
+    function getIndexBalances() public {
         // gets current balance of index tokens
+        indexValue = 0; //set pool value to zero
         for (uint8 i = 0; i < _vaultTokens.length; i++) {
-            address token = _vaultTokens[i];
+            address vaultToken = _vaultTokens[i];
             //calculate value of token in vault
-            uint256 tokenVaultValue = calculateTokenVaultValue(token);
-            tokenIndexValues[token] = tokenVaultValue;
+            uint256 tokenVaultValue = calculateTokenVaultValue(vaultToken);
+            // update vault value in mapping
+            tokenIndexValues[vaultToken] = tokenVaultValue;
+            indexValue += tokenVaultValue; //add each token value to get total index Value
         }
     }
 
@@ -120,26 +123,39 @@ contract IndexContract {
         uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
             address(this)
         );
-        uint256 individualVaultTokenValue = calculateVaultTokenPrice();
+        uint256 individualVaultTokenValue = calculateVaultTokenPriceInEth();
         return (numberOfVaultTokensHeld * individualVaultTokenValue);
     }
 
-    function calculateVaultTokenPrice(address vaultToken) public {
+    function calculateVaultTokenPriceInEth(address vaultToken)
+        public
+        returns (uint256 price)
+    {
         // get price of vault token quoted in underlying
-        uint256 vaultTokenPriceInUnderlying = IYearnVaultToken(vaultToken)
-            .pricePerShare();
+        address tokenAddress = VaultTokenToToken[vaultToken];
         // ### get price of underlying in eth => CHAINLINK REQUIRED ###
     }
 
     // function swapEthForToken() {}
     // // swap eth for token depending on constant balancing of the pools
 
-    // function balanceFund() {
-    //     // MAIN BALANCE FUNCTION
-    //     // check proportions of toknes within index
-    //     // withdraw and sell tokens which are too high proportion
-    //     // buy and deposit tokens which are low proportion
-    // }
+    function balanceFund() public {
+        // MAIN BALANCE FUNCTION
+        updateTokenProportions();
+        // check proportions of toknes within index
+        // withdraw and sell tokens which are too high proportion
+        // buy and deposit tokens which are low proportion
+    }
+
+    function updateTokenProportions() public {
+        for (uint8 i = 0; i < _vaultTokens.length; i++) {
+            address vaultToken = _vaultTokens[i];
+            address tokenAddress = VaultTokenToToken[vaultToken];
+            tokenIndexProportion[tokenAddress] =
+                tokenIndexValues[tokenAddress] /
+                indexValue;
+        }
+    }
 
     // stretchgoals: enable voting to change index -proportions, address whitelisting...
 }
