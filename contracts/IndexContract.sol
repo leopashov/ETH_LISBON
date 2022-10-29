@@ -59,7 +59,7 @@ contract IndexContract {
             _ethReceived > 100000000 gwei,
             "Please increase the minimum contribution to 0.1 Ether!"
         );
-        if (poolValue == 0) {
+        if (indexValue == 0) {
             // if pool empty, just mint 1 token irrespective of what was contributed
             // this will just affect the rate at which pool tokens are created
             // ie order of magnitude of max supply
