@@ -12,15 +12,15 @@ describe("IndexContract", function () {
     let deployer: SignerWithAddress;
     let acc1: SignerWithAddress;
     let acc2: SignerWithAddress;
-    let acc3: SignerWithAddress;
-    let acc4: SignerWithAddress;
-    let acc5: SignerWithAddress;
-    let acc6: SignerWithAddress;
-    let acc7: SignerWithAddress;
-    let acc8: SignerWithAddress;
+    let token1: SignerWithAddress;
+    let token2: SignerWithAddress;
+    let token3: SignerWithAddress;
+    let atoken1: SignerWithAddress;
+    let atoken2: SignerWithAddress;
+    let atoken3: SignerWithAddress;
 
     beforeEach(async () => {
-        [deployer, acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8] = await ethers.getSigners();
+        [deployer, acc1, acc2, token1, token2, token3, atoken1, atoken2, atoken3] = await ethers.getSigners();
 
         // get contract  
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -35,6 +35,7 @@ describe("IndexContract", function () {
         /// deploy indexContract 
         indexContract = await indexContractFactory.deploy(
             tokenContract.address,
+            [atoken1.address,atoken2.address,atoken3.address]
         );
         await indexContract.deployed();
         console.log("indexContract deployed!")
@@ -114,7 +115,7 @@ describe("IndexContract", function () {
     })
 
 
-    describe("When the owner withdraws from the contract", () => {
+    // describe("When the owner withdraws from the contract", () => {}
 
     //     it("recovers the right amount of ERC20 tokens", () => {
     //         throw new Error("Not implemented");

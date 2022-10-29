@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IIndexToken is IERC20 {
     function grantRole(bytes32 role, address sender) external;
@@ -31,12 +31,12 @@ contract IndexContract is Ownable {
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
-    constructor(address _tokenContract) {
+    constructor(address _tokenContract, address[] memory vaultTokens) {
         tokenContract = IIndexToken(_tokenContract);
         currentTokenSupply = tokenContract.totalSupply();
         // tokenContract.grantRole(keccak256("MINTER_ROLE"), address(this));
         // INPUT INITIAL CONDITIONS TO ALLOW UNIT TESTS
-        _vaultTokens = ["0xa1", "0xa2", "0xa3"];
+        _vaultTokens = vaultTokens;
     }
 
     function updateTotalSupply() external {
