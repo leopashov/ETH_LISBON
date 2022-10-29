@@ -17,8 +17,8 @@ describe("IndexContract", function () {
         [deployer, acc1, acc2] = await ethers.getSigners();
 
         // get contract  
-        const tokenContractFacory = await ethers.getContractFactory("tokenContract");
-        const indexContractFactory = await ethers.getContractFactory("IndexContract");
+        const tokenContractFacory = await ethers.getContractFactory('IndexToken');
+        const indexContractFactory = await ethers.getContractFactory('IndexContract');
 
         // deploy contract 
         // Note: ensure tokenContract is deployed before indexContract
@@ -42,10 +42,23 @@ describe("IndexContract", function () {
         // );
         // await grantRoleTx.wait();
         // // TODO: give role on the ERC721
+
     });
-})
 
 
+    describe("When the owner withdraw from the Shop contract", () => {
+
+        it("recovers the right amount of ERC20 tokens", () => {
+            throw new Error("Not implemented");
+        });
+
+        it("updates the owner account correctly", () => {
+            throw new Error("Not implemented");
+        });
+
+    });
+
+});
 // ===
 
 

@@ -20,8 +20,8 @@ contract IndexContract {
         currentTokenSupply = tokenContract.totalSupply();
         // consider minting one token and adding eth to pool here
     }
-    
-    /// @Notice: call outside of constructor
+
+    // Notice: call outside of constructor
     function updateTotalSupply() external {
         currentTokenSupply = tokenContract.totalSupply();
         // updates currentTokenSupply
@@ -75,25 +75,25 @@ contract IndexContract {
 
     function getBalance(address token) external view returns (uint256) {}
 
-    function removeLiquidity() public {}
+    // function removeLiquidity() {}
 
-    // user sends index tokens back to contract
-    // contract burns index tokens
-    // call token balancing function to decide where best to remove tokens from
-    // unstake tokens
-    // switch tokens to eth (if required)
-    // send eth back to function caller (msg.sender)
+    // // user sends index tokens back to contract
+    // // contract burns index tokens
+    // // call token balancing function to decide where best to remove tokens from
+    // // unstake tokens
+    // // switch tokens to eth (if required)
+    // // send eth back to function caller (msg.sender)
 
-    function swapEthForToken() public {}
+    // function swapEthForToken() {}
 
-    // swap eth for token depending on constant balancing of the pools
+    // // swap eth for token depending on constant balancing of the pools
 
-    function balanceFund() public {
-        // MAIN BALANCE FUNCTION
-        // check proportions of toknes within index
-        // withdraw and sell tokens which are too high proportion
-        // buy and deposit tokens which are low proportion
-    }
+    // function balanceFund() {
+    //     // MAIN BALANCE FUNCTION
+    //     // check proportions of toknes within index
+    //     // withdraw and sell tokens which are too high proportion
+    //     // buy and deposit tokens which are low proportion
+    // }
 
     // stretchgoals: enable voting to change index -proportions, address whitelisting...
 }
