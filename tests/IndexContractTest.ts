@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
+import { utils } from "ethers";
 
 describe("IndexContract", function () {
     let tokenContract: IndexToken;
@@ -51,7 +52,7 @@ describe("IndexContract", function () {
         it("increases the eth balance of the contract", async () => {
             const initialEthBalance = acc1.getBalance(indexContract.address);
             console.log(initialEthBalance);
-            const fund_tx = await indexContract.receive_funds({"value": 1});
+            const fund_tx = await indexContract.receive_funds({ "value": ethers.utils.parseEther("1") });
             console.log(fund_tx);
             const finalEthBalance = await acc1.getBalance(indexContract.address);
             expect(finalEthBalance).to.not.eq(initialEthBalance);
