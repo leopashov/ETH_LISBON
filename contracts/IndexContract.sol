@@ -15,6 +15,7 @@ contract IndexContract {
 
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
+        // consider minting one token and adding eth to pool here
     }
 
     /// @Notice: call outside of constructor
@@ -48,7 +49,16 @@ contract IndexContract {
         } else {
             // adding eth to the index returns
             return (currentTokenSupply * (_ethReceived / poolValue));
+            //think of eth recvieved in terms of pool value
+            // potnetial issue with small contributions - small number/large number
+            // no decimals in solidity
+            // set multiplier or something?
         }
+    }
+
+    function calculatePoolValue() public returns (uint256 _poolValue) {
+        // function to calculate pool value, denominated in eth.
+        // get conversion from uni pools or chainlink(preferred)
     }
 
     function getCurrentTokens()
@@ -61,4 +71,26 @@ contract IndexContract {
     }
 
     function getBalance(address token) external view returns (uint256) {}
+
+    function removeLiquidity() {}
+
+    // user sends index tokens back to contract
+    // contract burns index tokens
+    // call token balancing function to decide where best to remove tokens from
+    // unstake tokens
+    // switch tokens to eth (if required)
+    // send eth back to function caller (msg.sender)
+
+    function swapEthForToken() {}
+
+    // swap eth for token depending on constant balancing of the pools
+
+    function balanceFund() {
+        // MAIN BALANCE FUNCTION
+        // check proportions of toknes within index
+        // withdraw and sell tokens which are too high proportion
+        // buy and deposit tokens which are low proportion
+    }
+
+    // stretchgoals: enable voting to change index -proportions, address whitelisting...
 }

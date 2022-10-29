@@ -17,4 +17,6 @@ contract IndexToken is ERC20, ERC20Burnable, AccessControl, ERC20Permit {
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
+
+    // will need burnable function for redemption
 }
