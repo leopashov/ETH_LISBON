@@ -115,19 +115,19 @@ contract IndexContract {
         payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
-    function getIndexBalance() public {
-        // gets current balance of index tokens
-        for (uint8 i = 0; i < _tokens.length; i++) {
-            address token = _tokens[i];
-            //calculate value of token in vault
-            uint256 tokenVaultValue = calculateTokenVaultValue(token);
-            tokenIndexValues[token] = tokenVaultValue;
-        }
-    }
+    // function getIndexBalance() public {
+    //     // gets current balance of index tokens
+    //     for (uint8 i = 0; i < _tokens.length; i++) {
+    //         address token = _tokens[i];
+    //         //calculate value of token in vault
+    //         // uint256 tokenVaultValue = calculateTokenVaultValue(token);
+    //         // tokenIndexValues[token] = tokenVaultValue;
+    //     }
+    // }
 
-    function calculateTokenVaultValue(address token) {
-        uint256 vaultTokensHeld = IERC20(token).balanceOf(address(this));
-    }
+    // function calculateTokenVaultValue(address token) {
+    //     uint256 vaultTokensHeld = IERC20(token).balanceOf(address(this));
+    // }
 
     // function swapEthForToken() {}
 

@@ -46,7 +46,30 @@ describe("IndexContract", function () {
     });
 
 
-    describe("When the owner withdraw from the Shop contract", () => {
+    describe("When the user funds the contract", () => {
+
+        it("increases the eth balance of the contract", async () => {
+            const initialEthBalance = acc1.getBalance(indexContract.address);
+            console.log(initialEthBalance);
+            const fund_tx = await indexContract.receive_funds({"value": 1});
+            console.log(fund_tx);
+            const finalEthBalance = await acc1.getBalance(indexContract.address);
+            expect(finalEthBalance).to.not.eq(initialEthBalance);
+
+        })
+
+        it("recovers the right amount of ERC20 tokens", () => {
+            throw new Error("Not implemented");
+        });
+
+        it("updates the owner account correctly", () => {
+            throw new Error("Not implemented");
+        });
+
+    });
+
+
+    describe("When the owner withdraws from the contract", () => {
 
         it("recovers the right amount of ERC20 tokens", () => {
             throw new Error("Not implemented");
