@@ -145,39 +145,39 @@ contract IndexContract {
 
     function balanceFund() public {
         // MAIN BALANCE FUNCTION
-        // check proportions of toknes within index
+        // check proportions of tokens within index
         updateTokenProportions();
-        for 
+
         // withdraw and sell tokens which are too high proportion
         // buy and deposit tokens which are low proportion
     }
 
-    function updateTokenProportions() public returns(uint8 maxIndex) {
-        uint8 maxIndex = 0;
+    function updateTokenProportions() public returns (uint8 maxIndex) {
+        uint8 maxAt = 0;
         for (uint8 i = 0; i < _vaultTokens.length; i++) {
             address vaultToken = _vaultTokens[i];
             address tokenAddress = VaultTokenToToken[vaultToken];
             tokenIndexProportion[tokenAddress] =
                 tokenIndexValues[tokenAddress] /
                 indexValue;
-            if (i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i-1]) {
-                uint8 maxAt = i;
+            if (
+                i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i - 1]
+            ) {
+                maxAt = i;
             }
         }
-        // return index of largest proportion - need to sell this first before 
+        // return index of largest proportion - need to sell this first before
         // attempting to buy other tokens
-        return(maxAt);
+        return (maxAt);
     }
 
-
-
-            // if (tokenIndexProportion > 36) {
-            //    uint256 surplus = tokenIndexProportion - 33;
-            //    unstakeAndSell(surplus);
-            // } else if (tokenIndexProportion < 30) {
-            //     uint256 deficit = 30 - tokenIndexProportion;
-            //     unstakeAndBuy(deficit);
-            // }
+    // if (tokenIndexProportion > 36) {
+    //    uint256 surplus = tokenIndexProportion - 33;
+    //    unstakeAndSell(surplus);
+    // } else if (tokenIndexProportion < 30) {
+    //     uint256 deficit = 30 - tokenIndexProportion;
+    //     unstakeAndBuy(deficit);
+    // }
 
     // stretchgoals: enable voting to change index -proportions, address whitelisting...
 }
