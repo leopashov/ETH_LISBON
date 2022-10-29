@@ -18,12 +18,12 @@ contract IndexContract {
         // consider minting one token and adding eth to pool here
     }
 
-    /// @Notice: call outside of constructor
+    // @Notice: call outside of constructor
     function updateTotalSupply() public {
         // updates currentTokenSupply
         // Comment: I think we can avoid this compelety by
         // tokenContract.totalSupply() directly for calculation
-        currentTokenSupply = tokenContract.totalSupply();
+        // currentTokenSupply = tokenContract.totalSupply();
     }
 
     function receive_funds() public payable {
@@ -72,7 +72,7 @@ contract IndexContract {
 
     function getBalance(address token) external view returns (uint256) {}
 
-    function removeLiquidity() {}
+    function removeLiquidity() public {}
 
     // user sends index tokens back to contract
     // contract burns index tokens
@@ -81,11 +81,11 @@ contract IndexContract {
     // switch tokens to eth (if required)
     // send eth back to function caller (msg.sender)
 
-    function swapEthForToken() {}
+    function swapEthForToken() public {}
 
     // swap eth for token depending on constant balancing of the pools
 
-    function balanceFund() {
+    function balanceFund() public {
         // MAIN BALANCE FUNCTION
         // check proportions of toknes within index
         // withdraw and sell tokens which are too high proportion
