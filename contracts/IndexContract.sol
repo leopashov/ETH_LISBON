@@ -2,10 +2,8 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Burnable.sol";
 
-
-interface IIndexToken  is IERC20 {
+interface IIndexToken is IERC20 {
     function grantRole(bytes32 role, address sender) external;
 
     function MINTER_ROLE() external view returns (bytes32);
@@ -35,6 +33,14 @@ contract IndexContract {
         tokenContract = IIndexToken(_tokenContract);
         currentTokenSupply = tokenContract.totalSupply();
         // tokenContract.grantRole(keccak256("MINTER_ROLE"), address(this));
+        // INPUT INITIAL CONDITIONS TO ALLOW UNIT TESTS
+        _vaultTokens = ["0xa1", "0xa2", "0xa3"];
+        VaultTokenToToken["0xa1"] = "0x01";
+        VaultTokenToToken["0xa2"] = "0x02";
+        VaultTokenToToken["0xa3"] = "0x03";
+        tokenIndexValues["0x01"] = 1;
+        tokenIndexValues["0x02"] = 2;
+        tokenIndexValues["0x03"] = 3;
     }
 
     function updateTotalSupply() external {
@@ -96,7 +102,7 @@ contract IndexContract {
         returns (address[] memory tokens)
     {
         // shows tokens in index
-        return _tokens;
+        return _vaultTokens;
     }
 
     function getBalance(address token) external view returns (uint256) {}
@@ -149,6 +155,7 @@ contract IndexContract {
         // get price of vault token quoted in underlying
         address tokenAddress = VaultTokenToToken[vaultToken];
         // ### get price of underlying in eth => CHAINLINK REQUIRED ###
+        return (1);
     }
 
     // function swapEthForToken() {}
@@ -156,21 +163,24 @@ contract IndexContract {
 
     function balanceFund() public {
         // MAIN BALANCE FUNCTION
+        // update mappings
+
         // check proportions of tokens within index
         uint8 maxIndex = updateTokenProportions();
-        if(tokenIndexProportion[_vaultTokens[maxIndex]] > 36){
+        uint256 maxProportion = tokenIndexProportion[_vaultTokens[maxIndex]];
+        if (maxProportion > 36) {
             // sales required, need to balance
-            uint256 surplus = tokenIndexProportion - 33;
-            unstakeAndSell(surplus);
+            uint256 surplus = maxProportion - 33;
+            //unstakeAndSell(surplus);
         }
         // withdraw and sell tokens which are too high proportion
         // buy and deposit tokens which are low proportion
     }
 
-    function unstakeAndSell(uint256 amount, token) private, onlyOwner{
-        // IMPORTANT - CHECK VISIBILITY/ACCESS TO THIS FUNCTION
-        pass;
-    }
+    // function unstakeAndSell(uint256 amount, token) private onlyOwner {
+    //     // IMPORTANT - CHECK VISIBILITY/ACCESS TO THIS FUNCTION
+    //     pass;
+    // }
 
     function updateTokenProportions() public returns (uint8 maxIndex) {
         uint8 maxAt = 0;
@@ -181,7 +191,9 @@ contract IndexContract {
                 tokenIndexValues[tokenAddress] /
                 indexValue;
             if (
-                i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i - 1]
+                i > 0 &&
+                tokenIndexProportion[tokenAddress] >
+                tokenIndexProportion[VaultTokenToToken[_vaultTokens[i - 1]]]
             ) {
                 maxAt = i;
             }
@@ -200,4 +212,5 @@ contract IndexContract {
     // }
 
     // stretchgoals: enable voting to change index -proportions, address whitelisting...
+    // automate rebalancing
 }

@@ -13,9 +13,15 @@ describe("IndexContract", function () {
     let deployer: SignerWithAddress;
     let acc1: SignerWithAddress;
     let acc2: SignerWithAddress;
+    let acc3: SignerWithAddress;
+    let acc4: SignerWithAddress;
+    let acc5: SignerWithAddress;
+    let acc6: SignerWithAddress;
+    let acc7: SignerWithAddress;
+    let acc8: SignerWithAddress;
 
     beforeEach(async () => {
-        [deployer, acc1, acc2] = await ethers.getSigners();
+        [deployer, acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8] = await ethers.getSigners();
 
         // get contract  
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -56,7 +62,6 @@ describe("IndexContract", function () {
             console.log(fund_tx);
             const finalEthBalance = await acc1.getBalance(indexContract.address);
             expect(finalEthBalance).to.not.eq(initialEthBalance);
-
         })
 
         it("recovers the right amount of ERC20 tokens", () => {
@@ -68,6 +73,22 @@ describe("IndexContract", function () {
         });
 
     });
+
+
+
+    describe("when 'Balance Fund' function is called", () => {
+        this.beforeEach(async () => {
+            
+        })
+
+        it("has initial vault token dummy values", () => {
+            expect(indexContract._vaultTokens[0]).to.eq("0xa1");
+        })
+
+        it("updates token proportions", () => {
+            throw new Error("not implemented");
+        })
+    })
 
 
     describe("When the owner withdraws from the contract", () => {
