@@ -15,6 +15,7 @@ contract IndexContract {
     address[] private _tokens;
     uint256 public poolValue; // pool value quoted in eth
     uint256 public currentTokenSupply;
+    mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
 
     // Define Events
     event liquidtyRemoved(uint256 amount);
@@ -87,15 +88,25 @@ contract IndexContract {
         require(allowance >= amount, "check token allowance");
         // transfer token from user wallet to this contract
         tokenContract.transferFrom(msg.sender, address(this), amount);
-
         emit liquidtyRemoved(amount);
-
-        // contract burns index tokens
-        // call token balancing function to decide where best to remove tokens from
+        // burn returned index tokens
+        tokenContract.burn(amount);
+        // #call token balancing function to decide where best to remove tokens from
+        getIndexBalance()
+        // get number of tokens belonging to this address in a vault.
         // unstake tokens
         // switch tokens to eth (if required)
         // send eth back to function caller (msg.sender)
         payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
+    }
+
+    function getIndexBalance() public {
+        // gets current balance of index tokens
+        for (uint8 i=0; i < _tokens.length(); i++){
+            //calculate value of token in vault
+            
+            tokenIndexValues[_tokens[i]] = 
+        }
     }
 
     function swapEthForToken() public {}
