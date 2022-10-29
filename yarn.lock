@@ -683,7 +683,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomicfoundation/hardhat-network-helpers@npm:^1.0.0":
+"@nomicfoundation/hardhat-network-helpers@npm:^1.0.6":
   version: 1.0.6
   resolution: "@nomicfoundation/hardhat-network-helpers@npm:1.0.6"
   dependencies:
@@ -1217,14 +1217,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ETH_Lisbon@workspace:.":
+"Eth_Lisbon@workspace:.":
   version: 0.0.0-use.local
-  resolution: "ETH_Lisbon@workspace:."
+  resolution: "Eth_Lisbon@workspace:."
   dependencies:
     "@ethersproject/abi": ^5.4.7
     "@ethersproject/providers": ^5.4.7
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.0
-    "@nomicfoundation/hardhat-network-helpers": ^1.0.0
+    "@nomicfoundation/hardhat-network-helpers": ^1.0.6
     "@nomicfoundation/hardhat-toolbox": ^2.0.0
     "@nomiclabs/hardhat-ethers": ^2.0.0
     "@nomiclabs/hardhat-etherscan": ^3.0.0
@@ -1238,6 +1238,7 @@ __metadata:
     ethers: ^5.4.7
     hardhat: ^2.12.1
     hardhat-gas-reporter: ^1.0.8
+    mocha: ^10.1.0
     solidity-coverage: ^0.8.0
     ts-node: ">=8.0.0"
     typechain: ^8.1.0
@@ -4711,7 +4712,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mocha@npm:^10.0.0":
+"mocha@npm:^10.0.0, mocha@npm:^10.1.0":
   version: 10.1.0
   resolution: "mocha@npm:10.1.0"
   dependencies:
@@ -6507,11 +6508,11 @@ __metadata:
 
 "typescript@patch:typescript@>=4.5.0#~builtin<compat/typescript>":
   version: 4.8.4
-  resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=a1c5e5"
+  resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=701156"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 563a0ef47abae6df27a9a3ab38f75fc681f633ccf1a3502b1108e252e187787893de689220f4544aaf95a371a4eb3141e4a337deb9895de5ac3c1ca76430e5f0
+  checksum: 301459fc3eb3b1a38fe91bf96d98eb55da88a9cb17b4ef80b4d105d620f4d547ba776cc27b44cc2ef58b66eda23fe0a74142feb5e79a6fb99f54fc018a696afa
   languageName: node
   linkType: hard
 
