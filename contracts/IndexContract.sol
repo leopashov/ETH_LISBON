@@ -4,6 +4,10 @@ pragma solidity ^0.8.4;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IIndexToken {
+    function grantRole(bytes32 role, address sender) external;
+
+    function MINTER_ROLE() external view returns (bytes32);
+
     // interface to interact with token contract
     function mint(address to, uint256 amount) external;
 
@@ -39,7 +43,7 @@ contract IndexContract {
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
         currentTokenSupply = tokenContract.totalSupply();
-        // consider minting one token and adding eth to pool here
+        // tokenContract.grantRole(keccak256("MINTER_ROLE"), address(this));
     }
 
     function updateTotalSupply() external {
@@ -55,7 +59,14 @@ contract IndexContract {
         // value of fund.
         //calculate number of index tokens to mint
         uint256 tokensToMint = calculateTokensToMint(msg.value); //double check logic
+        // assign minter role to msg.sender
+        // Ref.: https://docs.openzeppelin.com/contracts/3.x/access-control#granting-and-revoking
+        // tokenContract.grantRole(
+        //     tokenContract.MINTER_ROLE(),
+        //     address(msg.sender)
+        // );
 
+        // mint token
         tokenContract.mint(msg.sender, tokensToMint);
     }
 
