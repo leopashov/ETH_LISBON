@@ -22,7 +22,7 @@ contract IndexContract is Ownable {
     // Define 'global' variables
     IIndexToken public tokenContract;
 
-    address[] private _vaultTokens;
+    address[] public _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     uint256 public currentTokenSupply;
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index

@@ -80,39 +80,24 @@ describe("IndexContract", function () {
         })
 
 
+    
+
+
+
+    describe("when 'Balance Fund' function is called", () => {
+        this.beforeEach(async () => {
+            
+        })
+
+        it("has initial vault token dummy values", () => {
+            expect(indexContract._vaultTokens).to.not.eq(null);
+        })
+
+        it("updates token proportions", () => {
+            throw new Error("not implemented");
+        })
+    })
     });
-
-
-
-    describe("when 'Balance Fund' function is called", () => {
-        this.beforeEach(async () => {
-            
-        })
-
-        it("has initial vault token dummy values", () => {
-            expect(indexContract._vaultTokens[0]).to.eq("0xa1");
-        })
-
-        it("updates token proportions", () => {
-            throw new Error("not implemented");
-        })
-    })
-
-
-
-    describe("when 'Balance Fund' function is called", () => {
-        this.beforeEach(async () => {
-            
-        })
-
-        it("has initial vault token dummy values", () => {
-            expect(indexContract._vaultTokens[0]).to.eq("0xa1");
-        })
-
-        it("updates token proportions", () => {
-            throw new Error("not implemented");
-        })
-    })
 
 
     // describe("When the owner withdraws from the contract", () => {}
@@ -126,7 +111,6 @@ describe("IndexContract", function () {
     //     });
 
     // });
-
 });
 // ===
 
