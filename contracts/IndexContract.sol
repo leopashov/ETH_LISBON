@@ -3,6 +3,8 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// import "@openzeppelin/contracts/access/Ownable.sol";
+
 interface IIndexToken is IERC20 {
     function grantRole(bytes32 role, address sender) external;
 
@@ -16,7 +18,7 @@ interface IYearnVaultToken is IERC20 {
     function pricePerShare() external view returns (uint256);
 }
 
-contract IndexContract {
+contract IndexContract is Ownable {
     // Define 'global' variables
     IIndexToken public tokenContract;
 
@@ -35,12 +37,6 @@ contract IndexContract {
         // tokenContract.grantRole(keccak256("MINTER_ROLE"), address(this));
         // INPUT INITIAL CONDITIONS TO ALLOW UNIT TESTS
         _vaultTokens = ["0xa1", "0xa2", "0xa3"];
-        VaultTokenToToken["0xa1"] = "0x01";
-        VaultTokenToToken["0xa2"] = "0x02";
-        VaultTokenToToken["0xa3"] = "0x03";
-        tokenIndexValues["0x01"] = 1;
-        tokenIndexValues["0x02"] = 2;
-        tokenIndexValues["0x03"] = 3;
     }
 
     function updateTotalSupply() external {
@@ -127,81 +123,78 @@ contract IndexContract {
         payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
-    function getIndexBalances() public {
-        // gets current balance of index tokens
-        indexValue = 0; //set pool value to zero
-        for (uint8 i = 0; i < _vaultTokens.length; i++) {
-            address vaultToken = _vaultTokens[i];
-            //calculate value of token in vault
-            uint256 tokenVaultValue = calculateTokenVaultValue(vaultToken);
-            // update vault value in mapping
-            tokenIndexValues[vaultToken] = tokenVaultValue;
-            indexValue += tokenVaultValue; //add each token value to get total index Value
-        }
-    }
+    // function getIndexBalances() public {
+    //     // gets current balance of index tokens
+    //     indexValue = 0; //set pool value to zero
+    //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
+    //         address vaultToken = _vaultTokens[i];
+    //         //calculate value of token in vault
+    //         uint256 tokenVaultValue = calculateTokenVaultValue(vaultToken);
+    //         // update vault value in mapping
+    //         tokenIndexValues[vaultToken] = tokenVaultValue;
+    //         indexValue += tokenVaultValue; //add each token value to get total index Value
+    //     }
+    // }
 
-    function calculateTokenVaultValue(address vaultToken) public {
-        uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
-            address(this)
-        );
-        uint256 individualVaultTokenValue = calculateVaultTokenPriceInEth();
-        return (numberOfVaultTokensHeld * individualVaultTokenValue);
-    }
+    // function calculateTokenVaultValue(address vaultToken) public {
+    //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
+    //         address(this)
+    //     );
+    //     uint256 individualVaultTokenValue = calculateVaultTokenPriceInEth();
+    //     return (numberOfVaultTokensHeld * individualVaultTokenValue);
+    // }
 
-    function calculateVaultTokenPriceInEth(address vaultToken)
-        public
-        returns (uint256 price)
-    {
-        // get price of vault token quoted in underlying
-        address tokenAddress = VaultTokenToToken[vaultToken];
-        // ### get price of underlying in eth => CHAINLINK REQUIRED ###
-        return (1);
-    }
+    // function calculateVaultTokenPriceInEth(address vaultToken)
+    //     public
+    //     returns (uint256 price)
+    // {
+    //     // get price of vault token quoted in underlying
+    //     address tokenAddress = VaultTokenToToken[vaultToken];
+    //     // ### get price of underlying in eth => CHAINLINK REQUIRED ###
+    //return (1);
+    // }
 
     // function swapEthForToken() {}
     // // swap eth for token depending on constant balancing of the pools
 
-    function balanceFund() public {
-        // MAIN BALANCE FUNCTION
-        // update mappings
-
-        // check proportions of tokens within index
-        uint8 maxIndex = updateTokenProportions();
-        uint256 maxProportion = tokenIndexProportion[_vaultTokens[maxIndex]];
-        if (maxProportion > 36) {
-            // sales required, need to balance
-            uint256 surplus = maxProportion - 33;
-            //unstakeAndSell(surplus);
-        }
-        // withdraw and sell tokens which are too high proportion
-        // buy and deposit tokens which are low proportion
-    }
+    // function balanceFund() public {
+    //     // MAIN BALANCE FUNCTION
+    //     // check proportions of tokens within index
+    //     uint8 maxIndex = updateTokenProportions();
+    //     if (tokenIndexProportion[_vaultTokens[maxIndex]] > 36) {
+    //         // sales required, need to balance
+    //         uint256 surplus = tokenIndexProportion - 33;
+    //         unstakeAndSell(surplus);
+    //     }
+    //     // withdraw and sell tokens which are too high proportion
+    //     // buy and deposit tokens which are low proportion
+    // }
 
     // function unstakeAndSell(uint256 amount, token) private onlyOwner {
     //     // IMPORTANT - CHECK VISIBILITY/ACCESS TO THIS FUNCTION
     //     pass;
     // }
 
-    function updateTokenProportions() public returns (uint8 maxIndex) {
-        uint8 maxAt = 0;
-        for (uint8 i = 0; i < _vaultTokens.length; i++) {
-            address vaultToken = _vaultTokens[i];
-            address tokenAddress = VaultTokenToToken[vaultToken];
-            tokenIndexProportion[tokenAddress] =
-                tokenIndexValues[tokenAddress] /
-                indexValue;
-            if (
-                i > 0 &&
-                tokenIndexProportion[tokenAddress] >
-                tokenIndexProportion[VaultTokenToToken[_vaultTokens[i - 1]]]
-            ) {
-                maxAt = i;
-            }
-        }
-        // return index of largest proportion - need to sell this first before
-        // attempting to buy other tokens
-        return (maxAt);
-    }
+    // function updateTokenProportions() public returns (uint8 maxIndex) {
+    //     uint8 maxAt = 0;
+    //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
+    //         address vaultToken = _vaultTokens[i];
+    //         address tokenAddress = VaultTokenToToken[vaultToken];
+    //         tokenIndexProportion[tokenAddress] =
+    //             tokenIndexValues[tokenAddress] /
+    //             indexValue;
+    //         if (
+    //             i > 0 &&
+    //             tokenIndexProportion[tokenAddress] >
+    //             tokenIndexProportion[VaultTokenToToken[_vaultTokens[i - 1]]]
+    //         ) {
+    //             maxAt = i;
+    //         }
+    //     }
+    //     // return index of largest proportion - need to sell this first before
+    //     // attempting to buy other tokens
+    //     return (maxAt);
+    // }
 
     // if (tokenIndexProportion > 36) {
     //    uint256 surplus = tokenIndexProportion - 33;

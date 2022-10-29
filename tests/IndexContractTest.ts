@@ -5,11 +5,10 @@ import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
 import { utils } from "ethers";
 
+
 describe("IndexContract", function () {
     let tokenContract: IndexToken;
     let indexContract: IndexContract;
-    // let tokenInterface: IIndexToken;
-    // let accounts: SignerWithAddress[] | { address: PromiseOrValue<string>; }[];
     let deployer: SignerWithAddress;
     let acc1: SignerWithAddress;
     let acc2: SignerWithAddress;
@@ -28,8 +27,6 @@ describe("IndexContract", function () {
         const indexContractFactory = await ethers.getContractFactory('IndexContract');
 
         // deploy contract 
-        // Note: ensure tokenContract is deployed before indexContract
-
         /// token contract 
         tokenContract = await tokenContractFacory.deploy();
         await tokenContract.deployed();
@@ -42,35 +39,45 @@ describe("IndexContract", function () {
         await indexContract.deployed();
         console.log("indexContract deployed!")
 
-        // const MINTER_ROLE = await erc20Token.MINTER_ROLE();
-        // const grantRoleTx = await erc20Token.grantRole(
-        //     MINTER_ROLE,
-        //     tokenSaleContract.address
-        // );
-        // await grantRoleTx.wait();
-        // // TODO: give role on the ERC721
-
+        const MINTER_ROLE = await tokenContract.MINTER_ROLE();
+        const grantRoleTx = await tokenContract.grantRole(
+            MINTER_ROLE,
+            indexContract.address
+        );
+        await grantRoleTx.wait();
+        console.log("Minter role granted!")
     });
 
 
-    describe("When the user funds the contract", () => {
+    describe("When the user funds the IndexContract.sol", async () => {
 
-        it("increases the eth balance of the contract", async () => {
-            const initialEthBalance = acc1.getBalance(indexContract.address);
+        it("we expect an increases the eth balance of the contract and non-reverting of the contract", async () => {
+
+            const initialEthBalance = await deployer.getBalance(indexContract.address);
             console.log(initialEthBalance);
-            const fund_tx = await indexContract.receive_funds({ "value": ethers.utils.parseEther("1") });
-            console.log(fund_tx);
-            const finalEthBalance = await acc1.getBalance(indexContract.address);
+
+            const fundTx = await indexContract.connect(deployer).receive_funds({ "value": ethers.utils.parseEther("1") });
+            await fundTx.wait();
+            console.log(fundTx.hash);
+
+            const finalEthBalance = await deployer.getBalance(indexContract.address);
             expect(finalEthBalance).to.not.eq(initialEthBalance);
         })
 
-        it("recovers the right amount of ERC20 tokens", () => {
-            throw new Error("Not implemented");
-        });
+        it("eth value sent to contract cannot be below 0.1 eth", async () => {
 
-        it("updates the owner account correctly", () => {
-            throw new Error("Not implemented");
-        });
+            const initialEthBalance = await deployer.getBalance(indexContract.address);
+            console.log(ethers.utils.formatEther(initialEthBalance));
+
+            const fund_tx = await indexContract.receive_funds({ "value": ethers.utils.parseEther("0.01") });
+            console.log(fund_tx.hash);
+
+            const finalEthBalance = await deployer.getBalance(indexContract.address);
+            expect(finalEthBalance).to.not.eq(initialEthBalance);
+            console.log("Successfully funded contract")
+
+        })
+
 
     });
 
@@ -91,17 +98,33 @@ describe("IndexContract", function () {
     })
 
 
+
+    describe("when 'Balance Fund' function is called", () => {
+        this.beforeEach(async () => {
+            
+        })
+
+        it("has initial vault token dummy values", () => {
+            expect(indexContract._vaultTokens[0]).to.eq("0xa1");
+        })
+
+        it("updates token proportions", () => {
+            throw new Error("not implemented");
+        })
+    })
+
+
     describe("When the owner withdraws from the contract", () => {
 
-        it("recovers the right amount of ERC20 tokens", () => {
-            throw new Error("Not implemented");
-        });
+    //     it("recovers the right amount of ERC20 tokens", () => {
+    //         throw new Error("Not implemented");
+    //     });
 
-        it("updates the owner account correctly", () => {
-            throw new Error("Not implemented");
-        });
+    //     it("updates the owner account correctly", () => {
+    //         throw new Error("Not implemented");
+    //     });
 
-    });
+    // });
 
 });
 // ===
