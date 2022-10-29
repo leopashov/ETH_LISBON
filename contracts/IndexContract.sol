@@ -5,6 +5,8 @@ interface IIndexToken {
     // interface to interact with token contract
     // function...
     function mint(address to, uint256 amount) external;
+
+    function totalSupply() external view returns (uint256);
 }
 
 contract IndexContract {
@@ -15,15 +17,16 @@ contract IndexContract {
 
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
+        currentTokenSupply = tokenContract.totalSupply();
         // consider minting one token and adding eth to pool here
     }
-
-    // @Notice: call outside of constructor
-    function updateTotalSupply() public {
+    
+    /// @Notice: call outside of constructor
+    function updateTotalSupply() external {
+        currentTokenSupply = tokenContract.totalSupply();
         // updates currentTokenSupply
         // Comment: I think we can avoid this compelety by
         // tokenContract.totalSupply() directly for calculation
-        // currentTokenSupply = tokenContract.totalSupply();
     }
 
     function receive_funds() public payable {
