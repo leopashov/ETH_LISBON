@@ -26,7 +26,6 @@ contract IndexContract {
         // consider minting one token and adding eth to pool here
     }
 
-    /// @Notice: call outside of constructor
     function updateTotalSupply() external {
         currentTokenSupply = tokenContract.totalSupply();
         // updates currentTokenSupply
@@ -109,16 +108,16 @@ contract IndexContract {
         }
     }
 
-    function swapEthForToken() public {}
+    // function swapEthForToken() {}
 
-    // swap eth for token depending on constant balancing of the pools
+    // // swap eth for token depending on constant balancing of the pools
 
-    function balanceFund() public {
-        // MAIN BALANCE FUNCTION
-        // check proportions of toknes within index
-        // withdraw and sell tokens which are too high proportion
-        // buy and deposit tokens which are low proportion
-    }
+    // function balanceFund() {
+    //     // MAIN BALANCE FUNCTION
+    //     // check proportions of toknes within index
+    //     // withdraw and sell tokens which are too high proportion
+    //     // buy and deposit tokens which are low proportion
+    // }
 
     // stretchgoals: enable voting to change index -proportions, address whitelisting...
 }

@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { IndexToken } from "../typechain-types";
+import { IndexToken } from "../typechain-types/contracts";
 import { PromiseOrValue } from "../typechain-types/common";
 
 // to run test: 'yarn hardhat test ./tests/TokenTest.ts'
@@ -15,10 +15,10 @@ describe("TokenContract", async () => {
         const tokenFactory = await ethers.getContractFactory("IndexToken"); // "IndexToken" matches import
         tokenContract = await tokenFactory.deploy();
         await tokenContract.deployed();
-        console.log(tokenContract);
+        // console.log(tokenContract);
     })
 
-    it("should have an address when deployed", async() => {
+    it("should have an address when deployed", async () => {
         expect(tokenContract.address).to.not.eq(null);
     })
 

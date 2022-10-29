@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@ethersproject/abi": "^5.4.7",
+    "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.4.7",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
@@ -19,7 +20,7 @@
     "@types/chai": "^4.2.0",
     "@types/mocha": "^9.1.0",
     "@types/node": ">=12.0.0",
-    "chai": "^4.2.0",
+    "chai": "^4.3.6",
     "ethers": "^5.4.7",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.0",
