@@ -10,10 +10,15 @@ interface IIndexToken {
 }
 
 contract IndexContract {
+    // Dfeine 'global' variables
     IIndexToken public tokenContract;
     address[] private _tokens;
     uint256 public poolValue; // pool value quoted in eth
     uint256 public currentTokenSupply;
+    mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
+
+    // Define Events
+    event liquidtyRemoved(uint256 amount);
 
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
@@ -21,7 +26,6 @@ contract IndexContract {
         // consider minting one token and adding eth to pool here
     }
 
-    // Notice: call outside of constructor
     function updateTotalSupply() external {
         currentTokenSupply = tokenContract.totalSupply();
         // updates currentTokenSupply
@@ -75,14 +79,34 @@ contract IndexContract {
 
     function getBalance(address token) external view returns (uint256) {}
 
-    // function removeLiquidity() {}
+    function removeLiquidity(uint256 amount) public {
+        // # user sends index tokens back to contract
+        require(amount > 0, "Provide amount of liquidity to remove");
+        // get allowance for this
+        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+        require(allowance >= amount, "check token allowance");
+        // transfer token from user wallet to this contract
+        tokenContract.transferFrom(msg.sender, address(this), amount);
+        emit liquidtyRemoved(amount);
+        // burn returned index tokens
+        tokenContract.burn(amount);
+        // #call token balancing function to decide where best to remove tokens from
+        getIndexBalance()
+        // get number of tokens belonging to this address in a vault.
+        // unstake tokens
+        // switch tokens to eth (if required)
+        // send eth back to function caller (msg.sender)
+        payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
+    }
 
-    // // user sends index tokens back to contract
-    // // contract burns index tokens
-    // // call token balancing function to decide where best to remove tokens from
-    // // unstake tokens
-    // // switch tokens to eth (if required)
-    // // send eth back to function caller (msg.sender)
+    function getIndexBalance() public {
+        // gets current balance of index tokens
+        for (uint8 i=0; i < _tokens.length(); i++){
+            //calculate value of token in vault
+            
+            tokenIndexValues[_tokens[i]] = 
+        }
+    }
 
     // function swapEthForToken() {}
 
