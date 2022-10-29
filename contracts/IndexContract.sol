@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Burnable.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IIndexToken is IERC20 {
@@ -31,10 +31,12 @@ contract IndexContract is Ownable {
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
-    constructor(address _tokenContract) {
+    constructor(address _tokenContract, address[] memory vaultTokens) {
         tokenContract = IIndexToken(_tokenContract);
         currentTokenSupply = tokenContract.totalSupply();
         // tokenContract.grantRole(keccak256("MINTER_ROLE"), address(this));
+        // INPUT INITIAL CONDITIONS TO ALLOW UNIT TESTS
+        _vaultTokens = vaultTokens;
     }
 
     function updateTotalSupply() external {
@@ -96,7 +98,7 @@ contract IndexContract is Ownable {
         returns (address[] memory tokens)
     {
         // shows tokens in index
-        return tokens;
+        return _vaultTokens;
     }
 
     function getBalance(address token) external view returns (uint256) {}
@@ -149,6 +151,7 @@ contract IndexContract is Ownable {
     //     // get price of vault token quoted in underlying
     //     address tokenAddress = VaultTokenToToken[vaultToken];
     //     // ### get price of underlying in eth => CHAINLINK REQUIRED ###
+    //return (1);
     // }
 
     // function swapEthForToken() {}
@@ -181,7 +184,9 @@ contract IndexContract is Ownable {
     //             tokenIndexValues[tokenAddress] /
     //             indexValue;
     //         if (
-    //             i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i - 1]
+    //             i > 0 &&
+    //             tokenIndexProportion[tokenAddress] >
+    //             tokenIndexProportion[VaultTokenToToken[_vaultTokens[i - 1]]]
     //         ) {
     //             maxAt = i;
     //         }
@@ -200,4 +205,5 @@ contract IndexContract is Ownable {
     // }
 
     // stretchgoals: enable voting to change index -proportions, address whitelisting...
+    // automate rebalancing
 }

@@ -11,9 +11,15 @@ describe("IndexContract", function () {
     let deployer: SignerWithAddress;
     let acc1: SignerWithAddress;
     let acc2: SignerWithAddress;
+    let token1: SignerWithAddress;
+    let token2: SignerWithAddress;
+    let token3: SignerWithAddress;
+    let atoken1: SignerWithAddress;
+    let atoken2: SignerWithAddress;
+    let atoken3: SignerWithAddress;
 
     beforeEach(async () => {
-        [deployer, acc1, acc2] = await ethers.getSigners();
+        [deployer, acc1, acc2, token1, token2, token3, atoken1, atoken2, atoken3] = await ethers.getSigners();
 
         // get contract  
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -29,6 +35,7 @@ describe("IndexContract", function () {
         /// deploy indexContract 
         indexContract = await indexContractFactory.deploy(
             tokenContract.address,
+            [atoken1.address,atoken2.address,atoken3.address]
         );
         await indexContract.deployed();
         console.log("indexContract deployed!");
@@ -71,13 +78,43 @@ describe("IndexContract", function () {
             //NOTE: function behaves as expected but I cannot find the right was to make 
             // the expect function work
 
-        });
-
 
     });
 
 
-    // describe("When the owner withdraws from the contract", () => {
+
+    describe("when 'Balance Fund' function is called", () => {
+        this.beforeEach(async () => {
+            
+        })
+
+        it("has initial vault token dummy values", () => {
+            expect(indexContract._vaultTokens[0]).to.eq("0xa1");
+        })
+
+        it("updates token proportions", () => {
+            throw new Error("not implemented");
+        })
+    })
+
+
+
+    describe("when 'Balance Fund' function is called", () => {
+        this.beforeEach(async () => {
+            
+        })
+
+        it("has initial vault token dummy values", () => {
+            expect(indexContract._vaultTokens[0]).to.eq("0xa1");
+        })
+
+        it("updates token proportions", () => {
+            throw new Error("not implemented");
+        })
+    })
+
+
+    // describe("When the owner withdraws from the contract", () => {}
 
     //     it("recovers the right amount of ERC20 tokens", () => {
     //         throw new Error("Not implemented");
