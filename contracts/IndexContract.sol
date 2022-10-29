@@ -146,10 +146,19 @@ contract IndexContract {
     function balanceFund() public {
         // MAIN BALANCE FUNCTION
         // check proportions of tokens within index
-        updateTokenProportions();
-
+        uint8 maxIndex = updateTokenProportions();
+        if(tokenIndexProportion[_vaultTokens[maxIndex]] > 36){
+            // sales required, need to balance
+            uint256 surplus = tokenIndexProportion - 33;
+            unstakeAndSell(surplus);
+        }
         // withdraw and sell tokens which are too high proportion
         // buy and deposit tokens which are low proportion
+    }
+
+    function unstakeAndSell(uint256 amount, token) private, onlyOwner{
+        // IMPORTANT - CHECK VISIBILITY/ACCESS TO THIS FUNCTION
+        pass;
     }
 
     function updateTokenProportions() public returns (uint8 maxIndex) {
