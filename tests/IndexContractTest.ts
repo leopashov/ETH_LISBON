@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
+import { tokenToString } from "typescript";
 
 
 describe("IndexContract", function () {
@@ -105,7 +106,7 @@ describe("IndexContract", function () {
             const initialIndexValue = await indexContract.indexValue();
             console.log(`initial index value ${initialIndexValue}`);
             const acc2Deposit = 10 * Math.random();
-            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            const acc2DepositBN = ethers.utils.parseUnits(String(acc2Deposit));
             console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
             const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
@@ -119,15 +120,17 @@ describe("IndexContract", function () {
 
         it("mints the correct number of tokens",async () => {
             const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
-            // use other account aswell
             const acc2Deposit = 10 * Math.random();
-            console.log(acc2Deposit);
-            const tx = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther(String(acc2Deposit)), });
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(acc2DepositBN);
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
             const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
             // const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
             console.log(finalUserIndexTokenBalance);
-            const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
+            const finalIndexValue = await indexContract.indexValue();
+            const finalTotalTokens = await tokenContract.totalSupply();
+            const expectedBalance = ((initialUserIndexTokenBalance.add(acc2DepositBN)).mul(finalTotalTokens)).div(finalIndexValue);
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
 
