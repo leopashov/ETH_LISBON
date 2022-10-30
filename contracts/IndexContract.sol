@@ -29,7 +29,7 @@ contract IndexContract is Ownable {
     mapping(address => uint256) public addressToAmountFunded; // keeps track of how much eth each user has put in fund.
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
-    mapping(address => uint256) public tokenIndexProportion;
+    mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
@@ -64,6 +64,8 @@ contract IndexContract is Ownable {
 
         // mint token
         tokenContract.mint(msg.sender, tokensToMint);
+        totalUserDeposits += msg.value;
+        addressToAmountFunded[address(msg.sender)] += msg.value;
     }
 
     function calculateTokensToMint(uint256 _ethReceived)
