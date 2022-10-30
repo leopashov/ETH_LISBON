@@ -107,19 +107,19 @@ describe("IndexContract", function () {
             console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
         });
 
-        it("increases indexValue by amount of eth received", async () => {
-            const initialIndexValue = await indexContract.indexValue();
-            console.log(`initial index value ${initialIndexValue}`);
+        it("keeps track of the total number of user deposits", async () => {
+            const initialDeposits = await indexContract.totalUserDeposits();
+            console.log(`initial index value ${initialDeposits}`);
             const acc2Deposit = 10 * Math.random();
-            const acc2DepositBN = ethers.utils.parseUnits(String(acc2Deposit));
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
             console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
             const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
-            const finalIndexValue = await indexContract.indexValue();
-            const expectedValue = initialIndexValue.add(acc2DepositBN);
-            console.log(`final index value: ${finalIndexValue}`);
+            const finaltotalUserDeposits = await indexContract.totalUserDeposits();
+            const expectedValue = initialDeposits.add(acc2DepositBN);
+            console.log(`final deposits value: ${finaltotalUserDeposits}`);
             console.log(`expectedValue: ${expectedValue}`);
-            expect(finalIndexValue).to.eq(expectedValue);
+            expect(finaltotalUserDeposits).to.eq(expectedValue);
         })
 
         it("keeps track of individual user deposits", async () =>{
