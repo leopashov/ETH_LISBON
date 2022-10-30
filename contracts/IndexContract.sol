@@ -155,24 +155,34 @@ contract IndexContract is Ownable {
     //     pass;
     // }
 
-    // function updateTokenProportions() public returns (uint8 maxIndex) {
-    //     uint8 maxAt = 0;
-    //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
-    //         address vaultToken = _vaultTokens[i];
-    //         address underlyingTokenAddress = VaultTokenToToken[vaultToken];
-    //         tokenIndexProportion[underlyingTokenAddress] =
-    //             tokenIndexValues[underlyingTokenAddress] /
-    //             indexValue;
-    //         if (
-    //             i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i - 1]
-    //         ) {
-    //             maxAt = i;
-    //         }
-    //     }
-    //     // return index of largest proportion - need to sell this first before
-    //     // attempting to buy other tokens
-    //     return (maxAt);
-    // }
+    function updateTokenProportionsAndReturnMaxLoc()
+        public
+        returns (uint8 maxIndex)
+    {
+        uint8 maxAt = 0;
+        if (indexValue > 0) {
+            for (uint8 i = 0; i < _vaultTokens.length; i++) {
+                address vaultToken = _vaultTokens[i];
+                address underlyingTokenAddress = VaultTokenToToken[vaultToken];
+
+                tokenIndexProportion[underlyingTokenAddress] =
+                    tokenIndexValues[underlyingTokenAddress] /
+                    indexValue;
+                if (
+                    i > 0 &&
+                    tokenIndexProportion[underlyingTokenAddress] >
+                    tokenIndexProportion[VaultTokenToToken[_vaultTokens[i - 1]]]
+                ) {
+                    maxAt = i;
+                }
+            }
+        } else {
+            maxAt = 4; // maxAt = 4 means index value = 0 - instruct purchases of tokens
+        }
+        // return index of largest proportion - need to sell this first before
+        // attempting to buy other tokens
+        return (maxAt);
+    }
 
     // if (tokenIndexProportion > 36) {
     //    uint256 surplus = tokenIndexProportion - 33;

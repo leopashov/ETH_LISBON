@@ -147,21 +147,24 @@ describe("IndexContract", function () {
         });
     });
 
-    describe("when 'Balance Fund' function is called", () => {
+    describe("when 'Balance Fund' function is called and indexvalue = 0", () => {
         this.beforeEach(async () => {
 
         })
 
-        it("updates token proportions", () => {
-            throw new Error("not implemented");
+        it("updates token proportions returns 4", async () => {
+            const getInfoTx = await indexContract.updateTokenProportionsAndReturnMaxLoc();
+            getInfoTx.wait();
+            console.log(Number(getInfoTx.data));
+            expect(getInfoTx).to.eq(4);
         })
 
         it("calculates vault token price in eth", () => {
-            expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
+            // expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
         })
 
         it("has initial vault token dummy values", () => {
-            expect(indexContract._vaultTokens).to.not.eq(null);
+            //expect(indexContract._vaultTokens).to.not.eq(null);
         })
 
 
