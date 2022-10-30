@@ -36,7 +36,8 @@ describe("IndexContract", function () {
         /// deploy indexContract 
         indexContract = await indexContractFactory.deploy(
             tokenContract.address,
-            [atoken1.address, atoken2.address, atoken3.address]
+            [atoken1.address, atoken2.address, atoken3.address],
+            [token1.address, token2.address, token3.address]
         );
         await indexContract.deployed();
         // console.log("indexContract deployed!");
@@ -83,9 +84,9 @@ describe("IndexContract", function () {
             const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
             const tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             await tx.wait();
-            const finalUserIndexTokenBalanceBN = await tokenContract.balanceOf(acc1.address);
-            console.log(finalUserIndexTokenBalanceBN);
-            const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
+            const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
+            const finalUserIndexTokenBalanceBN = ethers.utils.parseEther(String(finalUserIndexTokenBalance));
+            console.log(finalUserIndexTokenBalance);
             const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
             expect(expectedBalance).to.eq(finalUserIndexTokenBalanceBN);
         });
@@ -93,35 +94,7 @@ describe("IndexContract", function () {
         // here. 
         // @leo: it is similar but this one check index token balances, whereas other only considers eth, so this does have a bit more functionality i think
         // also it works so much aswell keep it lol
-    })
-
-
-    describe("When update supply function is called", async () => {
-
-        it("we expect the total supply to increase", async () => {
-
-            // check inital token supply
-            const currentTokenSupplyInitial = await indexContract.currentTokenSupply();
-            console.log(`The initial token supply is ${currentTokenSupplyInitial}`);
-
-            // mint token 
-            const fundTx = await indexContract.connect(deployer).receive_funds({ "value": ethers.utils.parseEther("1") });
-            await fundTx.wait();
-            console.log(`Tx-hash of mint: ${fundTx.hash}`);
-
-            // call update functon
-            const updateSupplyTx = await indexContract.updateTotalSupply();
-            updateSupplyTx.wait();
-            console.log(`Tx-hash of update supply: ${updateSupplyTx.hash}`);
-
-            // check final balance
-            // check inital token supply
-            const currentTokenSupplyFinal = await indexContract.currentTokenSupply();
-            console.log(`The initial token supply is ${currentTokenSupplyFinal}`);
-            expect(currentTokenSupplyInitial).to.not.eq(currentTokenSupplyFinal);
-        });
-
-    })
+})
 
     describe("When more users fund the IndexContract.sol", async () => {
         
@@ -159,7 +132,6 @@ describe("IndexContract", function () {
         })
 
         it("again mints the correct number of tokens",async () => {
-            const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
             const acc2Deposit = 10 * Math.random();
             const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
             console.log(acc2DepositBN);
@@ -180,6 +152,10 @@ describe("IndexContract", function () {
 
         })
 
+        it("updates token proportions", () => {
+            throw new Error("not implemented");
+        })
+
         it("calculates vault token price in eth", () => {
             expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
         })
@@ -188,9 +164,7 @@ describe("IndexContract", function () {
             expect(indexContract._vaultTokens).to.not.eq(null);
         })
 
-        it("updates token proportions", () => {
-            throw new Error("not implemented");
-        })
+
     });
 
 

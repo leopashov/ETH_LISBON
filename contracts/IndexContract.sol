@@ -25,7 +25,6 @@ contract IndexContract is Ownable {
     address[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
-    uint256 public currentTokenSupply;
     uint256 public totalUserDeposits;
     mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
@@ -34,9 +33,18 @@ contract IndexContract is Ownable {
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
-    constructor(address _tokenContract) {
+    constructor(
+        address _tokenContract,
+        address[] memory vaultTokens,
+        address[] memory tokens
+    ) {
         tokenContract = IIndexToken(_tokenContract);
-        currentTokenSupply = tokenContract.totalSupply();
+        // read in provided vault token addresses
+        _vaultTokens = vaultTokens;
+        // map vault tokens to underlying - careful of order!
+        for (uint8 i = 0; i < tokens.length; i++) {
+            VaultTokenToToken[_vaultTokens[i]] = tokens[i];
+        }
     }
 
     function receive_funds() public payable {
@@ -67,6 +75,7 @@ contract IndexContract is Ownable {
             return (1);
         } else {
             // adding eth to the index returns
+            uint256 currentTokenSupply = tokenContract.totalSupply();
             return (currentTokenSupply * (_ethReceived / indexValue));
             //think of eth recvieved in terms of pool value
             // potnetial issue with small contributions - small number/large number
@@ -74,22 +83,6 @@ contract IndexContract is Ownable {
             // set multiplier or something?
         }
     }
-
-    function calculatePoolValue() public returns (uint256 _poolValue) {
-        // function to calculate pool value, denominated in eth.
-        // get conversion from uni pools or chainlink(preferred)
-    }
-
-    function getCurrentTokens()
-        external
-        pure
-        returns (address[] memory tokens)
-    {
-        // shows tokens in index
-        return tokens;
-    }
-
-    function getBalance(address token) external view returns (uint256) {}
 
     function removeLiquidity(uint256 amount) public {
         // # user sends index tokens back to contract
@@ -166,9 +159,9 @@ contract IndexContract is Ownable {
     //     uint8 maxAt = 0;
     //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
     //         address vaultToken = _vaultTokens[i];
-    //         address tokenAddress = VaultTokenToToken[vaultToken];
-    //         tokenIndexProportion[tokenAddress] =
-    //             tokenIndexValues[tokenAddress] /
+    //         address underlyingTokenAddress = VaultTokenToToken[vaultToken];
+    //         tokenIndexProportion[underlyingTokenAddress] =
+    //             tokenIndexValues[underlyingTokenAddress] /
     //             indexValue;
     //         if (
     //             i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i - 1]
