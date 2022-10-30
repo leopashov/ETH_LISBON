@@ -39,14 +39,6 @@ contract IndexContract is Ownable {
         currentTokenSupply = tokenContract.totalSupply();
     }
 
-    function updateTotalSupply() external {
-        currentTokenSupply = tokenContract.totalSupply();
-        // updates currentTokenSupply
-        // xm3van: I think we can avoid this compelety by
-        // tokenContract.totalSupply() directly for calculation
-        // suggested action = remove
-    }
-
     function receive_funds() public payable {
         // allows users to send eth to the contract.
         // on doing so should mint tokens proportionate to eth added compared to
