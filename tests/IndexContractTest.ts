@@ -180,10 +180,6 @@ describe("IndexContract", function () {
             })
         });
 
-<<<<<<< HEAD
-
-        // describe("When the owner withdraws from the contract", () => {}
-=======
         it("increases indexValue by amount of eth received", async () => {
             const initialIndexValue = await indexContract.indexValue();
             console.log(`initial index value ${initialIndexValue}`);
@@ -200,7 +196,7 @@ describe("IndexContract", function () {
             // not sure about decimals (ie weivs eth) here
         })
 
-        it("mints the correct number of tokens",async () => {
+        it("mints the correct number of tokens", async () => {
             const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
             const acc2Deposit = 10 * Math.random();
             const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
@@ -215,7 +211,6 @@ describe("IndexContract", function () {
             const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(finalIndexValue);
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
->>>>>>> f925954ccc1d0a6761a011db91b377a151672c31
 
         //     it("recovers the right amount of ERC20 tokens", () => {
         //         throw new Error("Not implemented");
