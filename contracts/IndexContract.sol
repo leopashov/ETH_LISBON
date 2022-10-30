@@ -37,6 +37,7 @@ contract IndexContract is Ownable {
         // tokenContract.grantRole(keccak256("MINTER_ROLE"), address(this));
         // INPUT INITIAL CONDITIONS TO ALLOW UNIT TESTS
         _vaultTokens = vaultTokens;
+        indexValue = 0;
     }
 
     function updateTotalSupply() external {
@@ -65,25 +66,25 @@ contract IndexContract is Ownable {
 
     function calculateTokensToMint(uint256 _ethReceived)
         internal
-        view
         returns (uint256 tokensToMint)
     {
         require(
             _ethReceived > 100000000 gwei,
             "Please increase the minimum contribution to 0.1 Ether!"
         );
+
         if (indexValue == 0) {
             // if pool empty, just mint 1 token irrespective of what was contributed
             // this will just affect the rate at which pool tokens are created
             // ie order of magnitude of max supply
             return (1);
         } else {
+            // update index value
+            indexValue += _ethReceived;
             // adding eth to the index returns
-            return (currentTokenSupply * (_ethReceived / indexValue));
-            //think of eth recvieved in terms of pool value
-            // potnetial issue with small contributions - small number/large number
-            // no decimals in solidity
-            // set multiplier or something?
+            return ((currentTokenSupply * _ethReceived) / indexValue);
+            // ^this division giving issues - rounds down to zero each time
+            // need to calculate in gwei or something
         }
     }
 
@@ -123,39 +124,47 @@ contract IndexContract is Ownable {
         payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
-    // function getIndexBalances() public {
-    //     // gets current balance of index tokens
-    //     indexValue = 0; //set pool value to zero
-    //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
-    //         address vaultToken = _vaultTokens[i];
-    //         //calculate value of token in vault
-    //         uint256 tokenVaultValue = calculateTokenVaultValue(vaultToken);
-    //         // update vault value in mapping
-    //         tokenIndexValues[vaultToken] = tokenVaultValue;
-    //         indexValue += tokenVaultValue; //add each token value to get total index Value
-    //     }
-    // }
+    function getIndexBalances() public {
+        // gets current balance of index tokens
+        indexValue = 0; //set pool value to zero
+        for (uint8 i = 0; i < _vaultTokens.length; i++) {
+            address vaultToken = _vaultTokens[i];
+            //calculate value of token in vault
+            uint256 tokenVaultValue = calculateTokenVaultValue(vaultToken);
+            // update vault value in mapping
+            tokenIndexValues[vaultToken] = tokenVaultValue;
+            indexValue += tokenVaultValue; //add each token value to get total index Value
+        }
+    }
 
-    // function calculateTokenVaultValue(address vaultToken) public {
-    //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
-    //         address(this)
-    //     );
-    //     uint256 individualVaultTokenValue = calculateVaultTokenPriceInEth();
-    //     return (numberOfVaultTokensHeld * individualVaultTokenValue);
-    // }
+    function calculateTokenVaultValue(address vaultToken)
+        public
+        view
+        returns (uint256 tokenVaultValue)
+    {
+        uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
+            address(this)
+        );
+        uint256 individualVaultTokenValue = calculateVaultTokenPriceInEth(
+            vaultToken
+        );
+        return (numberOfVaultTokensHeld * individualVaultTokenValue);
+    }
 
-    // function calculateVaultTokenPriceInEth(address vaultToken)
-    //     public
-    //     returns (uint256 price)
-    // {
-    //     // get price of vault token quoted in underlying
-    //     address tokenAddress = VaultTokenToToken[vaultToken];
-    //     // ### get price of underlying in eth => CHAINLINK REQUIRED ###
-    //return (1);
-    // }
+    function calculateVaultTokenPriceInEth(address vaultToken)
+        public
+        view
+        returns (uint256 price)
+    {
+        // get price of vault token quoted in underlying
+        address tokenAddress = VaultTokenToToken[vaultToken];
+        // ### get price of underlying in eth => CHAINLINK REQUIRED ###
+        return (1);
+    }
 
-    // function swapEthForToken() {}
-    // // swap eth for token depending on constant balancing of the pools
+    function swapEthForToken() private {}
+
+    // swap eth for token depending on constant balancing of the pools
 
     // function balanceFund() public {
     //     // MAIN BALANCE FUNCTION
