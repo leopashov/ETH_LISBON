@@ -94,22 +94,27 @@ describe("IndexContract", function () {
     describe("When more users fund the IndexContract.sol", async () => {
         
         beforeEach(async () => {
-            // prefund contract with some (1) eth
-            const fundTx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther(String(Math.random())), });
+            // prefund contract with some eth
+            const initialFundAmount = (String(10 * Math.random()));
+            const initialFundAmountBN = ethers.utils.parseEther(initialFundAmount);
+            const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
+            console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
         });
 
         it("increases indexValue by amount of eth received", async () => {
-            const initialIndexValue = Number(tokenContract.indexValue);
+            const initialIndexValue = await indexContract.indexValue();
             console.log(`initial index value ${initialIndexValue}`);
             const acc2Deposit = 10 * Math.random();
-            console.log(acc2Deposit);
-            const tx = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther(String(acc2Deposit)), });
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
-            const finalIndexValue = await tokenContract.indexValue;
-            const expectedValue = initialIndexValue + acc2Deposit;
+            const finalIndexValue = await indexContract.indexValue();
+            const expectedValue = initialIndexValue.add(acc2DepositBN);
+            console.log(`final index value: ${finalIndexValue}`);
+            console.log(`expectedValue: ${expectedValue}`);
             expect(finalIndexValue).to.eq(expectedValue);
-
-
+            // not sure about decimals (ie weivs eth) here
         })
 
         it("mints the correct number of tokens",async () => {

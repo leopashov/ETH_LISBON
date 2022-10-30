@@ -66,7 +66,7 @@ contract IndexContract is Ownable {
 
     function calculateTokensToMint(uint256 _ethReceived)
         internal
-        returns (uint256 tokensToMint)
+        returns (uint256 tokensToMintinWei)
     {
         require(
             _ethReceived > 100000000 gwei,
@@ -77,12 +77,19 @@ contract IndexContract is Ownable {
             // if pool empty, just mint 1 token irrespective of what was contributed
             // this will just affect the rate at which pool tokens are created
             // ie order of magnitude of max supply
-            return (1);
+            uint256 mintAmount = 1 ether;
+            // update current token supply
+            currentTokenSupply += mintAmount;
+            indexValue += _ethReceived;
+            return (mintAmount);
         } else {
+            // adding eth to the index returns
+            uint256 mintAmount = (currentTokenSupply * _ethReceived) /
+                indexValue;
             // update index value
             indexValue += _ethReceived;
-            // adding eth to the index returns
-            return ((currentTokenSupply * _ethReceived) / indexValue);
+            currentTokenSupply += mintAmount;
+            return (mintAmount);
             // ^this division giving issues - rounds down to zero each time
             // need to calculate in gwei or something
         }
