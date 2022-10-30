@@ -21,6 +21,7 @@ describe("IndexContract", function () {
 
     beforeEach(async () => {
         [deployer, acc1, acc2, token1, token2, token3, atoken1, atoken2, atoken3] = await ethers.getSigners();
+        // @xm3van: what does this line do?
 
         // get contract  
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -30,17 +31,15 @@ describe("IndexContract", function () {
         /// token contract 
         tokenContract = await tokenContractFacory.deploy();
         await tokenContract.deployed();
-        console.log("tokenContract deployed!");
-        console.log((await ethers.provider.getBlock("latest")).timestamp);
+        // console.log("tokenContract deployed!");
 
         /// deploy indexContract 
         indexContract = await indexContractFactory.deploy(
             tokenContract.address,
-            [atoken1.address,atoken2.address,atoken3.address]
+            [atoken1.address, atoken2.address, atoken3.address]
         );
         await indexContract.deployed();
-        console.log("indexContract deployed!");
-        console.log((await ethers.provider.getBlock("latest")).timestamp);
+        // console.log("indexContract deployed!");
 
         // assign minter role
         const MINTER_ROLE = await tokenContract.MINTER_ROLE();
@@ -49,14 +48,13 @@ describe("IndexContract", function () {
             indexContract.address
         );
         await grantRoleTx.wait();
-        console.log("Minter role granted!");
-        console.log((await ethers.provider.getBlock("latest")).timestamp);
+        // console.log("Minter role granted!");
     });
 
 
     describe("When the first user funds the IndexContract.sol", async () => {
 
-        it("we expect an increases the eth balance of the contract and non-reverting of the contract", async () => {
+        it("increases in eth balance of the contract and non-reverting of the contract", async () => {
 
             const initialEthBalance = await ethers.provider.getBalance(indexContract.address);
             console.log(initialEthBalance);
@@ -71,17 +69,17 @@ describe("IndexContract", function () {
 
         });
 
-        it("must be funded with more than 0.1 eth", async () => {
+        it("transaction reversion for funding below 0.1 eth", async () => {
             var error = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.01"), });
             expect(error).to.be.an('error');
-        
+
             // ref.: https://www.chaijs.com/api/bdd/
 
             //NOTE: function behaves as expected but I cannot find the right was to make 
             // the expect function work
         });
 
-        it("mints the correct number of tokens",async () => {
+        it("mints the correct number of tokens", async () => {
             const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
             const tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             await tx.wait();
@@ -91,15 +89,95 @@ describe("IndexContract", function () {
             const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
             expect(expectedBalance).to.eq(finalUserIndexTokenBalanceBN);
         });
+        // @xm3van:  it technically already covered in the first function, thus if we wanted to we can delete this 
+        // here. 
 
-    describe("When more users fund the IndexContract.sol", async () => {
-        
-        beforeEach(async () => {
-            // prefund contract with some eth
-            const initialFundAmount = (String(10 * Math.random()));
-            const initialFundAmountBN = ethers.utils.parseEther(initialFundAmount);
-            const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
-            console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
+
+        describe("When update supply function is called", async () => {
+
+            it("we expect the total supply to increase", async () => {
+
+                // check inital token supply
+                const currentTokenSupplyInitial = await indexContract.currentTokenSupply();
+                console.log(`The initial token supply is ${currentTokenSupplyInitial}`);
+
+                // mint token 
+                const fundTx = await indexContract.connect(deployer).receive_funds({ "value": ethers.utils.parseEther("1") });
+                await fundTx.wait();
+                console.log(`Tx-hash of mint: ${fundTx.hash}`);
+
+                // call update functon
+                const updateSupplyTx = await indexContract.updateTotalSupply();
+                updateSupplyTx.wait();
+                console.log(`Tx-hash of update supply: ${updateSupplyTx.hash}`);
+
+                // check final balance
+                // check inital token supply
+                const currentTokenSupplyFinal = await indexContract.currentTokenSupply();
+                console.log(`The initial token supply is ${currentTokenSupplyFinal}`);
+                expect(currentTokenSupplyInitial).to.not.eq(currentTokenSupplyFinal);
+            });
+
+        })
+
+        describe("When more users fund the IndexContract.sol", async () => {
+
+            beforeEach(async () => {
+                // prefund contract with some eth
+                const initialFundAmount = (String(10 * Math.random()));
+                const initialFundAmountBN = ethers.utils.parseEther(initialFundAmount);
+                const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
+                console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
+            });
+
+            it("increases indexValue by amount of eth received", async () => {
+                const initialIndexValue = await indexContract.indexValue();
+                console.log(`initial index value ${initialIndexValue}`);
+                const acc2Deposit = 10 * Math.random();
+                const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+                console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+                const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+                await tx.wait();
+                const finalIndexValue = await indexContract.indexValue();
+                const expectedValue = initialIndexValue.add(acc2DepositBN);
+                console.log(`final index value: ${finalIndexValue}`);
+                console.log(`expectedValue: ${expectedValue}`);
+                expect(finalIndexValue).to.eq(expectedValue);
+                // not sure about decimals (ie weivs eth) here
+                // A.: I believe best practice is to denominate everything in wei - let's be consistent 
+            })
+
+            it("mints the correct number of tokens", async () => {
+                const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+                // use other account aswell
+                const acc2Deposit = 10 * Math.random();
+                console.log(acc2Deposit);
+                const tx = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther(String(acc2Deposit)), });
+                await tx.wait();
+                const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+                // const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
+                console.log(finalUserIndexTokenBalance);
+                const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
+                expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+            });
+
+            describe("when 'Balance Fund' function is called", () => {
+                this.beforeEach(async () => {
+
+                })
+
+                it("calculates vault token price in eth", () => {
+                    expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
+                })
+
+                it("has initial vault token dummy values", () => {
+                    expect(indexContract._vaultTokens).to.not.eq(null);
+                })
+
+                it("updates token proportions", () => {
+                    throw new Error("not implemented");
+                })
+            })
         });
 
         it("increases indexValue by amount of eth received", async () => {
@@ -118,7 +196,7 @@ describe("IndexContract", function () {
             // not sure about decimals (ie weivs eth) here
         })
 
-        it("mints the correct number of tokens",async () => {
+        it("mints the correct number of tokens", async () => {
             const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
             const acc2Deposit = 10 * Math.random();
             const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
@@ -134,35 +212,14 @@ describe("IndexContract", function () {
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
 
-    describe("when 'Balance Fund' function is called", () => {
-        this.beforeEach(async () => {
-            
-        })
+        //     it("recovers the right amount of ERC20 tokens", () => {
+        //         throw new Error("Not implemented");
+        //     });
 
-        it("calculates vault token price in eth", () => {
-            expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
-        })
+        //     it("updates the owner account correctly", () => {
+        //         throw new Error("Not implemented");
+        //     });
 
-        it("has initial vault token dummy values", () => {
-            expect(indexContract._vaultTokens).to.not.eq(null);
-        })
-
-        it("updates token proportions", () => {
-            throw new Error("not implemented");
-        })
+        // });
     })
-});
-
-
-    // describe("When the owner withdraws from the contract", () => {}
-
-    //     it("recovers the right amount of ERC20 tokens", () => {
-    //         throw new Error("Not implemented");
-    //     });
-
-    //     it("updates the owner account correctly", () => {
-    //         throw new Error("Not implemented");
-    //     });
-
-    // });
-})})
+})
