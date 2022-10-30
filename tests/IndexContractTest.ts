@@ -126,11 +126,11 @@ describe("IndexContract", function () {
             const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
             const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
-            // const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
             console.log(finalUserIndexTokenBalance);
             const finalIndexValue = await indexContract.indexValue();
             const finalTotalTokens = await tokenContract.totalSupply();
-            const expectedBalance = ((initialUserIndexTokenBalance.add(acc2DepositBN)).mul(finalTotalTokens)).div(finalIndexValue);
+            // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
+            const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(finalIndexValue);
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
 
