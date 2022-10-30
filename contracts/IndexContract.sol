@@ -24,7 +24,9 @@ contract IndexContract is Ownable {
 
     address[] public _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
+    uint256 public totalUserDeposits; // total user deposits in eth. Used for paying out - ie proportion of what you put in is proprotion of what you get out (hopefully higher than what you put in)
     uint256 public currentTokenSupply;
+    mapping(address => uint256) public addressToAmountFunded; // keeps track of how much eth each user has put in fund.
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
     mapping(address => uint256) public tokenIndexProportion;

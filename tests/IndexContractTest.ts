@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
+import { tokenToString } from "typescript";
 
 
 describe("IndexContract", function () {
@@ -179,8 +180,42 @@ describe("IndexContract", function () {
             })
         });
 
+<<<<<<< HEAD
 
         // describe("When the owner withdraws from the contract", () => {}
+=======
+        it("increases indexValue by amount of eth received", async () => {
+            const initialIndexValue = await indexContract.indexValue();
+            console.log(`initial index value ${initialIndexValue}`);
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseUnits(String(acc2Deposit));
+            console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const finalIndexValue = await indexContract.indexValue();
+            const expectedValue = initialIndexValue.add(acc2DepositBN);
+            console.log(`final index value: ${finalIndexValue}`);
+            console.log(`expectedValue: ${expectedValue}`);
+            expect(finalIndexValue).to.eq(expectedValue);
+            // not sure about decimals (ie weivs eth) here
+        })
+
+        it("mints the correct number of tokens",async () => {
+            const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(acc2DepositBN);
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+            console.log(finalUserIndexTokenBalance);
+            const finalIndexValue = await indexContract.indexValue();
+            const finalTotalTokens = await tokenContract.totalSupply();
+            // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
+            const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(finalIndexValue);
+            expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+        });
+>>>>>>> f925954ccc1d0a6761a011db91b377a151672c31
 
         //     it("recovers the right amount of ERC20 tokens", () => {
         //         throw new Error("Not implemented");
