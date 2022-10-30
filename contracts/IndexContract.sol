@@ -26,14 +26,11 @@ contract IndexContract is Ownable {
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
     uint256 public currentTokenSupply;
+    uint256 public totalUserDeposits;
+    mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
-<<<<<<< HEAD
     mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
-=======
-    mapping(address => uint256) public tokenIndexProportion;
-
->>>>>>> e243b04ce6f280c3045abfbceaada5b25870e793
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
@@ -93,7 +90,7 @@ contract IndexContract is Ownable {
 
     function getCurrentTokens()
         external
-        view
+        pure
         returns (address[] memory tokens)
     {
         // shows tokens in index
