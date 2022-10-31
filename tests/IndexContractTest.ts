@@ -182,16 +182,15 @@ describe("IndexContract", function () {
             console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
             const userIndexTokensHoldingsOnInit = await tokenContract.balanceOf(acc1.address);
             console.log(`initial index token holdings (wei?): ${userIndexTokensHoldingsOnInit}`);
+            const changeAllowance = await tokenContract.connect(acc1).approve(indexContract.address, userIndexTokensHoldingsOnInit);
+            changeAllowance.wait();
+            const currentAllowance = await tokenContract.allowance(acc1.address, indexContract.address);
+            console.log(`tokens allowance changed, value: ${currentAllowance}`);
         });
 
         it("allows the user to send back index tokens", async () => {
             const initialAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
             console.log(initialAcc1TokenBalance);
-            // give allowance
-            const changeAllowance = await tokenContract.connect(acc1).approve(indexContract.address, initialAcc1TokenBalance);
-            changeAllowance.wait();
-            const currentAllowance = await tokenContract.allowance(acc1.address, indexContract.address);
-            console.log(`tokens allowance changed, value: ${currentAllowance}`);
             // remove liquidity
             const removeTx = await indexContract.connect(acc1).returnIndexTokens(ethers.utils.parseEther("1"));
             removeTx.wait();
@@ -200,7 +199,11 @@ describe("IndexContract", function () {
         })
 
         it("burns index tokens", async () => {
-            throw new Error("not implmented yet");
+            const removeTx = await indexContract.connect(acc1).returnIndexTokens(ethers.utils.parseEther("1"));
+            removeTx.wait();
+            const burnTx = await indexContract.connect(acc1).burnIndexTokens(ethers.utils.parseEther("1"));
+            burnTx.wait();
+            expect(await tokenContract.balanceOf(indexContract.address)).to.eq(0);
         })
 
         it("recalculates the underlying token proportions within the index", () => {

@@ -12,6 +12,8 @@ interface IIndexToken is IERC20 {
 
     // interface to interact with token contract
     function mint(address to, uint256 amount) external;
+
+    function burn(uint256 amount) external;
 }
 
 interface IYearnVaultToken is IERC20 {
@@ -86,20 +88,18 @@ contract IndexContract is Ownable {
 
     function returnIndexTokens(uint256 amount) public {
         // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
-        require(amount > 0, "You need to sell at least some tokens");
+        require(amount > 0, "You need to return at least some tokens");
         uint256 allowance = tokenContract.allowance(msg.sender, address(this));
         require(allowance >= amount, "Check the token allowance");
         tokenContract.transferFrom(msg.sender, address(this), amount);
     }
 
+    function burnIndexTokens(uint256 amount) public {
+        tokenContract.burn(amount);
+    }
+
     function removeLiquidity(uint256 amount) public {
-        // # user sends index tokens back to contract
-        require(amount > 0, "Provide amount of liquidity to remove");
-        // get allowance for this
-        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amount, "check token allowance");
-        // transfer token from user wallet to this contract
-        tokenContract.transferFrom(msg.sender, address(this), amount);
+        returnIndexTokens(amount);
         emit liquidtyRemoved(amount);
         // burn returned index tokens
         // tokenContract.burn(amount);
