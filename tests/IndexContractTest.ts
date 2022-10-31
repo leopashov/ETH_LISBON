@@ -107,6 +107,8 @@ describe("IndexContract", function () {
         });
 
         it("keeps track of the total number of user deposits", async () => {
+            // use token variables (supply) to test this rather than mappings/ variables.
+            // remove corresponding mapping + variable from sc
             const initialDeposits = await indexContract.totalUserDeposits();
             console.log(`initial index value ${initialDeposits}`);
             const acc2Deposit = 10 * Math.random();
