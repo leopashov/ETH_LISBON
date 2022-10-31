@@ -148,7 +148,8 @@ describe("IndexContract", function () {
     });
 
     describe("when 'Balance Fund' function is called and indexvalue = 0", () => {
-        this.beforeEach(async () => {
+        // this will require integration testing as it requires functionality from other protocols eg uniswap - see google doc for references
+        beforeEach(async () => {
 
         })
 
@@ -170,16 +171,37 @@ describe("IndexContract", function () {
 
     });
 
+    describe("when a user withdraws from the index", () => {
 
-        
-        //     it("recovers the right amount of ERC20 tokens", () => {
-        //         throw new Error("Not implemented");
-        //     });
+        beforeEach(async () => {
+            // user needs funds within the contract
+            const initialFundAmount = (String(10 * Math.random()));
+            const initialFundAmountBN = ethers.utils.parseEther(initialFundAmount);
+            const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
+            initialFundTx.wait();
+            console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
+        });
 
-        //     it("updates the owner account correctly", () => {
-        //         throw new Error("Not implemented");
-        //     });
+        it("allows the user to send back index tokens", async () => {
+            
+            throw new Error("not implmented yet");
+        })
 
-        // });
+        it("burns index tokens", async () => {
+            throw new Error("not implmented yet");
+        })
+
+        it("recalculates the underlying token proportions within the index", () => {
+            throw new Error("Integration test");
+        })
+
+        it("removes liquidity from the appropriate (overbalanced) position", () => {
+            throw new Error("Integration test");
+        })
+
+        it("sends back eth from the smart contract", () => {
+            throw new Error("not implmented yet");
+        })
+    })     
     
 })
