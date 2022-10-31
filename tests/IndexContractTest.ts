@@ -85,10 +85,9 @@ describe("IndexContract", function () {
             const tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             await tx.wait();
             const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
-            const finalUserIndexTokenBalanceBN = ethers.utils.parseEther(String(finalUserIndexTokenBalance));
             console.log(finalUserIndexTokenBalance);
             const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
-            expect(expectedBalance).to.eq(finalUserIndexTokenBalanceBN);
+            expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
         // @xm3van:  it technically already covered in the first function, thus if we wanted to we can delete this 
         // here. 
@@ -132,6 +131,7 @@ describe("IndexContract", function () {
         })
 
         it("again mints the correct number of tokens",async () => {
+            // needs looking at - both SC and here
             const acc2Deposit = 10 * Math.random();
             const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
             console.log(acc2DepositBN);
@@ -199,6 +199,7 @@ describe("IndexContract", function () {
         })
 
         it("burns index tokens", async () => {
+            // this function should not be public but have put it as public for now to test
             const removeTx = await indexContract.connect(acc1).returnIndexTokens(ethers.utils.parseEther("1"));
             removeTx.wait();
             const burnTx = await indexContract.connect(acc1).burnIndexTokens(ethers.utils.parseEther("1"));
@@ -214,8 +215,17 @@ describe("IndexContract", function () {
             throw new Error("Integration test");
         })
 
-        it("sends back eth from the smart contract", () => {
-            throw new Error("not implmented yet");
+        it("sends eth back from the smart contract", async () => {
+            const initialContractEth = await ethers.provider.getBalance(indexContract.address);
+            const initialAccountEth = await ethers.provider.getBalance(acc1.address);
+            const sendTx = await indexContract.connect(acc1).returnEth("5");
+            sendTx.wait();
+            const gasPrice = sendTx.gasPrice;
+            const gasLimit = sendTx.gasLimit;
+            const gasCost = gasPrice.mul(gasLimit);
+            const finalContractEth = await ethers.provider.getBalance(indexContract.address);
+            const finalAccountEth = await ethers.provider.getBalance(acc1.address);
+            expect(finalAccountEth).to.eq(initialAccountEth.add(5).sub(gasCost));
         })
     })     
     

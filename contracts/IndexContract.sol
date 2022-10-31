@@ -78,7 +78,8 @@ contract IndexContract is Ownable {
         } else {
             // adding eth to the index returns
             uint256 currentTokenSupply = tokenContract.totalSupply();
-            return (currentTokenSupply * (_ethReceived / indexValue));
+            uint256 toMint = (currentTokenSupply * _ethReceived) / indexValue;
+            return (toMint);
             //think of eth recvieved in terms of pool value
             // potnetial issue with small contributions - small number/large number
             // no decimals in solidity
@@ -96,6 +97,10 @@ contract IndexContract is Ownable {
 
     function burnIndexTokens(uint256 amount) public {
         tokenContract.burn(amount);
+    }
+
+    function returnEth(uint256 amount) public {
+        payable(msg.sender).transfer(amount);
     }
 
     function removeLiquidity(uint256 amount) public {
