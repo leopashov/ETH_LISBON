@@ -180,11 +180,23 @@ describe("IndexContract", function () {
             const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
             initialFundTx.wait();
             console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
+            const userIndexTokensHoldingsOnInit = await tokenContract.balanceOf(acc1.address);
+            console.log(`initial index token holdings (wei?): ${userIndexTokensHoldingsOnInit}`);
         });
 
         it("allows the user to send back index tokens", async () => {
-            
-            throw new Error("not implmented yet");
+            const initialAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
+            console.log(initialAcc1TokenBalance);
+            // give allowance
+            const changeAllowance = await tokenContract.connect(acc1).approve(indexContract.address, initialAcc1TokenBalance);
+            changeAllowance.wait();
+            const currentAllowance = await tokenContract.allowance(acc1.address, indexContract.address);
+            console.log(`tokens allowance changed, value: ${currentAllowance}`);
+            // remove liquidity
+            const removeTx = await indexContract.connect(acc1).returnIndexTokens(ethers.utils.parseEther("1"));
+            removeTx.wait();
+            const finalAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
+            expect(finalAcc1TokenBalance).to.eq(0);
         })
 
         it("burns index tokens", async () => {

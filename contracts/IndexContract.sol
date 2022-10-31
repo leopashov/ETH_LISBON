@@ -72,7 +72,7 @@ contract IndexContract is Ownable {
             // if pool empty, just mint 1 token irrespective of what was contributed
             // this will just affect the rate at which pool tokens are created
             // ie order of magnitude of max supply
-            return (1);
+            return (1 ether);
         } else {
             // adding eth to the index returns
             uint256 currentTokenSupply = tokenContract.totalSupply();
@@ -82,6 +82,14 @@ contract IndexContract is Ownable {
             // no decimals in solidity
             // set multiplier or something?
         }
+    }
+
+    function returnIndexTokens(uint256 amount) public {
+        // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
+        require(amount > 0, "You need to sell at least some tokens");
+        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+        require(allowance >= amount, "Check the token allowance");
+        tokenContract.transferFrom(msg.sender, address(this), amount);
     }
 
     function removeLiquidity(uint256 amount) public {
@@ -101,7 +109,7 @@ contract IndexContract is Ownable {
         // unstake tokens
         // switch tokens to eth (if required)
         // send eth back to function caller (msg.sender)
-        payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
+        // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
     // function getIndexBalances() public {
