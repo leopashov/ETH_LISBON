@@ -35,7 +35,8 @@ describe("IndexContract", function () {
         /// deploy indexContract 
         indexContract = await indexContractFactory.deploy(
             tokenContract.address,
-            [atoken1.address, atoken2.address, atoken3.address]
+            [atoken1.address, atoken2.address, atoken3.address],
+            [token1.address, token2.address, token3.address]
         );
         await indexContract.deployed();
         // console.log("indexContract deployed!");
@@ -82,11 +83,10 @@ describe("IndexContract", function () {
             const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
             const tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             await tx.wait();
-            const finalUserIndexTokenBalanceBN = await tokenContract.balanceOf(acc1.address);
-            console.log(finalUserIndexTokenBalanceBN);
-            const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
+            const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
+            console.log(finalUserIndexTokenBalance);
             const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
-            expect(expectedBalance).to.eq(finalUserIndexTokenBalanceBN);
+            expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
     })
 
@@ -118,6 +118,7 @@ describe("IndexContract", function () {
 
     })
 
+
     describe("When more users fund the IndexContract.sol", async () => {
 
         beforeEach(async () => {
@@ -129,20 +130,23 @@ describe("IndexContract", function () {
             console.log(`initial fund amount (wei): ${initialFundAmountBN}`);
         });
 
-        it("increases indexValue by amount of eth received", async () => {
-            const initialIndexValue = await indexContract.indexValue();
-            console.log(`initial index value ${initialIndexValue}`);
+        it("keeps track of the total number of user deposits", async () => {
+            // use token variables (supply) to test this rather than mappings/ variables.
+            // remove corresponding mapping + variable from sc
+            const initialDeposits = await indexContract.totalUserDeposits();
+            console.log(`initial index value ${initialDeposits}`);
             const acc2Deposit = 10 * Math.random();
-            const acc2DepositBN = ethers.utils.parseUnits(String(acc2Deposit));
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
             console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
             const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
-            const finalIndexValue = await indexContract.indexValue();
-            const expectedValue = initialIndexValue.add(acc2DepositBN);
-            console.log(`final index value: ${finalIndexValue}`);
+            const finaltotalUserDeposits = await indexContract.totalUserDeposits();
+            const expectedValue = initialDeposits.add(acc2DepositBN);
+            console.log(`final deposits value: ${finaltotalUserDeposits}`);
             console.log(`expectedValue: ${expectedValue}`);
-            expect(finalIndexValue).to.eq(expectedValue);
+            expect(finaltotalUserDeposits).to.eq(expectedValue);
         })
+
     });
 
     //     it("keeps track of individual user deposits", async () => {

@@ -28,25 +28,27 @@ contract IndexContract {
     address[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
-    uint256 public currentTokenSupply;
+    uint256 public totalUserDeposits;
+    mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
-    mapping(address => uint256) public tokenIndexProportion;
-
+    mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
+    
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
-    constructor(address _tokenContract) {
+    constructor(
+        address _tokenContract,
+        address[] memory vaultTokens,
+        address[] memory tokens
+    ) {
         tokenContract = IIndexToken(_tokenContract);
-        currentTokenSupply = tokenContract.totalSupply();
-    }
-
-    function updateTotalSupply() external {
-        currentTokenSupply = tokenContract.totalSupply();
-        // updates currentTokenSupply
-        // xm3van: I think we can avoid this compelety by
-        // tokenContract.totalSupply() directly for calculation
-        // suggested action = remove
+        // read in provided vault token addresses
+        _vaultTokens = vaultTokens;
+        // map vault tokens to underlying - careful of order!
+        for (uint8 i = 0; i < tokens.length; i++) {
+            VaultTokenToToken[_vaultTokens[i]] = tokens[i];
+        }
     }
 
     function receive_funds() public payable {
@@ -75,10 +77,12 @@ contract IndexContract {
             // if pool empty, just mint 1 token irrespective of what was contributed
             // this will just affect the rate at which pool tokens are created
             // ie order of magnitude of max supply
-            return (1);
+            return (1 ether);
         } else {
             // adding eth to the index returns
-            return (currentTokenSupply * (_ethReceived / indexValue));
+            uint256 currentTokenSupply = tokenContract.totalSupply();
+            uint256 toMint = (currentTokenSupply * _ethReceived) / indexValue;
+            return (toMint);
             //think of eth recvieved in terms of pool value
             // potnetial issue with small contributions - small number/large number
             // no decimals in solidity
@@ -86,21 +90,21 @@ contract IndexContract {
         }
     }
 
-    function calculatePoolValue() public returns (uint256 _poolValue) {
-        // function to calculate pool value, denominated in eth.
-        // get conversion from uni pools or chainlink(preferred)
+    function returnIndexTokens(uint256 amount) public {
+        // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
+        require(amount > 0, "You need to return at least some tokens");
+        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+        require(allowance >= amount, "Check the token allowance");
+        tokenContract.transferFrom(msg.sender, address(this), amount);
     }
 
-    function getCurrentTokens()
-        external
-        view
-        returns (address[] memory tokens)
-    {
-        // shows tokens in index
-        return tokens;
+    function burnIndexTokens(uint256 amount) public {
+        tokenContract.burn(amount);
     }
 
-    function getBalance(address token) external view returns (uint256) {}
+    function returnEth(uint256 amount) public {
+        payable(msg.sender).transfer(amount);
+    }
 
     function removeLiquidity(uint256 amount) public {
         // # user sends index tokens back to contract
@@ -121,7 +125,7 @@ contract IndexContract {
         // unstake tokens
         // switch tokens to eth (if required)
         // send eth back to function caller (msg.sender)
-        payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
+        // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
     // function getIndexBalances() public {
@@ -175,24 +179,34 @@ contract IndexContract {
     //     pass;
     // }
 
-    // function updateTokenProportions() public returns (uint8 maxIndex) {
-    //     uint8 maxAt = 0;
-    //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
-    //         address vaultToken = _vaultTokens[i];
-    //         address tokenAddress = VaultTokenToToken[vaultToken];
-    //         tokenIndexProportion[tokenAddress] =
-    //             tokenIndexValues[tokenAddress] /
-    //             indexValue;
-    //         if (
-    //             i > 0 && tokenIndexProportion[i] > tokenIndexProportion[i - 1]
-    //         ) {
-    //             maxAt = i;
-    //         }
-    //     }
-    //     // return index of largest proportion - need to sell this first before
-    //     // attempting to buy other tokens
-    //     return (maxAt);
-    // }
+    function updateTokenProportionsAndReturnMaxLoc()
+        public
+        returns (uint8 maxIndex)
+    {
+        uint8 maxAt = 0;
+        if (indexValue > 0) {
+            for (uint8 i = 0; i < _vaultTokens.length; i++) {
+                address vaultToken = _vaultTokens[i];
+                address underlyingTokenAddress = VaultTokenToToken[vaultToken];
+
+                tokenIndexProportion[underlyingTokenAddress] =
+                    tokenIndexValues[underlyingTokenAddress] /
+                    indexValue;
+                if (
+                    i > 0 &&
+                    tokenIndexProportion[underlyingTokenAddress] >
+                    tokenIndexProportion[VaultTokenToToken[_vaultTokens[i - 1]]]
+                ) {
+                    maxAt = i;
+                }
+            }
+        } else {
+            maxAt = 4; // maxAt = 4 means index value = 0 - instruct purchases of tokens
+        }
+        // return index of largest proportion - need to sell this first before
+        // attempting to buy other tokens
+        return (maxAt);
+    }
 
     // if (tokenIndexProportion > 36) {
     //    uint256 surplus = tokenIndexProportion - 33;
