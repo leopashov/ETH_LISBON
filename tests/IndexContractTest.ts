@@ -21,7 +21,6 @@ describe("IndexContract", function () {
 
     beforeEach(async () => {
         [deployer, acc1, acc2, token1, token2, token3, atoken1, atoken2, atoken3] = await ethers.getSigners();
-        // @xm3van: what does this line do?
 
         // get contract  
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -89,10 +88,6 @@ describe("IndexContract", function () {
             const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
             expect(expectedBalance).to.eq(finalUserIndexTokenBalanceBN);
         });
-        // @xm3van:  it technically already covered in the first function, thus if we wanted to we can delete this 
-        // here. 
-        // @leo: it is similar but this one check index token balances, whereas other only considers eth, so this does have a bit more functionality i think
-        // also it works so much aswell keep it lol
     })
 
 
@@ -124,7 +119,7 @@ describe("IndexContract", function () {
     })
 
     describe("When more users fund the IndexContract.sol", async () => {
-        
+
         beforeEach(async () => {
             // prefund contract with some eth
             const initialFundAmount = (String(10 * Math.random()));
@@ -148,61 +143,87 @@ describe("IndexContract", function () {
             console.log(`expectedValue: ${expectedValue}`);
             expect(finalIndexValue).to.eq(expectedValue);
         })
-
-        it("keeps track of individual user deposits", async () =>{
-            const acc2Deposit = 10 * Math.random();
-            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-            await tx.wait();
-            const mappingValue = await indexContract.addressToAmountFunded(acc2.address);
-            expect(mappingValue).to.eq(acc2DepositBN);
-        })
-
-        it("again mints the correct number of tokens",async () => {
-            const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
-            const acc2Deposit = 10 * Math.random();
-            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-            console.log(acc2DepositBN);
-            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-            await tx.wait();
-            const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
-            console.log(finalUserIndexTokenBalance);
-            const totalUserDeposits = await indexContract.totalUserDeposits();
-            const finalTotalTokens = await tokenContract.totalSupply();
-            // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
-            const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
-            expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
-        });
     });
 
-    describe("when 'Balance Fund' function is called", () => {
-        this.beforeEach(async () => {
+    //     it("keeps track of individual user deposits", async () => {
+    //         const acc2Deposit = 10 * Math.random();
+    //         const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+    //         const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+    //         await tx.wait();
+    //         const mappingValue = await indexContract.addressToAmountFunded(acc2.address);
+    //         expect(mappingValue).to.eq(acc2DepositBN);
+    //     })
 
-        })
+    //     it("again mints the correct number of tokens", async () => {
+    //         const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+    //         const acc2Deposit = 10 * Math.random();
+    //         const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+    //         console.log(acc2DepositBN);
+    //         const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+    //         await tx.wait();
+    //         const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+    //         console.log(finalUserIndexTokenBalance);
+    //         const totalUserDeposits = await indexContract.totalUserDeposits();
+    //         const finalTotalTokens = await tokenContract.totalSupply();
+    //         // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
+    //         const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
+    //         expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+    //     });
+    // });
 
-        it("calculates vault token price in eth", () => {
-            expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
-        })
+    // describe("when 'Balance Fund' function is called", () => {
+    //     this.beforeEach(async () => {
 
-        it("has initial vault token dummy values", () => {
-            expect(indexContract._vaultTokens).to.not.eq(null);
-        })
+    //     })
 
-        it("updates token proportions", () => {
-            throw new Error("not implemented");
+    //     it("calculates vault token price in eth", () => {
+    //         expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
+    //     })
+
+    //     it("has initial vault token dummy values", () => {
+    //         expect(indexContract._vaultTokens).to.not.eq(null);
+    //     })
+
+    //     it("updates token proportions", () => {
+    //         throw new Error("not implemented");
+    //     })
+    // });
+
+    describe("When 'removeLiqudity' function is called", () => {
+
+
+        it("total token supply will reduce", async () => {
+            // initial token supply 
+            const initalTokenSupply = await tokenContract.totalSupply();
+
+            // mint token
+            const acc1Deposit = 10 * (Math.random() + 0.1);
+            const fundTx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther(String(acc1Deposit)) });
+            await fundTx.wait();
+
+            // temporaryTokenSupply 
+            const temporaryTokenSupply = await tokenContract.totalSupply();
+
+
+            // remove liquidity
+            indexContract.removeLiquidity(ethers.utils.parseEther(String(acc1Deposit)))
+
+            // capture final tokenSupply
+            const finalTokenSupply = await tokenContract.totalSupply();
+
+            expect(initalTokenSupply).to.eq(finalTokenSupply);
+            expect(initalTokenSupply).to.not.eq(temporaryTokenSupply);
         })
     });
 
+    //     it("recovers the right amount of ERC20 tokens", () => {
+    //         throw new Error("Not implemented");
+    //     });
 
-        
-        //     it("recovers the right amount of ERC20 tokens", () => {
-        //         throw new Error("Not implemented");
-        //     });
+    //     it("updates the owner account correctly", () => {
+    //         throw new Error("Not implemented");
+    //     });
 
-        //     it("updates the owner account correctly", () => {
-        //         throw new Error("Not implemented");
-        //     });
+    // });
 
-        // });
-    
 })

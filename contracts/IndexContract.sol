@@ -12,13 +12,16 @@ interface IIndexToken is IERC20 {
 
     // interface to interact with token contract
     function mint(address to, uint256 amount) external;
+
+    // interface to interact with token contract
+    function burn(address from, uint256 amount) external;
 }
 
 interface IYearnVaultToken is IERC20 {
     function pricePerShare() external view returns (uint256);
 }
 
-contract IndexContract is Ownable {
+contract IndexContract {
     // Define 'global' variables
     IIndexToken public tokenContract;
 
@@ -28,12 +31,8 @@ contract IndexContract is Ownable {
     uint256 public currentTokenSupply;
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
-<<<<<<< HEAD
-    mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
-=======
     mapping(address => uint256) public tokenIndexProportion;
 
->>>>>>> e243b04ce6f280c3045abfbceaada5b25870e793
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
@@ -56,10 +55,9 @@ contract IndexContract is Ownable {
         // value of fund.
         //calculate number of index tokens to mint
         uint256 tokensToMint = calculateTokensToMint(msg.value); //double check logic
-
         tokenContract.mint(msg.sender, tokensToMint);
-        totalUserDeposits += msg.value;
-        addressToAmountFunded[address(msg.sender)] += msg.value;
+        // totalUserDeposits += msg.value; // <- @xm3van: remove total user deposit == total token supply
+        // addressToAmountFunded[address(msg.sender)] += msg.value; // <- @xm3van: address tokenbalance == contribution
     }
 
     function calculateTokensToMint(uint256 _ethReceived)
@@ -67,8 +65,10 @@ contract IndexContract is Ownable {
         view
         returns (uint256 tokensToMint)
     {
+        /// @dev: require stament to prevent unreasonale small contribution extending
+        /// decimals beyond reason.
         require(
-            _ethReceived > 100000000 gwei,
+            _ethReceived > 100000000000000000 wei,
             "Please increase the minimum contribution to 0.1 Ether!"
         );
         if (indexValue == 0) {
@@ -106,14 +106,16 @@ contract IndexContract is Ownable {
         // # user sends index tokens back to contract
         require(amount > 0, "Provide amount of liquidity to remove");
         // get allowance for this
+        // @xm3van What is the rational for allowance? Time locking contribution to pools? Else Allowance = tokenbalance
         uint256 allowance = tokenContract.allowance(msg.sender, address(this));
         require(allowance >= amount, "check token allowance");
         // transfer token from user wallet to this contract
-        tokenContract.transferFrom(msg.sender, address(this), amount);
-        emit liquidtyRemoved(amount);
+        // tokenContract.transferFrom(msg.sender, address(this), amount); // @xm3van: not needed burn directly & use msg value to rebalance
         // burn returned index tokens
-        // tokenContract.burn(amount);
+        tokenContract.burn(msg.sender, amount);
         // #call token balancing function to decide where best to remove tokens from
+        emit liquidtyRemoved(amount);
+
         // getIndexBalance()
         // get number of tokens belonging to this address in a vault.
         // unstake tokens
