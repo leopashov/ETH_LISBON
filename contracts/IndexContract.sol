@@ -27,8 +27,9 @@ contract IndexContract is Ownable {
     address[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
-    uint256 public totalUserDeposits;
-    mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with
+    uint256 public totalUserDeposits; // might aswell keep i think
+    mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with - remove - user's token balance proportional to their funding!
+    // actually keep - we can then calculate the profit of the position and take a performance fee.
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
     mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.

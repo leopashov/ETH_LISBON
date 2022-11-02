@@ -72,7 +72,7 @@ describe("IndexContract", function () {
 
         it("transaction reversion for funding below 0.1 eth", async () => {
             var error = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.01"), });
-            expect(error).to.be.an('error');
+            expect(error).to.be.an('Error');
 
             // ref.: https://www.chaijs.com/api/bdd/
 
@@ -136,13 +136,15 @@ describe("IndexContract", function () {
             // needs looking at - both SC and here
             const acc2Deposit = 10 * Math.random();
             const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-            console.log(acc2DepositBN);
+            console.log(`account 2 deposits: ${acc2DepositBN}`);
+            const totalUserDeposits = await indexContract.totalUserDeposits();
+            console.log(`total user deposits: ${totalUserDeposits}`)
+            const finalTotalTokens = await tokenContract.totalSupply();
+            console.log(`total tokens: ${finalTotalTokens}`)
             const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
             await tx.wait();
             const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
             console.log(finalUserIndexTokenBalance);
-            const totalUserDeposits = await indexContract.totalUserDeposits();
-            const finalTotalTokens = await tokenContract.totalSupply();
             // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
             const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
