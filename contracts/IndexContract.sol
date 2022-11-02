@@ -39,15 +39,7 @@ contract IndexContract {
     constructor(address _tokenContract) {
         tokenContract = IIndexToken(_tokenContract);
         currentTokenSupply = tokenContract.totalSupply();
-    }
-
-    function updateTotalSupply() external {
-        currentTokenSupply = tokenContract.totalSupply();
-        // updates currentTokenSupply
-        // xm3van: I think we can avoid this compelety by
-        // tokenContract.totalSupply() directly for calculation
-        // suggested action = remove
-    }
+    };
 
     function receive_funds() public payable {
         // allows users to send eth to the contract.
@@ -56,15 +48,15 @@ contract IndexContract {
         //calculate number of index tokens to mint
         uint256 tokensToMint = calculateTokensToMint(msg.value); //double check logic
         tokenContract.mint(msg.sender, tokensToMint);
+        currentTokenSupply = tokenContract.totalSupply()
         // totalUserDeposits += msg.value; // <- @xm3van: remove total user deposit == total token supply
         // addressToAmountFunded[address(msg.sender)] += msg.value; // <- @xm3van: address tokenbalance == contribution
-    }
+    };
 
     function calculateTokensToMint(uint256 _ethReceived)
         internal
         view
-        returns (uint256 tokensToMint)
-    {
+        returns (uint256 tokensToMint) {
         /// @dev: require stament to prevent unreasonale small contribution extending
         /// decimals beyond reason.
         require(
@@ -80,26 +72,23 @@ contract IndexContract {
             // adding eth to the index returns
             return (currentTokenSupply * (_ethReceived / indexValue));
             //think of eth recvieved in terms of pool value
-            // potnetial issue with small contributions - small number/large number
-            // no decimals in solidity
-            // set multiplier or something?
         }
     }
 
-    function calculatePoolValue() public returns (uint256 _poolValue) {
-        // function to calculate pool value, denominated in eth.
-        // get conversion from uni pools or chainlink(preferred)
-    }
-
+    // @xm3van: what the point of getCurrentTokens()? If you need to token addresses could you not directly call
+    // the variable by making it public? 
+    // Suggestion: remove getCurrentTokens() functions and same function from IndexContractTest.ts
     function getCurrentTokens()
         external
         view
-        returns (address[] memory tokens)
-    {
+        returns (address[] memory tokens){
         // shows tokens in index
         return tokens;
     }
 
+
+    // @xm3van: what the point of getBalance()
+    // Suggestion: remove() if functionality is need call directly from tokencontract
     function getBalance(address token) external view returns (uint256) {}
 
     function removeLiquidity(uint256 amount) public {
@@ -124,6 +113,7 @@ contract IndexContract {
         payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
+    // @xm3van: Unit test required
     // function getIndexBalances() public {
     //     // gets current balance of index tokens
     //     indexValue = 0; //set pool value to zero
@@ -137,6 +127,12 @@ contract IndexContract {
     //     }
     // }
 
+    function calculatePoolValue() public returns (uint256 _poolValue) {
+        // function to calculate pool value, denominated in eth.
+        // get conversion from uni pools or chainlink(preferred)
+    }
+
+
     // function calculateTokenVaultValue(address vaultToken) public {
     //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
     //         address(this)
@@ -145,6 +141,7 @@ contract IndexContract {
     //     return (numberOfVaultTokensHeld * individualVaultTokenValue);
     // }
 
+    // @xm3van: maybe merge with above - ideally we directly get the ETH-Token pair
     // function calculateVaultTokenPriceInEth(address vaultToken)
     //     public
     //     returns (uint256 price)
@@ -154,9 +151,12 @@ contract IndexContract {
     //     // ### get price of underlying in eth => CHAINLINK REQUIRED ###
     // }
 
+    // @xm3van: Integration testing required 
     // function swapEthForToken() {}
     // // swap eth for token depending on constant balancing of the pools
 
+
+    // @xm3van Unit testing possible 
     // function balanceFund() public {
     //     // MAIN BALANCE FUNCTION
     //     // check proportions of tokens within index
@@ -194,6 +194,7 @@ contract IndexContract {
     //     return (maxAt);
     // }
 
+    // @xm3van: Seems like it got out fo place integration into updateTokenProportions()
     // if (tokenIndexProportion > 36) {
     //    uint256 surplus = tokenIndexProportion - 33;
     //    unstakeAndSell(surplus);
