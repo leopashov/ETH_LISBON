@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {UniswapExchangeInterface} from "./interfaces/IUniswapExchangeInterface.sol";
+import {IaTokenInterface} from "./interfaces/IaTokenInterface.sol";
 
 interface IIndexToken is IERC20 {
     // interface to interact with token contract
@@ -26,6 +27,10 @@ contract IndexContract {
     // Define 'global' variables
     IIndexToken public tokenContract;
 
+    //define aTokens
+    IaTokenInterface public aWeth;
+    IaTokenInterface public aWBtc;
+
     address[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
@@ -42,11 +47,16 @@ contract IndexContract {
     constructor(
         address _tokenContract,
         address[] memory vaultTokens,
+        // put in btc first!
         address[] memory tokens
     ) {
-        tokenContract = IIndexToken(_tokenContract);
         // read in provided vault token addresses
         _vaultTokens = vaultTokens;
+        // use interfaces to allow use of token functions
+        tokenContract = IIndexToken(_tokenContract);
+        aWeth = IaTokenInterface(vaultTokens[0]);
+        aWBtc = IaTokenInterface(vaultTokens[1]);
+
         // map vault tokens to underlying - careful of order!
         for (uint8 i = 0; i < tokens.length; i++) {
             VaultTokenToToken[_vaultTokens[i]] = tokens[i];
@@ -66,7 +76,6 @@ contract IndexContract {
 
     function calculateTokensToMint(uint256 _ethReceived)
         internal
-        view
         returns (uint256 tokensToMint)
     {
         /// @dev: require stament to prevent unreasonale small contribution extending
@@ -78,17 +87,38 @@ contract IndexContract {
         if (tokenContract.totalSupply() == 0) {
             // if no tokens minted, mint 1 token for each unit of eth received
             // sets index token = 1 eth at start
+            indexValue += _ethReceived;
             return (_ethReceived);
         } else {
             // adding eth to the index returns
             uint256 currentTokenSupply = tokenContract.totalSupply();
-            uint256 toMint = (currentTokenSupply * _ethReceived) / indexValue;
+            uint256 indexValueBeforeDeposit = calculateIndexValue() -
+                _ethReceived;
+            uint256 toMint = (currentTokenSupply * _ethReceived) /
+                indexValueBeforeDeposit;
+            indexValue = calculateIndexValue();
             return (toMint);
-            //think of eth recvieved in terms of pool value
-            // potnetial issue with small contributions - small number/large number
-            // no decimals in solidity
-            // set multiplier or something?
         }
+    }
+
+    function calculateIndexValue() public returns (uint256 value) {
+        // index value is sum of eth on contract and eth value of deposited tokens
+        uint256 ethOnContract = address(this).balance;
+        uint256 totalVaultPositionsValue;
+        for (uint8 i = 0; i < _vaultTokens.length; i++) {
+            totalVaultPositionsValue += getDepositedValue(_vaultTokens[i]);
+        }
+        return (ethOnContract + totalVaultPositionsValue);
+    }
+
+    function getDepositedValue(IaTokenInterface aTokenContract)
+        public
+        returns (uint256 positionValue)
+    {
+        //aTokens pegged 1:1 to underlying
+        // get balance of aTokens within indexContract
+        aTokenContract.balanceOf(address(this));
+        return 0;
     }
 
     function returnIndexTokens(uint256 amount) public {
