@@ -55,6 +55,22 @@ describe("IndexContract Integration", function () {
         // console.log("Minter role granted!");
     });
 
+    describe("When the contract is funded by > 1 account", async () => {
+        beforeEach(async () => {
+            // fund contract from two wallets:
+            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
+            acc1Fund.wait();
+            const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("1"), });
+            acc2Fund.wait();
+            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} ether`)
+        })
+        it("correctly updates index value", async() =>{
+            
+        })
+    })
+    
+    
+    
     describe("When the createIndex() function is called", async () => {
 
         beforeEach(async () => {
