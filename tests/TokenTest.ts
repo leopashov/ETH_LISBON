@@ -15,7 +15,7 @@ describe("TokenContract", async () => {
         const tokenFactory = await ethers.getContractFactory("IndexToken"); // "IndexToken" matches import
         tokenContract = await tokenFactory.deploy();
         await tokenContract.deployed();
-        // console.log(tokenContract);
+        //console.log();
     })
 
     it("should have an address when deployed", async () => {

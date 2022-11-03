@@ -66,7 +66,7 @@ describe("IndexContract", function () {
 
         it("transaction reversion for funding below 0.1 eth", async () => {
             var error = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.01"), });
-            expect(error).to.be.an('error');
+            expect(error).to.be.an('Error');
 
             // ref.: https://www.chaijs.com/api/bdd/
 
@@ -95,39 +95,59 @@ describe("IndexContract", function () {
             const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
             initialFundTx.wait();
 
-            // execution logic 
-            const initialIndexValue = await indexContract.indexValue();
-            console.log(`initial index value ${initialIndexValue}`);
+        it("keeps track of the total number of user deposits", async () => {
+            // use token variables (supply) to test this rather than mappings/ variables.
+            const initialDeposits = await tokenContract.totalSupply();
+            console.log(`initial index value ${initialDeposits}`);
+            // deposit using account 2
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const finaltotalUserDeposits = await tokenContract.totalSupply();
+            const expectedValue = initialDeposits.add(acc2DepositBN);
+            console.log(`final deposits value: ${finaltotalUserDeposits}`);
+            console.log(`expectedValue: ${expectedValue}`);
+            expect(finaltotalUserDeposits).to.eq(expectedValue);
+        })
 
             // @xm3van: I think here a merge fucked something up S
 
-            // it("keeps track of the total number of user deposits", async () => {
-            //     // use token variables (supply) to test this rather than mappings/ variables.
-            //     // remove corresponding mapping + variable from sc
-            //     const initialDeposits = await indexContract.totalUserDeposits();
-            //     console.log(`initial index value ${initialDeposits}`);
-            //     const acc2Deposit = 10 * Math.random();
-            //     const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-            //     console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
-            //     const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-            //     await tx.wait();
-            //     const finaltotalUserDeposits = await indexContract.totalUserDeposits();
-            //     const expectedValue = initialDeposits.add(acc2DepositBN);
-            //     console.log(`final deposits value: ${finaltotalUserDeposits}`);
-            //     console.log(`expectedValue: ${expectedValue}`);
-            //     expect(finaltotalUserDeposits).to.eq(expectedValue);
-            // })
+        it("keeps track of individual user deposits", async () => {
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const mappingValue = await indexContract.addressToAmountFunded(acc2.address);
+            expect(mappingValue).to.eq(acc2DepositBN);
         })
-
 
         describe("calculateTokensToMint()", async () => {
             it("calculates correct value when pool value 0 ", () => {
                 throw new Error("Not implemented");
             });
 
-            it("calculates correct value when pool value not 0  ", () => {
+        it("again mints the correct number of tokens",async () => {
+            // needs looking at - both SC and here
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(`account 2 deposits: ${acc2DepositBN}`);
+            const totalUserDeposits = await indexContract.totalUserDeposits();
+            console.log(`total user deposits: ${totalUserDeposits}`)
+            const finalTotalTokens = await tokenContract.totalSupply();
+            console.log(`total tokens: ${finalTotalTokens}`)
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+            console.log(finalUserIndexTokenBalance);
+                    it("calculates correct value when pool value not 0  ", () => {
                 throw new Error("Not implemented");
-            });
+        calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
+            const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
+            expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+        });
+    });;
 
 
 
@@ -226,11 +246,11 @@ describe("IndexContract", function () {
 
                 })
 
-                it("has initial vault token dummy values", () => {
-                    // expect(indexContract._vaultTokens).to.not.eq(null);
-                    throw new Error("not implemented");
+        it("updates the owner account correctly", () => {
+            throw new Error("Not implemented");
+        });
 
-                })
+    // });
 
                 it("updates token proportions", () => {
                     throw new Error("not implemented");

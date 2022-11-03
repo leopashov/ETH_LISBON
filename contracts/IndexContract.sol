@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IIndexToken is IERC20 {
+    // interface to interact with token contract
+
     function grantRole(bytes32 role, address sender) external;
 
     function MINTER_ROLE() external view returns (bytes32);
 
-    // interface to interact with token contract
     function mint(address to, uint256 amount) external;
 
-    // interface to interact with token contract
     function burn(address from, uint256 amount) external;
 }
 
@@ -28,12 +28,13 @@ contract IndexContract {
     address[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
-    uint256 public totalUserDeposits;
-    mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with
+    uint256 public totalUserDeposits; // might aswell keep i think
+    mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with - remove - user's token balance proportional to their funding!
+    // actually keep - we can then calculate the profit of the position and take a performance fee.
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
     mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
-    
+
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
@@ -78,11 +79,10 @@ contract IndexContract {
             _ethReceived > 100000000000000000 wei,
             "Please increase the minimum contribution to 0.1 Ether!"
         );
-        if (indexValue == 0) {
-            // if pool empty, just mint 1 token irrespective of what was contributed
-            // this will just affect the rate at which pool tokens are created
-            // ie order of magnitude of max supply
-            return (1 ether);
+        if (tokenContract.totalSupply() == 0) {
+            // if no tokens minted, mint 1 token for each unit of eth received
+            // sets index token = 1 eth at start
+            return (_ethReceived);
         } else {
             // adding eth to the index returns
             uint256 currentTokenSupply = tokenContract.totalSupply();
@@ -118,7 +118,7 @@ contract IndexContract {
     }
 
     function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(amount);
+        tokenContract.burn(address(this), amount);
     }
 
     function returnEth(uint256 amount) public {
@@ -133,9 +133,7 @@ contract IndexContract {
         // @xm3van What is the rational for allowance? Time locking contribution to pools? Else Allowance = tokenbalance
         uint256 allowance = tokenContract.allowance(msg.sender, address(this));
         require(allowance >= amount, "check token allowance");
-        // transfer token from user wallet to this contract
-        // tokenContract.transferFrom(msg.sender, address(this), amount); // @xm3van: not needed burn directly & use msg value to rebalance
-        // burn returned index tokens
+        // burn index tokens straight from user wallet
         tokenContract.burn(msg.sender, amount);
         // #call token balancing function to decide where best to remove tokens from
         emit liquidtyRemoved(amount);
