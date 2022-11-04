@@ -6,6 +6,7 @@
     "mocha": "^10.1.0"
   },
   "dependencies": {
+    "@chainlink/contracts": "^0.5.1",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.4.7",

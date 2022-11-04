@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
-import {IScaledBalanceToken} from "./IScaledBalanceToken.sol";
-import {IInitializableAToken} from "./IInitializableAToken.sol";
-import {IAaveIncentivesController} from "./IAaveIncentivesController.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IAToken is IERC20, IScaledBalanceToken, IInitializableAToken {
+interface IAToken is IERC20 {
     /**
      * @dev Emitted after the mint action
      * @param from The address performing the mint
@@ -106,14 +103,6 @@ interface IAToken is IERC20, IScaledBalanceToken, IInitializableAToken {
      * @param amount The amount getting repaid
      **/
     function handleRepayment(address user, uint256 amount) external;
-
-    /**
-     * @dev Returns the address of the incentives controller contract
-     **/
-    function getIncentivesController()
-        external
-        view
-        returns (IAaveIncentivesController);
 
     /**
      * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
