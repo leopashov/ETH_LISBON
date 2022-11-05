@@ -45,9 +45,10 @@ interface IUniswapV2Factory {
     function getPair(address token0, address token1) external returns (address);
 }
 
-interface IWETH {
-    // function deposit();
-    // function withdraw();
+interface IWETH is IERC20 {
+    function deposit() external payable;
+
+    function withdraw(uint256) external;
 }
 
 interface IIndexToken is IERC20 {
@@ -66,10 +67,13 @@ contract IndexContract {
     //address of the uniswap v2 router
     address private constant UNISWAP_V2_ROUTER =
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-    // @Note: address same on Testnet and Groeli
+    // @Note: address same on Testnet and
+
+    address private weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     // Define 'global' variables
     IIndexToken public tokenContract;
+    IWETH public wethContract;
 
     //define aTokens
     IAToken public aWeth;
@@ -110,6 +114,9 @@ contract IndexContract {
         }
         // use interfaces to allow use of token functions
         tokenContract = IIndexToken(_tokenContract);
+
+        // weth contract
+        wethContract = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
         // currentTokenSupply = tokenContract.totalSupply();
         WBtcPriceFeed = AggregatorV3Interface(
@@ -343,6 +350,16 @@ contract IndexContract {
     function calculatePoolValue() public returns (uint256 _poolValue) {
         // function to calculate pool value, denominated in eth.
         // get conversion from uni pools or chainlink(preferred)
+    }
+
+    function convertToWeth() external payable {
+        uint256 eth = address(this).balance;
+        IWETH(weth).deposit{value: eth}();
+    }
+
+    function wethBalance() external view returns (uint256 _balance) {
+        _balance = IWETH(weth).balanceOf(address(this));
+        return _balance;
     }
 
     // function calculateTokenVaultValue(address vaultToken) public {
