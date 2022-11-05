@@ -5,12 +5,60 @@ __metadata:
   version: 6
   cacheKey: 8
 
+"@chainlink/contracts@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@chainlink/contracts@npm:0.5.1"
+  dependencies:
+    "@eth-optimism/contracts": ^0.5.21
+    "@openzeppelin/contracts": ^4.3.3
+    "@openzeppelin/contracts-v0.7": "npm:@openzeppelin/contracts@v3.4.2"
+  checksum: 24cb0c1c7135b001105ac9d0ae87ba338aa94a93e15c2c02269bad6a0f9cc48d1ad48bf7ccaa0a9faf3ad1835d1aeb20b3804e8f463ddf524240bd72625821cd
+  languageName: node
+  linkType: hard
+
 "@cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
   resolution: "@cspotcode/source-map-support@npm:0.8.1"
   dependencies:
     "@jridgewell/trace-mapping": 0.3.9
   checksum: 5718f267085ed8edb3e7ef210137241775e607ee18b77d95aa5bd7514f47f5019aa2d82d96b3bf342ef7aa890a346fa1044532ff7cc3009e7d24fce3ce6200fa
+  languageName: node
+  linkType: hard
+
+"@eth-optimism/contracts@npm:^0.5.21":
+  version: 0.5.37
+  resolution: "@eth-optimism/contracts@npm:0.5.37"
+  dependencies:
+    "@eth-optimism/core-utils": 0.10.1
+    "@ethersproject/abstract-provider": ^5.7.0
+    "@ethersproject/abstract-signer": ^5.7.0
+  peerDependencies:
+    ethers: ^5
+  checksum: 52a694838abaeadaa6b87fa37cd4936ff8db8b212c1650a8415e207b8386444a1a6e48b6cb836ea3019515e8fb3c3a9c0d0f16b261e1d880c36b428d9c0b7728
+  languageName: node
+  linkType: hard
+
+"@eth-optimism/core-utils@npm:0.10.1":
+  version: 0.10.1
+  resolution: "@eth-optimism/core-utils@npm:0.10.1"
+  dependencies:
+    "@ethersproject/abi": ^5.7.0
+    "@ethersproject/abstract-provider": ^5.7.0
+    "@ethersproject/address": ^5.7.0
+    "@ethersproject/bignumber": ^5.7.0
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/constants": ^5.7.0
+    "@ethersproject/contracts": ^5.7.0
+    "@ethersproject/hash": ^5.7.0
+    "@ethersproject/keccak256": ^5.7.0
+    "@ethersproject/properties": ^5.7.0
+    "@ethersproject/providers": ^5.7.0
+    "@ethersproject/rlp": ^5.7.0
+    "@ethersproject/transactions": ^5.7.0
+    "@ethersproject/web": ^5.7.0
+    bufio: ^1.0.7
+    chai: ^4.3.4
+  checksum: ab8dfe644eb70b877d63c4543ec18c4a3f50ed71304b052562ce7827a1a9aefb5d735d5a2de275866fed3e48726c7ae8dd8335f7da91e2e7bc2b7ddd397de678
   languageName: node
   linkType: hard
 
@@ -120,7 +168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/contracts@npm:5.7.0":
+"@ethersproject/contracts@npm:5.7.0, @ethersproject/contracts@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/contracts@npm:5.7.0"
   dependencies:
@@ -241,7 +289,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/providers@npm:5.7.2, @ethersproject/providers@npm:^5.4.7":
+"@ethersproject/providers@npm:5.7.2, @ethersproject/providers@npm:^5.4.7, @ethersproject/providers@npm:^5.7.0":
   version: 5.7.2
   resolution: "@ethersproject/providers@npm:5.7.2"
   dependencies:
@@ -880,7 +928,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:^4.7.3":
+"@openzeppelin/contracts-v0.7@npm:@openzeppelin/contracts@v3.4.2":
+  version: 3.4.2
+  resolution: "@openzeppelin/contracts@npm:3.4.2"
+  checksum: 0c90f029fe50a49643588e4c8670dae3bbf31795133a6ddce9bdcbc258486332700bb732287baabf7bf807f39182fe8ea2ffa19aa5caf359b1b9c0f083280748
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/contracts@npm:^4.3.3, @openzeppelin/contracts@npm:^4.7.3":
   version: 4.7.3
   resolution: "@openzeppelin/contracts@npm:4.7.3"
   checksum: 18382fcacf7cfd652f5dd0e70c08f08ea74eaa8ff11e9f9850639ada70198ae01a3f9493d89a52d724f2db394e9616bf6258017804612ba273167cf657fbb073
@@ -1221,6 +1276,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "Eth_Lisbon@workspace:."
   dependencies:
+    "@chainlink/contracts": ^0.5.1
     "@ethersproject/abi": ^5.4.7
     "@ethersproject/bytes": ^5.7.0
     "@ethersproject/providers": ^5.4.7
@@ -1236,6 +1292,7 @@ __metadata:
     "@types/mocha": ^9.1.0
     "@types/node": ">=12.0.0"
     chai: ^4.3.6
+    dotenv: ^16.0.3
     ethers: ^5.4.7
     hardhat: ^2.12.1
     hardhat-gas-reporter: ^1.0.8
@@ -1851,6 +1908,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bufio@npm:^1.0.7":
+  version: 1.1.3
+  resolution: "bufio@npm:1.1.3"
+  checksum: e1340fc36dd74407fd2975eefc570907b41d989e9c46dabbb5001a3ad0b0499cf934f699635932e9301286162beb8d70b4e9073817f247552cf0c60aa77b462f
+  languageName: node
+  linkType: hard
+
 "busboy@npm:^1.6.0":
   version: 1.6.0
   resolution: "busboy@npm:1.6.0"
@@ -1952,7 +2016,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chai@npm:^4.3.6":
+"chai@npm:^4.3.4, chai@npm:^4.3.6":
   version: 4.3.6
   resolution: "chai@npm:4.3.6"
   dependencies:
@@ -2483,6 +2547,13 @@ __metadata:
   dependencies:
     path-type: ^4.0.0
   checksum: fa05e18324510d7283f55862f3161c6759a3f2f8dbce491a2fc14c8324c498286c54282c1f0e933cb930da8419b30679389499b919122952a4f8592362ef4615
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^16.0.3":
+  version: 16.0.3
+  resolution: "dotenv@npm:16.0.3"
+  checksum: afcf03f373d7a6d62c7e9afea6328e62851d627a4e73f2e12d0a8deae1cd375892004f3021883f8aec85932cd2834b091f568ced92b4774625b321db83b827f8
   languageName: node
   linkType: hard
 
