@@ -213,7 +213,7 @@ contract IndexContract {
         uint256 _amountIn,
         uint256 _amountOutMin,
         address _to
-    ) internal {
+    ) public {
         //first we need to transfer the amount in tokens from the msg.sender to this contract
         //this contract will have the amount of in tokens
         // IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
@@ -346,15 +346,19 @@ contract IndexContract {
         // get conversion from uni pools or chainlink(preferred)
     }
 
-    function convertToWeth() external payable {
-        uint256 eth = address(this).balance;
-        IWETH(weth).deposit{value: eth}();
-    }
-
     function wethBalance() external view returns (uint256 _balance) {
         _balance = IWETH(weth).balanceOf(address(this));
         return _balance;
     }
+
+    function convertToWeth() external payable {
+        uint256 eth = address(this).balance;
+        IWETH(weth).deposit{value: eth}();
+        uint256 wethBal = IWETH(weth).balanceOf(address(this));
+        IWETH(weth).transfer(address(this), wethBal);
+    }
+
+    // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
     // function calculateTokenVaultValue(address vaultToken) public {
     //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
