@@ -185,6 +185,11 @@ contract IndexContract {
         return (valueOfIndex, totalVaultPositionsValue);
     }
 
+    function getWbtcPrice() public view returns (int256 price) {
+        (, price, , , ) = WBtcPriceFeed.latestRoundData();
+        return price;
+    }
+
     function getDepositedValue(IAToken aTokenContract)
         public
         view
@@ -201,7 +206,8 @@ contract IndexContract {
             // if asset is eth, return 1: 1eth = 1eth
             priceOfVaultToken = 1;
         } else {
-            (, priceOfVaultToken, , , ) = WBtcPriceFeed.latestRoundData();
+            priceOfVaultToken = getWbtcPrice();
+            // (, priceOfVaultToken, , , ) = WBtcPriceFeed.latestRoundData();
         }
 
         return (uint256(priceOfVaultToken) * balanceOfVaultTokenInIndex);
