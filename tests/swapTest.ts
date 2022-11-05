@@ -1,10 +1,11 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { artifacts, ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
-import { waitForDebugger } from "inspector";
+import { abi } from '../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json';
 
+// const ERC20_Data = ERC20;
 
 describe("IndexContract", function () {
     let tokenContract: IndexToken;
@@ -52,7 +53,7 @@ describe("IndexContract", function () {
 
     });
 
-    describe("When user call convertToWeth() the IndexContract.sol", async () => {
+    describe("When convertToWeth() is called in the IndexContract.sol", async () => {
 
         beforeEach(async () => {
             const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
@@ -60,7 +61,7 @@ describe("IndexContract", function () {
             console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
         })
 
-        it("should convert balance to weth", async () => {
+        it("should convert ETH in contract to WETH", async () => {
             // initial eth balance of contract
             const ethBal = await ethers.provider.getBalance(indexContract.address)
             console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`)
@@ -75,6 +76,74 @@ describe("IndexContract", function () {
 
             expect(ethBal).to.eq(wethBal);
         })
+
+
+    })
+
+    describe("When getAmountOutMin() & swap() is called", async () => {
+
+        beforeEach(async () => {
+            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
+            acc1Fund.wait();
+            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
+
+            // initial eth balance of contract
+            const ethBal = await ethers.provider.getBalance(indexContract.address)
+            console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`)
+
+            // convert balance of smart contract to weth 
+            await indexContract.convertToWeth();
+            console.log('Conversion from ETH to WETH')
+        })
+
+
+        it("getAmountOutMin() - Get min amount of WBTC for 1 WETH", async () => {
+            const swapAmount = ethers.utils.parseEther("1.0")
+            // convert balance of smart contract to weth 
+            const expectedAmountWBTC = await indexContract.connect(deployer).getAmountOutMin(
+                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', //tokenIn
+                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // tokenOut
+                swapAmount
+            );
+            console.log(`WBTC to be received for 1 ETH: ${expectedAmountWBTC}`)
+
+            expect(expectedAmountWBTC).to.not.eq(0);
+        })
+
+        it("swap() - Get min amount of WBTC for 1 WETH", async () => {
+            // amount ot swap 
+            const swapAmount = ethers.utils.parseEther("1.0")
+
+            // convert balance of smart contract to weth 
+            const expectedAmountWBTC = await indexContract.connect(deployer).getAmountOutMin(
+                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', //tokenIn
+                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // tokenOut
+                swapAmount
+            );
+            console.log(`WBTC to be received for 1 ETH: ${expectedAmountWBTC}`)
+
+
+            // swap weth for wbtc 
+            const swapTx = await indexContract.connect(deployer).swap(
+                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', //tokenIn
+                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // tokenOut
+                swapAmount, //amountIn 
+                expectedAmountWBTC, // amountOut
+                indexContract.address
+            );
+
+            console.log('swap initated')
+            const swapTxReceipt = swapTx.wait();
+            console.log('swap completed')
+
+
+            // get wbtc balance
+            const WBTCcontract = new ethers.Contract('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', abi, deployer);
+            const WBTCBalance = await WBTCcontract.balanceOf(indexContract.address);
+
+            expect(WBTCBalance).to.eq(expectedAmountWBTC);
+        })
+
     })
 
 });
