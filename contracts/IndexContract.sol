@@ -104,6 +104,7 @@ contract IndexContract {
         // use interfaces to allow use of token functions
         tokenContract = IIndexToken(_tokenContract);
 
+        // currentTokenSupply = tokenContract.totalSupply();
         WBtcPriceFeed = AggregatorV3Interface(
             0x779877A7B0D9E8603169DdbD7836e478b4624789
         ); //Btc/Eth price feed
@@ -311,6 +312,7 @@ contract IndexContract {
         // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
+    // @xm3van: Unit test required
     // function getIndexBalances() public {
     //     // gets current balance of index tokens
     //     indexValue = 0; //set pool value to zero
@@ -324,6 +326,11 @@ contract IndexContract {
     //     }
     // }
 
+    function calculatePoolValue() public returns (uint256 _poolValue) {
+        // function to calculate pool value, denominated in eth.
+        // get conversion from uni pools or chainlink(preferred)
+    }
+
     // function calculateTokenVaultValue(address vaultToken) public {
     //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
     //         address(this)
@@ -332,6 +339,7 @@ contract IndexContract {
     //     return (numberOfVaultTokensHeld * individualVaultTokenValue);
     // }
 
+    // @xm3van: maybe merge with above - ideally we directly get the ETH-Token pair
     // function calculateVaultTokenPriceInEth(address vaultToken)
     //     public
     //     returns (uint256 price)
@@ -341,9 +349,11 @@ contract IndexContract {
     //     // ### get price of underlying in eth => CHAINLINK REQUIRED ###
     // }
 
+    // @xm3van: Integration testing required
     // function swapEthForToken() {}
     // // swap eth for token depending on constant balancing of the pools
 
+    // @xm3van Unit testing possible
     // function balanceFund() public {
     //     // MAIN BALANCE FUNCTION
     //     // check proportions of tokens within index
@@ -393,6 +403,7 @@ contract IndexContract {
     //     return (maxAt);
     // }
 
+    // @xm3van: Seems like it got out fo place integration into updateTokenProportions()
     // if (tokenIndexProportion > 36) {
     //    uint256 surplus = tokenIndexProportion - 33;
     //    unstakeAndSell(surplus);
