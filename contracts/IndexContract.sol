@@ -104,10 +104,7 @@ contract IndexContract {
         // use interfaces to allow use of token functions
         tokenContract = IIndexToken(_tokenContract);
 
-<<<<<<< HEAD
-        currentTokenSupply = tokenContract.totalSupply();
-    };
-=======
+        // currentTokenSupply = tokenContract.totalSupply();
         WBtcPriceFeed = AggregatorV3Interface(
             0x779877A7B0D9E8603169DdbD7836e478b4624789
         ); //Btc/Eth price feed
@@ -118,7 +115,6 @@ contract IndexContract {
         //     VaultTokenToToken[_vaultTokens[i]] = tokens[i];
         // }
     }
->>>>>>> dc1822c166cac78ff77d092deeb4808217f341bc
 
     function receive_funds() public payable {
         // allows users to send eth to the contract.
@@ -130,7 +126,7 @@ contract IndexContract {
         totalUserDeposits += msg.value;
         // totalUserDeposits += msg.value; // <- @xm3van: remove total user deposit == total token supply
         // addressToAmountFunded[address(msg.sender)] += msg.value; // <- @xm3van: address tokenbalance == contribution
-    };
+    }
 
     function calculateTokensToMint(uint256 _ethReceived)
         internal
@@ -335,7 +331,6 @@ contract IndexContract {
         // get conversion from uni pools or chainlink(preferred)
     }
 
-
     // function calculateTokenVaultValue(address vaultToken) public {
     //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
     //         address(this)
@@ -354,12 +349,11 @@ contract IndexContract {
     //     // ### get price of underlying in eth => CHAINLINK REQUIRED ###
     // }
 
-    // @xm3van: Integration testing required 
+    // @xm3van: Integration testing required
     // function swapEthForToken() {}
     // // swap eth for token depending on constant balancing of the pools
 
-
-    // @xm3van Unit testing possible 
+    // @xm3van Unit testing possible
     // function balanceFund() public {
     //     // MAIN BALANCE FUNCTION
     //     // check proportions of tokens within index

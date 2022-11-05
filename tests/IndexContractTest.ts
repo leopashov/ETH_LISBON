@@ -79,41 +79,13 @@ describe("IndexContract", function () {
             const tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             await tx.wait();
             const finalUserIndexTokenBalanceBN = await tokenContract.balanceOf(acc1.address);
-            // console.log(finalUserIndexTokenBalanceBN);
-            // const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
+            console.log(finalUserIndexTokenBalanceBN);
+            const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
 
             const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
 
-
-        describe("When update supply function is called", async () => {
-
-            it("we expect the total supply to increase", async () => { // @Leo - not really - calling 'update supply' does not increase the supply of index tokens. The supply is increased by 
-                // sending eth to the contract 
-
-                // check inital token supply
-                const currentTokenSupplyInitial = await tokenContract.totalSupply();
-                console.log(`The initial token supply is ${currentTokenSupplyInitial}`);
-
-                // mint token 
-                const fundTx = await indexContract.connect(deployer).receive_funds({ "value": ethers.utils.parseEther("1") });
-                await fundTx.wait();
-                console.log(`Tx-hash of mint: ${fundTx.hash}`);
-
-                // call update functon
-                const updateSupplyTx = await indexContract.updateTotalSupply(); // @leo = seems we are testing a function that doesnt actually exist?
-                updateSupplyTx.wait();
-                console.log(`Tx-hash of update supply: ${updateSupplyTx.hash}`);
-
-                // check final balance
-                // check inital token supply
-                const currentTokenSupplyFinal = await indexContract.currentTokenSupply();
-                console.log(`The initial token supply is ${currentTokenSupplyFinal}`);
-                expect(currentTokenSupplyInitial).to.not.eq(currentTokenSupplyFinal);
-            });
-
-        })
         it("indexValue by amount of eth received increases if multiple user fund receive_funds()", async () => {
 
 
@@ -128,268 +100,269 @@ describe("IndexContract", function () {
             console.log(`initial index value ${initialIndexValue}`);
 
             // @xm3van: I think here a merge fucked something up S
+        })
 
-            it("keeps track of the total number of user deposits", async () => {
-                // use token variables (supply) to test this rather than mappings/ variables.
-                const initialDeposits = await tokenContract.totalSupply();
-                console.log(`initial index value ${initialDeposits}`);
-                // deposit using account 2
-                const acc2Deposit = 10 * Math.random();
-                const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-                console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
-                const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-                await tx.wait();
-                const finaltotalUserDeposits = await tokenContract.totalSupply();
-                const expectedValue = initialDeposits.add(acc2DepositBN);
-                console.log(`final deposits value: ${finaltotalUserDeposits}`);
-                console.log(`expectedValue: ${expectedValue}`);
-                expect(finaltotalUserDeposits).to.eq(expectedValue);
-                // it("keeps track of the total number of user deposits", async () => {
-                //     // use token variables (supply) to test this rather than mappings/ variables.
-                //     // remove corresponding mapping + variable from sc
-                //     const initialDeposits = await indexContract.totalUserDeposits();
-                //     console.log(`initial index value ${initialDeposits}`);
-                //     const acc2Deposit = 10 * Math.random();
-                //     const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-                //     console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
-                //     const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-                //     await tx.wait();
-                //     const finaltotalUserDeposits = await indexContract.totalUserDeposits();
-                //     const expectedValue = initialDeposits.add(acc2DepositBN);
-                //     console.log(`final deposits value: ${finaltotalUserDeposits}`);
-                //     console.log(`expectedValue: ${expectedValue}`);
-                //     expect(finaltotalUserDeposits).to.eq(expectedValue);
-                // })
-            })
+        it("keeps track of the total number of user deposits", async () => {
+            // use token variables (supply) to test this rather than mappings/ variables.
+            const initialDeposits = await tokenContract.totalSupply();
+            console.log(`initial index value ${initialDeposits}`);
+            // deposit using account 2
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const finaltotalUserDeposits = await tokenContract.totalSupply();
+            const expectedValue = initialDeposits.add(acc2DepositBN);
+            console.log(`final deposits value: ${finaltotalUserDeposits}`);
+            console.log(`expectedValue: ${expectedValue}`);
+            expect(finaltotalUserDeposits).to.eq(expectedValue);
+            // it("keeps track of the total number of user deposits", async () => {
+            //     // use token variables (supply) to test this rather than mappings/ variables.
+            //     // remove corresponding mapping + variable from sc
+            //     const initialDeposits = await indexContract.totalUserDeposits();
+            //     console.log(`initial index value ${initialDeposits}`);
+            //     const acc2Deposit = 10 * Math.random();
+            //     const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            //     console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+            //     const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            //     await tx.wait();
+            //     const finaltotalUserDeposits = await indexContract.totalUserDeposits();
+            //     const expectedValue = initialDeposits.add(acc2DepositBN);
+            //     console.log(`final deposits value: ${finaltotalUserDeposits}`);
+            //     console.log(`expectedValue: ${expectedValue}`);
+            //     expect(finaltotalUserDeposits).to.eq(expectedValue);
+            // })
+        })
 
 
-            describe("calculateTokensToMint()", async () => {
-                it("calculates correct value when pool value 0 ", () => {
+        describe("calculateTokensToMint()", async () => {
+            it("calculates correct value when pool value 0 ", () => {
+                throw new Error("Not implemented");
+            });
+
+            it("calculates correct value when pool value not 0  ", () => {
+                throw new Error("Not implemented");
+            });
+
+
+
+            describe("getCurrentTokens()", async () => {
+                it("Suggestion remove getCurrentTokens()", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("When 'removeLiqudity()' function is called", () => {
+
+
+                it("total token supply will reduce", async () => {
+                    // initial token supply 
+                    const initalTokenSupply = await tokenContract.totalSupply();
+
+                    // mint token
+                    const acc1Deposit = 10 * (Math.random() + 0.1);
+                    const fundTx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther(String(acc1Deposit)) });
+                    await fundTx.wait();
+
+                    // temporaryTokenSupply 
+                    const temporaryTokenSupply = await tokenContract.totalSupply();
+
+
+                    // remove liquidity
+                    indexContract.removeLiquidity(ethers.utils.parseEther(String(acc1Deposit)))
+
+                    // capture final tokenSupply
+                    const finalTokenSupply = await tokenContract.totalSupply();
+
+                    expect(initalTokenSupply).to.eq(finalTokenSupply);
+                    expect(initalTokenSupply).to.not.eq(temporaryTokenSupply);
+                })
+            });
+
+            describe("getIndexBalances()", async () => {
+
+                it("Unit testing required", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("calculatePoolValue()", async () => {
+
+                // Integration testing required! 
+                it("calculates correct value of pool assets", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("calculateTokenVaultValue()", async () => {
+
+                // Integration testing required! 
+                it("calculates correct value of a given pool assets", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("calculateTokenVaultValue()", async () => {
+
+                // Integration testing required! 
+                it("calculates correct value of a given pool assets", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("calculateVaultTokenPriceInEth()", async () => {
+
+                // Integration testing required! 
+                it("calculates correct value of a given pool assets", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("swapEthForToken()", async () => {
+
+                // Integration testing required! 
+                it("calculates correct value of a given pool assets", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
+            describe("balanceFund()", async () => {
+                //@xm3van: Integration testing needed! Unit testing possible
+                //@xm3van: double check test - seems like they can be broken down
+                // into further functions 
+
+                this.beforeEach(async () => {
+
+                })
+
+                it("calculates vault token price in eth", () => {
+                    // expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
+                    throw new Error("not implemented");
+
+                })
+
+                it("has initial vault token dummy values", () => {
+                    // expect(indexContract._vaultTokens).to.not.eq(null);
+                    throw new Error("not implemented");
+
+                })
+
+                it("updates token proportions", () => {
+                    throw new Error("not implemented");
+                })
+
+                it("recovers the right amount of ERC20 tokens", () => {
                     throw new Error("Not implemented");
                 });
 
-                it("calculates correct value when pool value not 0  ", () => {
+                it("updates the owner account correctly", () => {
                     throw new Error("Not implemented");
-                });
-
-
-
-                describe("getCurrentTokens()", async () => {
-                    it("Suggestion remove getCurrentTokens()", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("When 'removeLiqudity()' function is called", () => {
-
-
-                    it("total token supply will reduce", async () => {
-                        // initial token supply 
-                        const initalTokenSupply = await tokenContract.totalSupply();
-
-                        // mint token
-                        const acc1Deposit = 10 * (Math.random() + 0.1);
-                        const fundTx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther(String(acc1Deposit)) });
-                        await fundTx.wait();
-
-                        // temporaryTokenSupply 
-                        const temporaryTokenSupply = await tokenContract.totalSupply();
-
-
-                        // remove liquidity
-                        indexContract.removeLiquidity(ethers.utils.parseEther(String(acc1Deposit)))
-
-                        // capture final tokenSupply
-                        const finalTokenSupply = await tokenContract.totalSupply();
-
-                        expect(initalTokenSupply).to.eq(finalTokenSupply);
-                        expect(initalTokenSupply).to.not.eq(temporaryTokenSupply);
-                    })
-                });
-
-                describe("getIndexBalances()", async () => {
-
-                    it("Unit testing required", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("calculatePoolValue()", async () => {
-
-                    // Integration testing required! 
-                    it("calculates correct value of pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("calculateTokenVaultValue()", async () => {
-
-                    // Integration testing required! 
-                    it("calculates correct value of a given pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("calculateTokenVaultValue()", async () => {
-
-                    // Integration testing required! 
-                    it("calculates correct value of a given pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("calculateVaultTokenPriceInEth()", async () => {
-
-                    // Integration testing required! 
-                    it("calculates correct value of a given pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("swapEthForToken()", async () => {
-
-                    // Integration testing required! 
-                    it("calculates correct value of a given pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("balanceFund()", async () => {
-                    //@xm3van: Integration testing needed! Unit testing possible
-                    //@xm3van: double check test - seems like they can be broken down
-                    // into further functions 
-
-                    this.beforeEach(async () => {
-
-                    })
-
-                    it("calculates vault token price in eth", () => {
-                        // expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
-                        throw new Error("not implemented");
-
-                    })
-
-                    it("has initial vault token dummy values", () => {
-                        // expect(indexContract._vaultTokens).to.not.eq(null);
-                        throw new Error("not implemented");
-
-                    })
-
-                    it("updates token proportions", () => {
-                        throw new Error("not implemented");
-                    })
-
-                    it("recovers the right amount of ERC20 tokens", () => {
-                        throw new Error("Not implemented");
-                    });
-
-                    it("updates the owner account correctly", () => {
-                        throw new Error("Not implemented");
-                    });
-
-                });
-
-
-                describe("unstakeAndSell()", async () => {
-
-                    // Integration testing required!
-                    it("calculates correct value of a given pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
-                });
-
-                describe("updateTokenProportionsAndReturnMaxLoc()", async () => {
-
-                    // Integration testing required!
-                    it("calculates correct value of a given pool assets", () => {
-                        throw new Error("Not implemented");
-                    });
                 });
 
             });
 
-            // @xm3van: integragte below or delete
 
-            it("keeps track of individual user deposits", async () => {
-                const acc2Deposit = 10 * Math.random();
-                const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-                const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-                await tx.wait();
-                const mappingValue = await indexContract.addressToAmountFunded(acc2.address);
-                expect(mappingValue).to.eq(acc2DepositBN);
-            })
+            describe("unstakeAndSell()", async () => {
 
-
-
-            // describe("when 'Balance Fund' function is called", () => {
-            //     this.beforeEach(async () => {
-
-            it("again mints the correct number of tokens", async () => {
-                // needs looking at - both SC and here
-                const acc2Deposit = 10 * Math.random();
-                const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-                console.log(`account 2 deposits: ${acc2DepositBN}`);
-                const totalUserDeposits = await indexContract.totalUserDeposits();
-                console.log(`total user deposits: ${totalUserDeposits}`)
-                const finalTotalTokens = await tokenContract.totalSupply();
-                console.log(`total tokens: ${finalTotalTokens}`)
-                const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-                await tx.wait();
-                const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
-                console.log(finalUserIndexTokenBalance);
-                // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
-                const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
-                expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+                // Integration testing required!
+                it("calculates correct value of a given pool assets", () => {
+                    throw new Error("Not implemented");
+                });
             });
+
+            describe("updateTokenProportionsAndReturnMaxLoc()", async () => {
+
+                // Integration testing required!
+                it("calculates correct value of a given pool assets", () => {
+                    throw new Error("Not implemented");
+                });
+            });
+
         });
 
-        //     it("calculates vault token price in eth", () => {
-        //         expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
-        //     })
+        // @xm3van: integragte below or delete
 
-        //     it("has initial vault token dummy values", () => {
-        //         expect(indexContract._vaultTokens).to.not.eq(null);
-        //     })
-
-        //     it("updates token proportions", () => {
-        //         throw new Error("not implemented");
-        //     })
-        // });
-
-        describe("When 'removeLiqudity' function is called", () => {
+        it("keeps track of individual user deposits", async () => {
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const mappingValue = await indexContract.addressToAmountFunded(acc2.address);
+            expect(mappingValue).to.eq(acc2DepositBN);
+        })
 
 
-            it("total token supply will reduce", async () => {
-                // initial token supply 
-                const initalTokenSupply = await tokenContract.totalSupply();
 
-                // mint token
-                const acc1Deposit = 10 * (Math.random() + 0.1);
-                const fundTx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther(String(acc1Deposit)) });
-                await fundTx.wait();
+        // describe("when 'Balance Fund' function is called", () => {
+        //     this.beforeEach(async () => {
 
-                // temporaryTokenSupply 
-                const temporaryTokenSupply = await tokenContract.totalSupply();
-
-
-                // remove liquidity
-                indexContract.removeLiquidity(ethers.utils.parseEther(String(acc1Deposit)))
-
-                // capture final tokenSupply
-                const finalTokenSupply = await tokenContract.totalSupply();
-
-                expect(initalTokenSupply).to.eq(finalTokenSupply);
-                expect(initalTokenSupply).to.not.eq(temporaryTokenSupply);
-            })
+        it("again mints the correct number of tokens", async () => {
+            // needs looking at - both SC and here
+            const acc2Deposit = 10 * Math.random();
+            const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+            console.log(`account 2 deposits: ${acc2DepositBN}`);
+            const totalUserDeposits = await indexContract.totalUserDeposits();
+            console.log(`total user deposits: ${totalUserDeposits}`)
+            const finalTotalTokens = await tokenContract.totalSupply();
+            console.log(`total tokens: ${finalTotalTokens}`)
+            const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+            await tx.wait();
+            const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+            console.log(finalUserIndexTokenBalance);
+            // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
+            const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
+            expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
-
-        it("recovers the right amount of ERC20 tokens", () => {
-            throw new Error("Not implemented");
-        });
-
-        it("updates the owner account correctly", () => {
-            throw new Error("Not implemented");
-        });
-
-
     });
+
+    //     it("calculates vault token price in eth", () => {
+    //         expect(indexContract.calculateVaultTokenPriceInEth(atoken1));
+    //     })
+
+    //     it("has initial vault token dummy values", () => {
+    //         expect(indexContract._vaultTokens).to.not.eq(null);
+    //     })
+
+    //     it("updates token proportions", () => {
+    //         throw new Error("not implemented");
+    //     })
+    // });
+
+    describe("When 'removeLiqudity' function is called", () => {
+
+
+        it("total token supply will reduce", async () => {
+            // initial token supply 
+            const initalTokenSupply = await tokenContract.totalSupply();
+
+            // mint token
+            const acc1Deposit = 10 * (Math.random() + 0.1);
+            const fundTx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther(String(acc1Deposit)) });
+            await fundTx.wait();
+
+            // temporaryTokenSupply 
+            const temporaryTokenSupply = await tokenContract.totalSupply();
+
+
+            // remove liquidity
+            indexContract.removeLiquidity(ethers.utils.parseEther(String(acc1Deposit)))
+
+            // capture final tokenSupply
+            const finalTokenSupply = await tokenContract.totalSupply();
+
+            expect(initalTokenSupply).to.eq(finalTokenSupply);
+            expect(initalTokenSupply).to.not.eq(temporaryTokenSupply);
+        })
+    });
+
+    it("recovers the right amount of ERC20 tokens", () => {
+        throw new Error("Not implemented");
+    });
+
+    it("updates the owner account correctly", () => {
+        throw new Error("Not implemented");
+    });
+
+
+});
