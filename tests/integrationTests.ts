@@ -134,6 +134,18 @@ describe("IndexContract Integration", function () {
         })
     })
 
+    describe("get wbtc price in terms of eth", () => {
+
+        it("retreives the price of wbtc denominated in eth", async () => {
+            const wbtcPriceHex = await indexContract.getWbtcPrice();
+            const wbtcPriceBN = wbtcPriceHex.toString();
+            console.log(`wbtcPriceBN ${String(wbtcPriceBN)}`);
+            const wbtcPrice = ethers.utils.formatEther(String(wbtcPriceBN));
+            console.log(wbtcPrice);
+            //expect(wbtcPrice).to
+        })
+    })
+
 
 
 
