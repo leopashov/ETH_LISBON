@@ -142,7 +142,7 @@ describe("IndexContract Integration", function () {
             console.log(`wbtcPriceBN ${String(wbtcPriceBN)}`);
             const wbtcPrice = ethers.utils.formatEther(String(wbtcPriceBN));
             console.log(wbtcPrice);
-            //expect(wbtcPrice).to
+            //expect price to be ~12.98
         })
     })
 
