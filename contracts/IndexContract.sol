@@ -45,6 +45,12 @@ interface IUniswapV2Factory {
     function getPair(address token0, address token1) external returns (address);
 }
 
+interface IWETH {
+    function deposit();
+
+    function withdraw();
+}
+
 interface IIndexToken is IERC20 {
     // interface to interact with token contract
 
@@ -57,14 +63,11 @@ interface IIndexToken is IERC20 {
     function burn(address from, uint256 amount) external;
 }
 
-interface IYearnVaultToken is IERC20 {
-    function pricePerShare() external view returns (uint256);
-}
-
 contract IndexContract {
     //address of the uniswap v2 router
     address private constant UNISWAP_V2_ROUTER =
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    // @Note: address same on Testnet and Groeli
 
     // Define 'global' variables
     IIndexToken public tokenContract;
@@ -74,9 +77,14 @@ contract IndexContract {
     IAToken public aWBtc;
     AggregatorV3Interface internal WBtcPriceFeed;
     // AggregatorV3Interface internal WEthPriceFeed; only need WBtc
-    address private constant ETH = 0x7af963cF6D228E564e2A0aA0DdBF06210B38615D;
+
+    // Mainnet Addresses
     address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address private constant WBTC = 0xdA4a47eDf8ab3c5EeeB537A97c5B66eA42F49CdA;
+    address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+
+    // Testnet Groeli Adresses
+    // address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    // address private constant WBTC = 0xdA4a47eDf8ab3c5EeeB537A97c5B66eA42F49CdA;
 
     IAToken[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
@@ -106,8 +114,9 @@ contract IndexContract {
 
         // currentTokenSupply = tokenContract.totalSupply();
         WBtcPriceFeed = AggregatorV3Interface(
-            0x779877A7B0D9E8603169DdbD7836e478b4624789
+            0xdeb288F737066589598e9214E782fa5A8eD689e8
         ); //Btc/Eth price feed
+        // 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Groeli testnet
 
         // map vault tokens to underlying - careful of order!
         // think not needed as we can call function from IAToken interface to get this data
@@ -270,8 +279,8 @@ contract IndexContract {
             // swap half eth for btc
             uint256 ethOnContract = address(this).balance;
             uint256 ethToSwap = ethOnContract / 2;
-            uint256 minAmountOut = getAmountOutMin(ETH, WBTC, ethToSwap);
-            swap(ETH, WBTC, ethToSwap, minAmountOut, address(this));
+            uint256 minAmountOut = getAmountOutMin(WETH, WBTC, ethToSwap);
+            swap(WETH, WBTC, ethToSwap, minAmountOut, address(this));
             // deposit both to aave vaults
         }
     }

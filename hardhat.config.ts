@@ -11,7 +11,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`
+        url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`
       },
       hardfork: "merge"
     }
