@@ -337,8 +337,9 @@ contract IndexContract {
     /// FUNCTONALITY WITHDRAW
     // 1. User specifies amount of token to withdraw
     // 2. Calculate eth value
-    // 3. rebalance
-    // 4. release funds
+    // 3. rebalance ??
+    // 4. Convert WETH to ETH 
+    // 5. Release funds to user 
 
     function withdraw(uint256 _amountIndexTokens) external {
         // adding eth to the index returns
@@ -434,7 +435,7 @@ contract IndexContract {
             wethContract.withdraw(Amount);
             sender.transfer(Amount);
         }
-    }
+    }git 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
     // @xm3van: Unit test required

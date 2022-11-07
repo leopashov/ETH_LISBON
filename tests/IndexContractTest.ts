@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
-
-
+import * as dotenv from 'dotenv';
+dotenv.config()
 describe("IndexContract", function () {
     let tokenContract: IndexToken;
     let indexContract: IndexContract;
