@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
-import { Address } from "cluster";
-import { BigNumber } from "ethers";
+import { abi as WethABI} from "../artifacts/contracts/IndexToken.sol/IndexToken.json";
+import { Contract } from "ethers";
 
 describe("IndexContract Integration", function () {
     let tokenContract: IndexToken;
@@ -14,13 +14,14 @@ describe("IndexContract Integration", function () {
     let acc2: SignerWithAddress;
     let aBTC: String;
     let aEth: String;
-    let wBtcContractAddress: String;
-    let wEthContractAddress: String;
+    let wBtcContractAddress: string;
+    let wEthContractAddress: string;
+    let wethContract: Contract;
 
     beforeEach(async () => {
         [deployer, acc1, acc2] = await ethers.getSigners();
-        wEthContractAddress = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
-        wBtcContractAddress = "0xda4a47edf8ab3c5eeeb537a97c5b66ea42f49cda";
+        wEthContractAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+        wBtcContractAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
         // hardcoded for now - atokens have ability to give underlying token 
         // contract address for extra robustness
         aBTC = "0xFC4B8ED459e00e5400be803A9BB3954234FD50e3";
@@ -97,7 +98,7 @@ describe("IndexContract Integration", function () {
     
     
     
-    describe("When the createIndex() function is called", async () => {
+    describe("When the balanceFund() function is called", async () => {
 
         beforeEach(async () => {
             // fund contract from two wallets:
@@ -106,6 +107,7 @@ describe("IndexContract Integration", function () {
             const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("1"), });
             acc2Fund.wait();
             console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} ether`)
+            wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
         })
 
 
@@ -113,15 +115,16 @@ describe("IndexContract Integration", function () {
             const initialEthOnContract = await ethers.provider.getBalance(indexContract.address);
             const halfInitial = initialEthOnContract.div(2);
             console.log(`half initial: ${halfInitial}`);
-            const tx = await indexContract.balanceFund();
-            console.log(`tx: ${tx}`);
+            const tx = await indexContract.connect(acc2).balanceFund();
+            console.log(`tx hash: ${tx.hash}`);
             tx.wait();
-            const txGasLimit = tx.gasLimit;
-            const txGasPrice = tx.gasPrice;
-            const gasSpent = txGasLimit.mul(ethers.BigNumber.from(txGasPrice));
-            console.log(`gas spent: ${gasSpent}`);
-            const finalEthOnContract = await ethers.provider.getBalance(indexContract.address);
-            expect(finalEthOnContract).to.eq(halfInitial.sub(gasSpent));
+            // const txGasLimit = tx.gasLimit;
+            // const txGasPrice = tx.gasPrice;
+            // const gasSpent = txGasLimit.mul(ethers.BigNumber.from(txGasPrice));
+            // console.log(`gas spent: ${gasSpent}`);
+            const finalWethOnContract = await wethContract.balanceOf(indexContract.address);
+            console.log(`final weth on contract: ${finalWethOnContract}`);
+            expect(finalWethOnContract).to.eq(halfInitial);
         });
 
         // it("")

@@ -283,16 +283,26 @@ contract IndexContract {
         return amountOutMins[path.length - 1];
     }
 
+    function convertToWeth() public {
+        //public for testing - should be internal
+        uint256 eth = address(this).balance;
+        IWETH(weth).deposit{value: eth}();
+        uint256 wethBal = IWETH(weth).balanceOf(address(this));
+        IWETH(weth).transfer(address(this), wethBal);
+    }
+
     function balanceFund() public {
         // check for any vault positions
         (, uint256 vaultValue) = calculateIndexValue();
         if (vaultValue == 0) {
             // if vault value is zero ie all balance is just held as eth on contract
+            // convert ETH to WETH
+            convertToWeth();
             // swap half eth for btc
-            uint256 ethOnContract = address(this).balance;
-            uint256 ethToSwap = ethOnContract / 2;
-            uint256 minAmountOut = getAmountOutMin(WETH, WBTC, ethToSwap);
-            swap(WETH, WBTC, ethToSwap, minAmountOut, address(this));
+            uint256 wethOnContract = IWETH(weth).balanceOf(address(this));
+            uint256 wethToSwap = wethOnContract / 2;
+            uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
+            swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
             // deposit both to aave vaults
         }
     }
@@ -355,13 +365,6 @@ contract IndexContract {
     function wethBalance() external view returns (uint256 _balance) {
         _balance = IWETH(weth).balanceOf(address(this));
         return _balance;
-    }
-
-    function convertToWeth() external payable {
-        uint256 eth = address(this).balance;
-        IWETH(weth).deposit{value: eth}();
-        uint256 wethBal = IWETH(weth).balanceOf(address(this));
-        IWETH(weth).transfer(address(this), wethBal);
     }
 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
