@@ -69,8 +69,6 @@ contract IndexContract {
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     // @Note: address same on Testnet and
 
-    address private weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
     // Define 'global' variables
     IIndexToken public tokenContract;
     IWETH public wethContract;
@@ -92,7 +90,6 @@ contract IndexContract {
     IAToken[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
     // @xm3van: let's denominate in wei for sake of consistency
-    uint256 public totalUserDeposits; // might aswell keep i think
     mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with - remove - user's token balance proportional to their funding!
     // actually keep - we can then calculate the profit of the position and take a performance fee.
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
@@ -118,11 +115,11 @@ contract IndexContract {
         // weth contract
         wethContract = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
-        // currentTokenSupply = tokenContract.totalSupply();
+        //Btc/Eth price feed
         WBtcPriceFeed = AggregatorV3Interface(
-            0xdeb288F737066589598e9214E782fa5A8eD689e8
-        ); //Btc/Eth price feed
-        // 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Groeli testnet
+            0xdeb288F737066589598e9214E782fa5A8eD689e8 // Mainnet address
+            // 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Groeli testnet address
+        );
 
         // map vault tokens to underlying - careful of order!
         // think not needed as we can call function from IAToken interface to get this data
@@ -131,28 +128,34 @@ contract IndexContract {
         // }
     }
 
+    /// FUNCTIONALITY DEPOSIT
+
     function receive_funds() public payable {
         // allows users to send eth to the contract.
         // on doing so should mint tokens proportionate to eth added compared to
         // value of fund.
+
+        /// @dev: require stament to prevent unreasonale small contribution extending
+        /// decimals beyond reason.
+        require(
+            msg.value > 100000000000000000 wei,
+            "Please increase the minimum contribution to 0.1 Ether!"
+        );
+
         //calculate number of index tokens to mint
         uint256 tokensToMint = calculateTokensToMint(msg.value); //double check logic
+
+        //mint tokens
         tokenContract.mint(msg.sender, tokensToMint);
-        totalUserDeposits += msg.value;
-        // totalUserDeposits += msg.value; // <- @xm3van: remove total user deposit == total token supply
-        // addressToAmountFunded[address(msg.sender)] += msg.value; // <- @xm3van: address tokenbalance == contribution
+
+        // convert all eth idle in contract to weth
+        convertToWeth();
     }
 
     function calculateTokensToMint(uint256 _ethReceived)
         internal
         returns (uint256 tokensToMint)
     {
-        /// @dev: require stament to prevent unreasonale small contribution extending
-        /// decimals beyond reason.
-        require(
-            _ethReceived > 100000000000000000 wei,
-            "Please increase the minimum contribution to 0.1 Ether!"
-        );
         if (tokenContract.totalSupply() == 0) {
             // if no tokens minted, mint 1 token for each unit of eth received
             // sets index token = 1 eth at start
@@ -170,26 +173,30 @@ contract IndexContract {
         }
     }
 
+    //@xm3van:  anxilary function
     function calculateIndexValue()
         public
         view
         returns (uint256 valueOfIndex, uint256 valueOfVaultPositions)
     {
         // index value is sum of eth on contract and eth value of deposited tokens
-        uint256 ethOnContract = address(this).balance;
+        // uint256 ethOnContract = address(this).balance;
+        uint256 wethOwnedByContract = wethBalance();
         uint256 totalVaultPositionsValue;
         for (uint8 i = 0; i < _vaultTokens.length; i++) {
             totalVaultPositionsValue += getDepositedValue(_vaultTokens[i]);
         }
-        valueOfIndex = ethOnContract + totalVaultPositionsValue;
+        valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
         return (valueOfIndex, totalVaultPositionsValue);
     }
 
+    //@xm3van:  anxilary function
     function getWbtcPrice() public view returns (int256 price) {
         (, price, , , ) = WBtcPriceFeed.latestRoundData();
         return price;
     }
 
+    //@xm3van:  anxilary function
     function getDepositedValue(IAToken aTokenContract)
         public
         view
@@ -213,6 +220,7 @@ contract IndexContract {
         return (uint256(priceOfVaultToken) * balanceOfVaultTokenInIndex);
     } // CHECK updateTokenProportionsAndReturnMaxLoc() FUNCTION AFTER WRITING THIS
 
+    //@xm3van:  Rebalance function
     function swap(
         address _tokenIn,
         address _tokenOut,
@@ -283,6 +291,8 @@ contract IndexContract {
         return amountOutMins[path.length - 1];
     }
 
+    /// FUNCTIONALITY REBALANCE
+
     function balanceFund() public {
         // check for any vault positions
         (, uint256 vaultValue) = calculateIndexValue();
@@ -297,6 +307,9 @@ contract IndexContract {
         }
     }
 
+    /// FUNCTONALITY WITHDRAW
+
+    //@xm3van:  withdraw function
     function returnIndexTokens(uint256 amount) public {
         // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
         require(amount > 0, "You need to return at least some tokens");
@@ -305,14 +318,17 @@ contract IndexContract {
         tokenContract.transferFrom(msg.sender, address(this), amount);
     }
 
+    //@xm3van:  withdraw function
     function burnIndexTokens(uint256 amount) public {
         tokenContract.burn(address(this), amount);
     }
 
+    //@xm3van:  withdraw function
     function returnEth(uint256 amount) public {
         payable(msg.sender).transfer(amount);
     }
 
+    //@xm3van:  withdraw function
     function removeLiquidity(uint256 amount) public {
         // # user sends index tokens back to contract
         require(amount > 0, "Provide amount of liquidity to remove");
@@ -333,6 +349,23 @@ contract IndexContract {
         // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
     }
 
+    /// ANXILIARY FUNCTIONS
+    //@xm3van:  anxilary function
+    function wethBalance() public view returns (uint256 _balance) {
+        _balance = wethContract.balanceOf(address(this));
+        return _balance;
+    }
+
+    //@xm3van:  anxilary function
+    function convertToWeth() public payable {
+        uint256 eth = address(this).balance;
+        wethContract.deposit{value: eth}();
+        uint256 wethBal = wethContract.balanceOf(address(this));
+        wethContract.transfer(address(this), wethBal);
+    }
+
+    // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
+
     // @xm3van: Unit test required
     // function getIndexBalances() public {
     //     // gets current balance of index tokens
@@ -346,25 +379,6 @@ contract IndexContract {
     //         indexValue += tokenVaultValue; //add each token value to get total index Value
     //     }
     // }
-
-    function calculatePoolValue() public returns (uint256 _poolValue) {
-        // function to calculate pool value, denominated in eth.
-        // get conversion from uni pools or chainlink(preferred)
-    }
-
-    function wethBalance() external view returns (uint256 _balance) {
-        _balance = IWETH(weth).balanceOf(address(this));
-        return _balance;
-    }
-
-    function convertToWeth() external payable {
-        uint256 eth = address(this).balance;
-        IWETH(weth).deposit{value: eth}();
-        uint256 wethBal = IWETH(weth).balanceOf(address(this));
-        IWETH(weth).transfer(address(this), wethBal);
-    }
-
-    // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
     // function calculateTokenVaultValue(address vaultToken) public {
     //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
