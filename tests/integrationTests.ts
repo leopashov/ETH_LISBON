@@ -206,9 +206,7 @@ describe("IndexContract Integration", function () {
     })
 
 
-
-    describe("When the createIndex() function is called", async () => {
-
+    describe("When the balanceFund() function is called", async () => {
         beforeEach(async () => {
             // fund contract from two wallets:
             const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });

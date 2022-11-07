@@ -305,11 +305,21 @@ contract IndexContract {
         return amountOutMins[path.length - 1];
     }
 
+<<<<<<<<< Temporary merge branch 1
+    function convertToWeth() public {
+        //public for testing - should be internal
+        uint256 eth = address(this).balance;
+        IWETH(weth).deposit{value: eth}();
+        uint256 wethBal = IWETH(weth).balanceOf(address(this));
+        IWETH(weth).transfer(address(this), wethBal);
+    }
+
     function depositToAave(address token, uint256 amount) public {
         aaveV2LendingPool.deposit(token, amount, address(this), 0);
     }
-
+=========
     /// FUNCTIONALITY REBALANCE
+>>>>>>>>> Temporary merge branch 2
 
     function balanceFund() public {
         // check for any vault positions
@@ -454,6 +464,8 @@ contract IndexContract {
 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
+=========
+>>>>>>>>> Temporary merge branch 2
     // function calculateTokenVaultValue(address vaultToken) public {
     //     uint256 numberOfVaultTokensHeld = IERC20(vaultToken).balanceOf(
     //         address(this)
