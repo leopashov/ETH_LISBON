@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
 import { abi as WethABI} from "../artifacts/contracts/IndexToken.sol/IndexToken.json";
-import { Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { abi as ERC20ABI} from '../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json';
 
 describe("IndexContract Integration", function () {
@@ -27,7 +27,7 @@ describe("IndexContract Integration", function () {
         wBtcContractAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
         // hardcoded for now - atokens have ability to give underlying token 
         // contract address for extra robustness
-        aWBTC = "0xFC4B8ED459e00e5400be803A9BB3954234FD50e3";
+        aWBTC = "0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656";
         aWEth = "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e";
 
         // get factories 
@@ -107,8 +107,12 @@ describe("IndexContract Integration", function () {
             // fund contract from two wallets:
             const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             acc1Fund.wait();
+            var indexValue = await indexContract.indexValue();
+            console.log(`index value: ${indexValue}`)
             const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("1"), });
             acc2Fund.wait();
+            indexValue = await indexContract.indexValue();
+            console.log(`index value: ${indexValue}`)
             console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} ether`)
             wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
             AWethContract = new ethers.Contract(aWEth, WethABI, deployer); //just use WethABI as only need balance of
@@ -150,7 +154,7 @@ describe("IndexContract Integration", function () {
         it("deposits WBTC to aave, receiving awbtctokens", async () => {
             const wbtcPriceHex = await indexContract.getWbtcPrice();
             const wbtcPriceBN = wbtcPriceHex.toString();
-            const initialEthOnContract = await ethers.provider.getBalance(indexContract.address);
+            const initialEthOnContract = await wethContract.balanceOf(indexContract.address);
             const halfInitial = initialEthOnContract.div(2);
             console.log(`half initial: ${halfInitial}`)
             //const initialAWbtcBalanceValue = await indexContract.getDepositedValue(AWbtcContract.address);
@@ -164,16 +168,30 @@ describe("IndexContract Integration", function () {
             console.log(`awbtc decimals: ${AWbtcDecimals}`);
             const finalAWbtcBalance = await AWbtcContract.balanceOf(indexContract.address);
             console.log(`final awbtc balance: ${finalAWbtcBalance}`);
-            const finalAWbtcBalanceValue = wbtcPriceHex.mul(finalAWbtcBalance);
+            const finalAWbtcBalanceValueBN = wbtcPriceHex.mul(finalAWbtcBalance);
+            // const finalAWbtcBalanceValue = finalAWbtcBalanceValueBN.div(10^AWbtcDecimals);
+            const finalAWbtcBalanceValue = ethers.utils.formatUnits(finalAWbtcBalanceValueBN, AWbtcDecimals);
             console.log(`final awbtc balance value: ${finalAWbtcBalanceValue}`);
-            expect(halfInitial).to.eq(finalAWbtcBalanceValue.sub(initialAWbtcBalanceValue));
+            expect(halfInitial).to.eq(finalAWbtcBalanceValue);
+        })
+    });
+
+    describe("get wbtc price in terms of eth", () => {
+        it("retreives the price of wbtc denominated in eth", async () => {
+            const wbtcPriceHex = await indexContract.getWbtcPrice();
+            const wbtcPriceBN = wbtcPriceHex.toString();
+            console.log(`wbtcPriceBN ${String(wbtcPriceBN)}`);
+            const wbtcPrice = ethers.utils.formatEther(String(wbtcPriceBN));
+            console.log(wbtcPrice);
+            //expect(wbtcPrice).to
+            //expect price to be ~12.98
         })
     });
 
     describe("When convertToWeth() is called in the IndexContract.sol", async () => {
 
         beforeEach(async () => {
-            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
+            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
             acc1Fund.wait();
             console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
         })

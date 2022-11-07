@@ -151,6 +151,8 @@ contract IndexContract {
             "Please increase the minimum contribution to 0.1 Ether!"
         );
 
+        convertToWeth();
+
         //calculate number of index tokens to mint
         uint256 tokensToMint = calculateTokensToMint(msg.value); //double check logic
 
@@ -158,7 +160,7 @@ contract IndexContract {
         tokenContract.mint(msg.sender, tokensToMint);
 
         // convert all eth idle in contract to weth
-        convertToWeth();
+        //
     }
 
     function calculateTokensToMint(uint256 _ethReceived)
@@ -180,6 +182,11 @@ contract IndexContract {
             (indexValue, ) = calculateIndexValue();
             return (toMint);
         }
+    }
+
+    function wethBalance() public view returns (uint256 _balance) {
+        _balance = wethContract.balanceOf(address(this));
+        return _balance;
     }
 
     //@xm3van:  anxilary function
@@ -304,9 +311,9 @@ contract IndexContract {
     function convertToWeth() public {
         //public for testing - should be internal
         uint256 eth = address(this).balance;
-        IWETH(weth).deposit{value: eth}();
-        uint256 wethBal = IWETH(weth).balanceOf(address(this));
-        IWETH(weth).transfer(address(this), wethBal);
+        wethContract.deposit{value: eth}();
+        uint256 wethBal = wethContract.balanceOf(address(this));
+        wethContract.transfer(address(this), wethBal);
     }
 
     function depositToAave(address token, uint256 amount) public {
@@ -321,7 +328,7 @@ contract IndexContract {
             // convert ETH to WETH
             convertToWeth();
             // swap half eth for btc
-            uint256 wethOnContract = IWETH(weth).balanceOf(address(this));
+            uint256 wethOnContract = wethContract.balanceOf(address(this));
             uint256 wethToSwap = wethOnContract / 2;
             uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
             swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
@@ -380,18 +387,18 @@ contract IndexContract {
 
     /// ANXILIARY FUNCTIONS
     //@xm3van:  anxilary function
-    function wethBalance() public view returns (uint256 _balance) {
-        _balance = wethContract.balanceOf(address(this));
-        return _balance;
-    }
+    // function wethBalance() public view returns (uint256 _balance) {
+    //     _balance = wethContract.balanceOf(address(this));
+    //     return _balance;
+    // }
 
     //@xm3van:  anxilary function
-    function convertToWeth() public payable {
-        uint256 eth = address(this).balance;
-        wethContract.deposit{value: eth}();
-        uint256 wethBal = wethContract.balanceOf(address(this));
-        wethContract.transfer(address(this), wethBal);
-    }
+    // function convertToWeth() public payable {
+    //     uint256 eth = address(this).balance;
+    //     wethContract.deposit{value: eth}();
+    //     uint256 wethBal = wethContract.balanceOf(address(this));
+    //     wethContract.transfer(address(this), wethBal);
+    // }
 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
@@ -412,11 +419,6 @@ contract IndexContract {
     function calculatePoolValue() public returns (uint256 _poolValue) {
         // function to calculate pool value, denominated in eth.
         // get conversion from uni pools or chainlink(preferred)
-    }
-
-    function wethBalance() external view returns (uint256 _balance) {
-        _balance = IWETH(weth).balanceOf(address(this));
-        return _balance;
     }
 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
