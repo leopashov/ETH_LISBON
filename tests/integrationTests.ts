@@ -67,17 +67,17 @@ describe("IndexContract Integration", function () {
             acc1Fund.wait();
             console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
         })
-        it("correctly updates index value", async() =>{
+        it("correctly updates index value", async () => {
             const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("1"), });
             acc2Fund.wait();
             const fundedAmount = ethers.utils.parseEther("1.11");
             const indexValue = await indexContract.indexValue();
             console.log(`indexValue: ${indexValue}`);
-            
+
             expect(ethers.BigNumber.from(indexValue)).to.eq(fundedAmount);
         });
 
-        it("again mints the correct number of tokens",async () => {
+        it("again mints the correct number of tokens", async () => {
             // needs looking at - both SC and here
             const acc2Deposit = 10 * Math.random();
             const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
@@ -96,12 +96,12 @@ describe("IndexContract Integration", function () {
             const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
-        
+
     })
     
     
-    
     describe("When the balanceFund() function is called", async () => {
+
 
         beforeEach(async () => {
             // fund contract from two wallets:
@@ -170,23 +170,98 @@ describe("IndexContract Integration", function () {
         })
     });
 
-    describe("check uniswap functionality", () => {
-        
-        it("calculates minimum amount out (getAmountOutMin)", async() => {
-            expect(0).to.eq(0);
+    describe("When convertToWeth() is called in the IndexContract.sol", async () => {
+
+        beforeEach(async () => {
+            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
+            acc1Fund.wait();
+            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
         })
+
+        it("should convert ETH in contract to WETH", async () => {
+            // initial eth balance of contract
+            const ethBal = await ethers.provider.getBalance(indexContract.address)
+            console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`)
+
+            // convert balance of smart contract to weth 
+            await indexContract.convertToWeth();
+            console.log('Conversion from ETH to WETH')
+
+            // retrieve weth balance 
+            const wethBal = await indexContract.wethBalance();
+            console.log(`WETH Balance: ${ethers.utils.formatEther(wethBal)}`)
+
+            expect(ethBal).to.eq(wethBal);
+        })
+
+
     })
 
-    describe("get wbtc price in terms of eth", () => {
+    // Uniswap functionality 
+    describe("When getAmountOutMin() & swap() is called", async () => {
 
-        it("retreives the price of wbtc denominated in eth", async () => {
-            const wbtcPriceHex = await indexContract.getWbtcPrice();
-            const wbtcPriceBN = wbtcPriceHex.toString();
-            console.log(`wbtcPriceBN ${String(wbtcPriceBN)}`);
-            const wbtcPrice = ethers.utils.formatEther(String(wbtcPriceBN));
-            console.log(wbtcPrice);
-            //expect price to be ~12.98
+        beforeEach(async () => {
+            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
+            acc1Fund.wait();
+            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
+
+            // initial eth balance of contract
+            const ethBal = await ethers.provider.getBalance(indexContract.address)
+            console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`)
+
+            // convert balance of smart contract to weth 
+            await indexContract.convertToWeth();
+            console.log('Conversion from ETH to WETH')
         })
+
+
+        it("getAmountOutMin() - Get min amount of WBTC for 1 WETH", async () => {
+            const swapAmount = ethers.utils.parseEther("1.0")
+            // convert balance of smart contract to weth 
+            const expectedAmountWBTC = await indexContract.connect(deployer).getAmountOutMin(
+                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', //tokenIn
+                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // tokenOut
+                swapAmount
+            );
+            console.log(`WBTC to be received for 1 ETH: ${expectedAmountWBTC}`)
+
+            expect(expectedAmountWBTC).to.not.eq(0);
+        })
+
+        it("swap() - Get min amount of WBTC for 1 WETH", async () => {
+            // amount ot swap 
+            const swapAmount = ethers.utils.parseEther("1.0")
+
+            // convert balance of smart contract to weth 
+            const expectedAmountWBTC = await indexContract.connect(deployer).getAmountOutMin(
+                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', //tokenIn
+                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // tokenOut
+                swapAmount
+            );
+            console.log(`WBTC to be received for 1 ETH: ${expectedAmountWBTC}`)
+
+
+            // swap weth for wbtc 
+            const swapTx = await indexContract.connect(deployer).swap(
+                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', //tokenIn
+                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // tokenOut
+                swapAmount, //amountIn 
+                expectedAmountWBTC, // amountOut
+                indexContract.address
+            );
+
+            console.log('swap initated')
+            const swapTxReceipt = swapTx.wait();
+            console.log('swap completed')
+
+
+            // get wbtc balance
+            const WBTCcontract = new ethers.Contract('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', abi, deployer);
+            const WBTCBalance = await WBTCcontract.balanceOf(indexContract.address);
+
+            expect(WBTCBalance).to.eq(expectedAmountWBTC);
+        })
+
     })
 
 
