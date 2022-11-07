@@ -316,12 +316,13 @@ contract IndexContract {
             uint256 wethToSwap = wethOnContract / 2;
             uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
             swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
-            // approve spending of weth and wbtc
+            uint256 wbtcOnContract = wbtcContract.balanceOf(address(this));
+            // approve spending of weth and wbtc (max fine)
             wethContract.approve(address(aaveV2LendingPool), 2**256 - 1);
             wbtcContract.approve(address(aaveV2LendingPool), 2**256 - 1);
             // deposit both to aave vaults
             aaveV2LendingPool.deposit(WETH, wethToSwap, address(this), 0);
-            // aaveV2LendingPool.deposit(WBTC, wethToSwap, address(this), 0);
+            aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
             // depositToAave(WETH, wethToSwap);
         } else {}
     }
