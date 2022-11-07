@@ -306,23 +306,23 @@ describe("IndexContract", function () {
     // describe("when 'Balance Fund' function is called", () => {
     //     this.beforeEach(async () => {
 
-    it("again mints the correct number of tokens", async () => {
-        // needs looking at - both SC and here
-        const acc2Deposit = 10 * Math.random();
-        const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
-        console.log(`account 2 deposits: ${acc2DepositBN}`);
-        const totalUserDeposits = await indexContract.totalUserDeposits();
-        console.log(`total user deposits: ${totalUserDeposits}`)
-        const finalTotalTokens = await tokenContract.totalSupply();
-        console.log(`total tokens: ${finalTotalTokens}`)
-        const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
-        await tx.wait();
-        const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
-        console.log(finalUserIndexTokenBalance);
-        // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
-        const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
-        expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
-    });
+    // it("again mints the correct number of tokens", async () => {
+    //     // needs looking at - both SC and here
+    //     const acc2Deposit = 10 * Math.random();
+    //     const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+    //     console.log(`account 2 deposits: ${acc2DepositBN}`);
+    //     const totalUserDeposits = await indexContract.totalUserDeposits();
+    //     console.log(`total user deposits: ${totalUserDeposits}`)
+    //     const finalTotalTokens = await tokenContract.totalSupply();
+    //     console.log(`total tokens: ${finalTotalTokens}`)
+    //     const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+    //     await tx.wait();
+    //     const finalUserIndexTokenBalance = await tokenContract.balanceOf(acc2.address);
+    //     console.log(finalUserIndexTokenBalance);
+    //     // calculate expected index token balance by getting proportion of this user's deposits compared to all deposits and multiplying by total index tokens
+    //     const expectedBalance = ((acc2DepositBN).mul(finalTotalTokens)).div(totalUserDeposits);
+    //     expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+    // });
 
     //     it("calculates vault token price in eth", () => {
     //         expect(indexContract.calculateVaultTokenPriceInEth(atoken1));

@@ -97,6 +97,112 @@ describe("IndexContract Integration", function () {
             expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
         });
 
+        describe("When user call receive_funds() the IndexContract.sol", async () => {
+
+            beforeEach(async () => { })
+
+            it("increases eth balance of the contract and non-reverting of the contract", async () => {
+
+                const initialEthBalance = await ethers.provider.getBalance(indexContract.address);
+                const fundTx = await indexContract.connect(deployer).receive_funds({ "value": ethers.utils.parseEther("1") });
+                await fundTx.wait();
+                const finalEthBalance = await ethers.provider.getBalance(indexContract.address);
+                expect(finalEthBalance).to.not.eq(initialEthBalance);
+            });
+
+            it("transaction reversion for funding below 0.1 eth", async () => {
+                var error = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.01"), });
+                expect(error).to.be.an('Error');
+
+                // ref.: https://www.chaijs.com/api/bdd/
+
+                //NOTE: function behaves as expected but I cannot find the right was to make 
+                // the expect function work
+            });
+
+
+            it("indexValue by amount of eth received increases if multiple user fund receive_funds()", async () => {
+
+                // prefund contract with some eth
+                const initialFundAmount = (String(10 * Math.random()));
+                const initialFundAmountBN = ethers.utils.parseEther(initialFundAmount);
+                const initialFundTx = await indexContract.connect(acc1).receive_funds({ "value": initialFundAmountBN, });
+                initialFundTx.wait();
+
+                // execution logic 
+                const initialIndexValue = await indexContract.indexValue();
+                console.log(`initial index value ${initialIndexValue}`);
+
+                // @xm3van: I think here a merge fucked something up S
+            })
+
+            it("keeps track of the total number of user deposits", async () => {
+                // use token variables (supply) to test this rather than mappings/ variables.
+                const initialDeposits = await tokenContract.totalSupply();
+                console.log(`initial index value ${initialDeposits}`);
+                // deposit using account 2
+                const acc2Deposit = 10 * Math.random();
+                const acc2DepositBN = ethers.utils.parseEther(String(acc2Deposit));
+                console.log(`acc2 deposit (wei): ${acc2DepositBN}`);
+                const tx = await indexContract.connect(acc2).receive_funds({ "value": acc2DepositBN, });
+                await tx.wait();
+                const finaltotalUserDeposits = await tokenContract.totalSupply();
+                const expectedValue = initialDeposits.add(acc2DepositBN);
+                console.log(`final deposits value: ${finaltotalUserDeposits}`);
+                console.log(`expectedValue: ${expectedValue}`);
+                expect(finaltotalUserDeposits).to.eq(expectedValue);
+            })
+        })
+
+        describe("calculateTokensToMint()", async () => {
+
+            beforeEach(async () => { })
+
+            it("mints the correct number of indexTokens when initial indexToken Supply is 0", async () => {
+                const initialUserIndexTokenBalance = await tokenContract.balanceOf(acc1.address);
+                const tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("0.11"), });
+                await tx.wait();
+                const finalUserIndexTokenBalanceBN = await tokenContract.balanceOf(acc1.address);
+                console.log(finalUserIndexTokenBalanceBN);
+                const finalUserIndexTokenBalance = ethers.utils.formatEther(String(finalUserIndexTokenBalanceBN));
+
+                const expectedBalance = initialUserIndexTokenBalance.add(ethers.utils.parseEther("1"));
+                expect(expectedBalance).to.eq(finalUserIndexTokenBalance);
+            });
+
+            it("mints the correct number of indexTokens when initial indexToken Supply is not 0", async () => {
+
+                // Deposit 1 
+                const depositValue1 = ethers.utils.parseEther((String(10 * Math.random())));
+                const deposit1Tx = await indexContract.connect(acc1).receive_funds({ "value": depositValue1, });
+                deposit1Tx.wait();
+
+                // Deposit 2
+                /// Deposit 2 amount
+                const depositValue2 = ethers.utils.parseEther((String(10 * Math.random())));
+
+                /// Expected indexToken resulting from deposit 2
+                const currentIndexValue = ethers.utils.parseEther((String(100 * Math.random())));
+                const indexValueBeforeDeposit = currentIndexValue.sub(depositValue2);
+                const currentTokenSupply = await tokenContract.totalSupply();
+                const formattedCurrentTokenSupply = ethers.utils.formatEther((currentTokenSupply));
+
+                /// Expected tokens 
+                const expectedIndexTokens = (currentTokenSupply.mul(depositValue2)).div(indexValueBeforeDeposit);
+
+                /// Execution of deposit 2 
+                const deposit2Tx = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther((String(depositValue2))), });
+                deposit2Tx.wait();
+
+                /// actualTokenSupply
+                const actualTokenSupply = tokenContract.totalSupply();
+
+                // execution logic 
+                expect(expectedIndexTokens).to.eq(actualTokenSupply);
+
+            })
+        })
+
     })
 
 
