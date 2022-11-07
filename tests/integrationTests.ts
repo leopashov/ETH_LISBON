@@ -12,11 +12,13 @@ describe("IndexContract Integration", function () {
     let deployer: SignerWithAddress;
     let acc1: SignerWithAddress;
     let acc2: SignerWithAddress;
-    let aBTC: String;
-    let aEth: String;
+    let aBTC: string;
+    let aWEth: string;
     let wBtcContractAddress: string;
     let wEthContractAddress: string;
     let wethContract: Contract;
+    let AWethContract: Contract;
+    let AWbtcContract: Contract;
 
     beforeEach(async () => {
         [deployer, acc1, acc2] = await ethers.getSigners();
@@ -25,7 +27,7 @@ describe("IndexContract Integration", function () {
         // hardcoded for now - atokens have ability to give underlying token 
         // contract address for extra robustness
         aBTC = "0xFC4B8ED459e00e5400be803A9BB3954234FD50e3";
-        aEth = "0x3a3A65aAb0dd2A17E3F1947bA16138cd37d08c04";
+        aWEth = "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e";
 
         // get factories 
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -40,7 +42,7 @@ describe("IndexContract Integration", function () {
         /// deploy indexContract 
         indexContract = await indexContractFactory.deploy(
             tokenContract.address,
-            [aBTC, aEth],
+            [aBTC, aWEth],
             [wBtcContractAddress, wEthContractAddress]
         );
 
@@ -108,6 +110,8 @@ describe("IndexContract Integration", function () {
             acc2Fund.wait();
             console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} ether`)
             wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
+            AWethContract = new ethers.Contract(aWEth, WethABI, deployer); //just use WethABI as only need balance of
+            AWbtcContract = new ethers.Contract(aBTC, WethABI, deployer); //just use WethABI as only need balance of
         })
 
 
@@ -125,9 +129,22 @@ describe("IndexContract Integration", function () {
             const finalWethOnContract = await wethContract.balanceOf(indexContract.address);
             console.log(`final weth on contract: ${finalWethOnContract}`);
             expect(finalWethOnContract).to.eq(halfInitial);
+            // probably wont pass now as have implmented aave functionality but did work before.
         });
 
-        // it("")
+        it("deposits WETH and WBTC to aave, receiving atokens", async () => {
+            const initialEthOnContract = await ethers.provider.getBalance(indexContract.address);
+            const halfInitial = initialEthOnContract.div(2);
+            console.log(`half initial: ${halfInitial}`)
+            const initialAWethBalance = await AWethContract.balanceOf(indexContract.address);
+            console.log(`inital aweth balance: ${initialAWethBalance}`);
+            // const initialAWbtcBalance = AWbtcContract.balanceOf(indexContract.address);
+            const tx = await indexContract.connect(acc2).balanceFund();
+            tx.wait();
+            const finalAWethBalance = await AWethContract.balanceOf(indexContract.address);
+            console.log(`final aweth balance: ${finalAWethBalance}`);
+            expect(halfInitial).to.eq(finalAWethBalance.sub(initialAWethBalance));
+        })
     });
 
     describe("check uniswap functionality", () => {

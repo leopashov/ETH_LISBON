@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {UniswapExchangeInterface} from "./interfaces/IUniswapExchangeInterface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {IAToken} from "./interfaces/IaTokenInterface.sol";
+import {ILendingPool} from "./interfaces/ILendingPool.sol";
 
 interface IUniswapV2Router {
     function getAmountsOut(uint256 amountIn, address[] memory path)
@@ -74,6 +75,8 @@ contract IndexContract {
     // Define 'global' variables
     IIndexToken public tokenContract;
     IWETH public wethContract;
+    IWETH public wbtcContract;
+    ILendingPool public aaveV2LendingPool;
 
     //define aTokens
     IAToken public aWeth;
@@ -85,7 +88,7 @@ contract IndexContract {
     address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 
-    // Testnet Groeli Adresses
+    // Testnet Goerli Adresses
     // address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     // address private constant WBTC = 0xdA4a47eDf8ab3c5EeeB537A97c5B66eA42F49CdA;
 
@@ -117,6 +120,12 @@ contract IndexContract {
 
         // weth contract
         wethContract = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+        //wbtc contract
+        wbtcContract = IWETH(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
+        // Aave v2 lending pool contract
+        aaveV2LendingPool = ILendingPool(
+            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+        );
 
         // currentTokenSupply = tokenContract.totalSupply();
         WBtcPriceFeed = AggregatorV3Interface(
@@ -291,6 +300,10 @@ contract IndexContract {
         IWETH(weth).transfer(address(this), wethBal);
     }
 
+    function depositToAave(address token, uint256 amount) public {
+        aaveV2LendingPool.deposit(token, amount, address(this), 0);
+    }
+
     function balanceFund() public {
         // check for any vault positions
         (, uint256 vaultValue) = calculateIndexValue();
@@ -303,8 +316,14 @@ contract IndexContract {
             uint256 wethToSwap = wethOnContract / 2;
             uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
             swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
+            // approve spending of weth and wbtc
+            wethContract.approve(address(aaveV2LendingPool), 2**256 - 1);
+            wbtcContract.approve(address(aaveV2LendingPool), 2**256 - 1);
             // deposit both to aave vaults
-        }
+            aaveV2LendingPool.deposit(WETH, wethToSwap, address(this), 0);
+            // aaveV2LendingPool.deposit(WBTC, wethToSwap, address(this), 0);
+            // depositToAave(WETH, wethToSwap);
+        } else {}
     }
 
     function returnIndexTokens(uint256 amount) public {
