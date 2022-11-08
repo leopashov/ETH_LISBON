@@ -2,7 +2,7 @@
 <body class="text-bg-dark">
 
     <!--Header-->
-    <header class="p-3" style="background-color: rgb(0, 0, 0);">
+    <header class="p-3 sticky-top" style="background-color: rgb(0, 0, 0);">
         <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
             
@@ -50,13 +50,20 @@
 </section>
 
 <!-- Advantages with icons -->
-<div class="container px-4 py-5" id="featured-3">
-    <div class="row g-4 py-3 row-cols-1 row-cols-lg-3">
+<div class="container px-4 py-5 " id="featured-3">
+  <h2 class="pb-2 border-bottom">Advantages</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
       <div class="feature col">
-        <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3" style="background-color: #20A150">
-          <svg class="bi" width="1em" height="1em"><use xlink:href="#collection"></use></svg>
+        <!-- Icon -->
+        <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3 rounded-3">
+          <img
+              src="https://i.ibb.co/wwkHqyR/diversification.png"
+              alt="Diversification"
+              style="width: 45px; height: 45px"
+              class="rounded-3"
+              />
         </div>
-        <h3 class="fs-2">Diversification</h3>
+        <h3 class="fs-2 text-white">Diversification</h3>
         <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another sentence and probably just keep going until we run out of words.</p>
         <a href="#" class="icon-link d-inline-flex align-items-center">
           Call to action
@@ -64,8 +71,14 @@
         </a>
       </div>
       <div class="feature col">
-        <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3" style="background-color: #20A150">
-          <svg class="bi" width="1em" height="1em"><use xlink:href="#people-circle"></use></svg>
+        <!-- Icon -->
+        <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3 rounded-3">
+          <img
+              src="https://i.ibb.co/g789Kpr/convenience.png"
+              alt="Convenience"
+              style="width: 45px; height: 45px"
+              class="rounded-3"
+              />
         </div>
         <h3 class="fs-2">Convenience</h3>
         <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another sentence and probably just keep going until we run out of words.</p>
@@ -75,10 +88,16 @@
         </a>
       </div>
       <div class="feature col">
-        <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3" style="background-color: #20A150">
-          <svg class="bi" width="1em" height="1em"><use xlink:href="#toggles2"></use></svg>
+        <!-- Icon -->
+        <div class="feature-icon d-inline-flex align-items-center justify-content-center bg-gradient fs-2 mb-3 rounded-3">
+          <img
+              src="https://i.ibb.co/qF5SnGL/less-volatility.png"
+              alt="Less Volatility"
+              style="width: 45px; height: 45px"
+              class="rounded-3"
+              />
         </div>
-        <h3 class="fs-2">Follow the Market</h3>
+        <h3 class="fs-2">Less Volatility</h3>
         <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another sentence and probably just keep going until we run out of words.</p>
         <a href="#" class="icon-link d-inline-flex align-items-center">
           Call to action
@@ -86,13 +105,39 @@
         </a>
       </div>
     </div>
+</div>
+
+<div class="b-example-divider"></div>
+
+<!--Market Data-->
+
+<div class="container bg-transparent container px-4 py-5" id="market_data">
+  <h2 class="pb-2 border-bottom">Market Data</h2>
+  <div class="row g-1 py-5 justify-content-md-center">
+    <div class="col">
+      <h1 class="text-center mt-5 pt-5 fw-normal" style="color:#7030A0">$ 269,844,368</h1>
+      <p class="text-center text-white fw-light">Index Market Cap</p>
+      <h1 class="text-center mt-5 pt-5 fw-normal" style="color:#7030A0">$ 30,000+</h1>
+      <p class="text-center text-white fw-light">Total Token Holders</p>
+    </div>
+    <div class="col-md-auto">
+      <img
+              src="https://i.ibb.co/n3xtKRb/chart.png"
+              alt="Chart"
+              style="width: 802px; height: 521px"
+              class=""
+              />
+    </div>
   </div>
+</div>
+
 
 <!-- Table with tokens in the index -->
-
-
-<div class="container mt-5 px-4 py-5" id="featured-3">
-  <table class="table table-bordered align-middle mb-0 bg-transparent">
+<div class="container px-4 py-5" id="headline_assets">
+  <h2 class="pb-2 border-bottom ">Represented Assets</h2>
+</div>
+<div class="container pb-5 px-5" id="featured-3">
+  <table class="table table-bordered py-5 align-middle bg-transparent">
   <thead class="text-white" style="background-color: rgba(112, 48, 160, 0.5);">
     <tr>
       <th>Position</th>
@@ -185,10 +230,11 @@
 
 
 
+
 <!--Footer-->
 <div class="b-example-divider"></div>
 
-<div class="container">
+<div class="container pt-5">
     <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
     <div class="col-md-4 d-flex align-items-center">
         <a href="/" class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
@@ -206,4 +252,50 @@
 </div>
 
 
+ <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="../../assets/js/vendor/popper.min.js"></script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+
+    <!-- Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.7.1/dist/Chart.min.js"></script>
+    <script>
+      var ctx = document.getElementById("myChart");
+      var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          datasets: [{
+            data: [15339, 21345, 18483, 24003, 23489, 24092, 12034],
+            lineTension: 0,
+            backgroundColor: 'transparent',
+            borderColor: '#007bff',
+            borderWidth: 4,
+            pointBackgroundColor: '#007bff'
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: false
+              }
+            }]
+          },
+          legend: {
+            display: false,
+          }
+        }
+      });
+    </script>
+  
 </body>
