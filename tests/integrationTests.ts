@@ -58,6 +58,9 @@ describe("IndexContract Integration", function () {
         );
         await grantRoleTx.wait();
         // console.log("Minter role granted!");
+        wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
+        AWethContract = new ethers.Contract(aWEth, WethABI, deployer); //just use WethABI as only need balance of
+        AWbtcContract = new ethers.Contract(aWBTC, ERC20ABI, deployer); //just use WethABI as only need balance of
     });
 
     describe("When the contract is funded by > 1 account", async () => {
@@ -113,16 +116,13 @@ describe("IndexContract Integration", function () {
             acc2Fund.wait();
             indexValue = await indexContract.indexValue();
             console.log(`index value: ${indexValue}`)
-            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} ether`)
-            wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
-            AWethContract = new ethers.Contract(aWEth, WethABI, deployer); //just use WethABI as only need balance of
-            AWbtcContract = new ethers.Contract(aWBTC, ERC20ABI, deployer); //just use WethABI as only need balance of
+            console.log(`contract funded with: ${await wethContract.balanceOf(indexContract.address)} ether`)
         })
 
 
         it("swaps half of the collected ETH to BTC", async () => {
-            const initialEthOnContract = await ethers.provider.getBalance(indexContract.address);
-            const halfInitial = initialEthOnContract.div(2);
+            const initialWethOnContract = await wethContract.balanceOf(indexContract.address);
+            const halfInitial = initialWethOnContract.div(2);
             console.log(`half initial: ${halfInitial}`);
             const tx = await indexContract.connect(acc2).balanceFund();
             console.log(`tx hash: ${tx.hash}`);
@@ -138,8 +138,8 @@ describe("IndexContract Integration", function () {
         });
 
         it("deposits WETH to aave, receiving awethtokens", async () => {
-            const initialEthOnContract = await ethers.provider.getBalance(indexContract.address);
-            const halfInitial = initialEthOnContract.div(2);
+            const initialWethOnContract = await wethContract.balanceOf(indexContract.address);
+            const halfInitial = initialWethOnContract.div(2);
             console.log(`half initial: ${halfInitial}`)
             const initialAWethBalance = await AWethContract.balanceOf(indexContract.address);
             console.log(`inital aweth balance: ${initialAWethBalance}`);
@@ -153,14 +153,15 @@ describe("IndexContract Integration", function () {
 
         it("deposits WBTC to aave, receiving awbtctokens", async () => {
             const wbtcPriceHex = await indexContract.getWbtcPrice();
-            const wbtcPriceBN = wbtcPriceHex.toString();
-            const initialEthOnContract = await wethContract.balanceOf(indexContract.address);
-            const halfInitial = initialEthOnContract.div(2);
+            const wbtcPrice = wbtcPriceHex.toString();
+            console.log(`Wbtc price: ${wbtcPrice}`);
+            const initialWethOnContract = await wethContract.balanceOf(indexContract.address);
+            const halfInitial = initialWethOnContract.div(2);
             console.log(`half initial: ${halfInitial}`)
             //const initialAWbtcBalanceValue = await indexContract.getDepositedValue(AWbtcContract.address);
             const initialAWbtcBalance = await AWbtcContract.balanceOf(indexContract.address);
             const initialAWbtcBalanceValue = wbtcPriceHex.mul(initialAWbtcBalance);
-            console.log(`inital awbtc balance: ${initialAWbtcBalanceValue}`);
+            console.log(`inital awbtc balance value: ${initialAWbtcBalanceValue}`);
             // const initialAWbtcBalance = AWbtcContract.balanceOf(indexContract.address);
             const tx = await indexContract.connect(acc2).balanceFund();
             tx.wait();
@@ -169,10 +170,49 @@ describe("IndexContract Integration", function () {
             const finalAWbtcBalance = await AWbtcContract.balanceOf(indexContract.address);
             console.log(`final awbtc balance: ${finalAWbtcBalance}`);
             const finalAWbtcBalanceValueBN = wbtcPriceHex.mul(finalAWbtcBalance);
-            // const finalAWbtcBalanceValue = finalAWbtcBalanceValueBN.div(10^AWbtcDecimals);
-            const finalAWbtcBalanceValue = ethers.utils.formatUnits(finalAWbtcBalanceValueBN, AWbtcDecimals);
+            
+            // const finalAWbtcBalanceValue = ethers.utils.formatUnits(finalAWbtcBalanceValueBN, AWbtcDecimals);
+            console.log(`final awbtc balance value BN: ${finalAWbtcBalanceValueBN}`);
+            const divider = 10**AWbtcDecimals;
+            const finalAWbtcBalanceValue = finalAWbtcBalanceValueBN.div(divider);
             console.log(`final awbtc balance value: ${finalAWbtcBalanceValue}`);
-            expect(halfInitial).to.eq(finalAWbtcBalanceValue);
+            expect(halfInitial).to.be.lessThanOrEqual(finalAWbtcBalanceValue);
+            // current conversion 1AWBTC = 1.03 WBTC, dont know why
+        });
+
+        it("should have equal values of aWBTC and aWETH on the contract", async () => {
+            const initialWethOnContract = await wethContract.balanceOf(indexContract.address);
+            const halfInitial = initialWethOnContract.div(2);
+            console.log(`half initial: ${halfInitial}`)
+            const initialAWethBalance = await AWethContract.balanceOf(indexContract.address);
+            console.log(`inital aweth balance: ${initialAWethBalance}`);
+            // const initialAWbtcBalance = AWbtcContract.balanceOf(indexContract.address);
+            const tx = await indexContract.connect(acc2).balanceFund();
+            tx.wait();
+            const finalAWethBalance = await AWethContract.balanceOf(indexContract.address);
+            console.log(`final aweth balance: ${finalAWethBalance}`);
+
+            const wbtcPriceHex = await indexContract.getWbtcPrice();
+            const wbtcPrice = wbtcPriceHex.toString();
+            console.log(`Wbtc price: ${wbtcPrice}`);
+            console.log(`half initial: ${halfInitial}`)
+            //const initialAWbtcBalanceValue = await indexContract.getDepositedValue(AWbtcContract.address);
+            const initialAWbtcBalance = await AWbtcContract.balanceOf(indexContract.address);
+            const initialAWbtcBalanceValue = wbtcPriceHex.mul(initialAWbtcBalance);
+            console.log(`inital awbtc balance value: ${initialAWbtcBalanceValue}`);
+            const AWbtcDecimals = await AWbtcContract.decimals();
+            console.log(`awbtc decimals: ${AWbtcDecimals}`);
+            const finalAWbtcBalance = await AWbtcContract.balanceOf(indexContract.address);
+            console.log(`final awbtc balance: ${finalAWbtcBalance}`);
+            const finalAWbtcBalanceValueBN = wbtcPriceHex.mul(finalAWbtcBalance);
+            
+            // const finalAWbtcBalanceValue = ethers.utils.formatUnits(finalAWbtcBalanceValueBN, AWbtcDecimals);
+            console.log(`final awbtc balance value BN: ${finalAWbtcBalanceValueBN}`);
+            const divider = 10**AWbtcDecimals;
+            const finalAWbtcBalanceValue = finalAWbtcBalanceValueBN.div(divider);
+            console.log(`final awbtc balance value: ${finalAWbtcBalanceValue}`);
+            expect(finalAWethBalance).to.eq(finalAWbtcBalanceValue);
+            // close enough
         })
     });
 

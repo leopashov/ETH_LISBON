@@ -76,9 +76,9 @@ contract IndexContract {
     IWETH public wbtcContract;
     ILendingPool public aaveV2LendingPool;
 
-    //define aTokens
-    IAToken public aWeth;
-    IAToken public aWBtc;
+    //define aToken contracts
+    IAToken public aWethContract;
+    IAToken public aWBtcContract;
     AggregatorV3Interface internal WBtcPriceFeed;
     // AggregatorV3Interface internal WEthPriceFeed; only need WBtc
 
@@ -97,8 +97,8 @@ contract IndexContract {
     // actually keep - we can then calculate the profit of the position and take a performance fee.
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
-    mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
-
+    // mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
+    uint256 public inverseIndexProportionBTCx100;
     // Define Events
     event liquidtyRemoved(uint256 amount);
 
@@ -207,9 +207,9 @@ contract IndexContract {
     }
 
     //@xm3van:  anxilary function
-    function getWbtcPrice() public view returns (int256 price) {
-        (, price, , , ) = WBtcPriceFeed.latestRoundData();
-        return price;
+    function getWbtcPrice() public view returns (uint256 outPrice) {
+        (, int256 price, , , ) = WBtcPriceFeed.latestRoundData();
+        return uint256(price);
     }
 
     //@xm3van:  anxilary function
@@ -224,7 +224,7 @@ contract IndexContract {
             address(this)
         );
         // get price per vault token
-        int256 priceOfVaultToken;
+        uint256 priceOfVaultToken;
         if (aTokenContract == _vaultTokens[1]) {
             // if asset is eth, return 1: 1eth = 1eth
             priceOfVaultToken = 1;
@@ -340,8 +340,62 @@ contract IndexContract {
             aaveV2LendingPool.deposit(WETH, wethToSwap, address(this), 0);
             aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
             // depositToAave(WETH, wethToSwap);
-        } else {}
+        } else {
+            // vault value not zero
+           rebalanceExistingVault();
+        }
     }
+
+    function rebalanceExistingVault() public {
+        // calculate values of aWETH and aWBTC on contract
+        uint256 awethOnContract = aWethContract.balanceOf(address(this));
+        uint256 aWbtcOnContract = aWBtcContract.balanceOf(address(this));
+        uint256 wbtcPrice = getWbtcPrice();
+        uint256 aWbtcOnContractValue = wbtcPrice * aWbtcOnContract;
+        
+        uint256 totalAtokenValueOnContract = aWbtcOnContractValue + awethOnContract;
+        // check if rebalance required
+        inverseIndexProportionBTCx100 = (100*totalAtokenValueOnContract)/aWbtcOnContractValue;
+        if(inverseIndexProportionBTC > 210) {
+            // corresponds to eth appreciating ~ 2.5% relative to BTC
+            // this means there is more value of aweth on contract than awbtc
+            rebalanceToken(aWethContract, aWBtcContract, aWbtcOnContractValue, awethOnContract); 
+        }
+        // select higher value to sell first 
+        if(aWbtcOnContractValue > )
+    }
+
+    function rebalanceToken(Contract aContractToSell, Contract aContractToBuy, uint256 aWbtcOnContractValue, uint256 awethOnContract) public {
+        // check for weth on contract
+        uint256 wethOnContract = wethContract.balanceOf(address(this));
+        if(wethOnContract > 1) {
+            // only bother swapping and depositing weth if > 1 on contract
+            // check if we are trying to sell eth 
+            if(keccak256(bytes(aContractToSell.UNDERLYING_ASSET_ADDRESS())) == keccak256(bytes(WETH))) {
+                // check the difference in values
+                uint256 indexValueDifference = awethOnContract - aWbtcOnContractValue;
+                if(wethOncontract <= indexValueDifference) {
+                    // swap all to btc and deposit to try and reblance this way
+                    uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethOnContract);
+                    swap(WETH, WBTC, wethOnContract, minAmountOut, address(this));
+                    uint256 wbtcOnContract = wbtcContract.balanceOf(address(this));
+                    aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
+                    // RECURSION - not meant to do but think it's the best option here
+                    rebalanceToken(Contract aContractToSell, Contract aContractToBuy, uint256 aWbtcOnContractValue, uint256 awethOnContract);
+                } else {
+                    // amount of weth on contract is enough to balance with some extra
+                    // weth to swap is difference in values + half of remaining weth
+                    uint256 excessWeth = wethOnContract - indexValueDifference;
+
+                }
+                
+            } else {
+                // if trying to sell btc
+                // deposit eth to aave
+                aaveV2LendingPool.deposit(WETH, wethToSwap, address(this), 0);
+            }
+        }
+    };
 
     /// FUNCTONALITY WITHDRAW
 
