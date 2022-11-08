@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
-import * as WethABI from "./wethABI/wethABI.json";
+import WethABI from "./wethABI/wethABI.json";
 import { BigNumber, Contract } from "ethers";
 import { abi as ERC20ABI} from '../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json';
 import { UniswapMockContract } from "../typechain-types/contracts/UniswapMockContract.sol";
@@ -25,7 +25,7 @@ describe("IndexContract Integration", function () {
     let uniContract: UniswapMockContract;
 
     beforeEach(async () => {
-        console.log(`Weth abi: ${WethABI}`);
+        // console.log(`Weth abi: ${WethABI}`);
         [deployer, acc1, acc2] = await ethers.getSigners();
         wEthContractAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
         wBtcContractAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
@@ -50,9 +50,10 @@ describe("IndexContract Integration", function () {
             [aWBTC, aWEth],
             [wBtcContractAddress, wEthContractAddress]
         );
+        
 
         await indexContract.deployed();
-        // console.log("indexContract deployed!");
+        console.log("indexContract deployed!");
 
         // assign minter role
         const MINTER_ROLE = await tokenContract.MINTER_ROLE();
@@ -78,15 +79,19 @@ describe("IndexContract Integration", function () {
             // fund contract
             const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("3"), });
             acc1Fund.wait();
-            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
+            console.log(`contract funded with: ${await wethContract.balanceOf(indexContract.address)} wei`);
             // allow uniswap mck to spend eth
             // swap 1/10th user eth to Weth
-            const ethSwap = wethContract.deposit()
-            // const ethSwap = await uniContract.connect(acc1).convertToWeth();
+            const ethSwap = await wethContract.deposit({ "value": ethers.utils.parseEther("2"), })
             ethSwap.wait();
+            const wethBal = await wethContract.balanceOf(acc1.address);
+            const wethFetch = await wethContract.connect(acc1).transfer(acc1.address, wethBal);
+            // const ethSwap = await uniContract.connect(acc1).convertToWeth();
+            wethFetch.wait();
+            console.log(`weth balance: ${wethBal}`);
             console.log("eth swapped to weth");
             // deposit all weth to aave
-            const wethBalance = await wethContract.balanceOf(acc1);
+            const wethBalance = await wethContract.balanceOf(acc1.address);
             console.log(`wallet weth balance: ${wethBalance}`);
             const aaveDeposit = await uniContract.connect(acc1).depositToAave(wethContract.address, wethBalance);
             aaveDeposit.wait();
