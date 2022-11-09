@@ -1,34 +1,8 @@
 <body class="text-bg-dark" style="background: linear-gradient(to right, rgba(112,48,160,0.05), rgba(0,0,0,0.05));">
 
-    <!--Header-->
-    <header class="p-3" style="background-color: rgb(0, 0, 0);">
-        <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-            
-            <!--Logo in the top left corner-->
-            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-            <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
-            </a>
-            
-            <!--Header Navigation Links-->
-            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-            <li><a routerLink="" class="nav-link px-2 text-white">Home</a></li>
-            <li><a routerLink="/dashboard" class="nav-link px-2 text-secondary">Dashboard</a></li>
-            <li><a routerLink="/swap" class="nav-link px-2 text-white">Swap</a></li>
-            <li><a href="#" class="nav-link px-2 text-danger">Whitepaper</a></li>
-            <li><a href="#" class="nav-link px-2 text-danger">Team</a></li>
-            </ul>
-
-            <!--Display Connected Wallet-->
-            <p class="text-right mb-md-0 px-5 text-danger">Connected wallet: 0x59f3...9zu664</p>
-            
-            <!--Button Connect Wallet-->
-            <div class="text-end">
-            <button type="button" class="btn text-white" style="background-color: #7030A0">Connect Wallet</button>
-            </div>
-        </div>
-        </div>
-    </header>
+    <div>
+        <ng-template #header></ng-template>
+    </div>
 
     <div class="b-example-divider"></div>
 
@@ -37,6 +11,7 @@
 <div class="container px-5 py-5" id="featured-3">
     <h2 class="pb-2 border-bottom">Decentralized Index Protocol</h2>
 </div>
+
 
 <!-- Container -->
 <div class="container px-5 py-5" id="featured-3">

@@ -1,30 +1,42 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterContentChecked, AfterViewInit, Component, Input, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ethers, Signer } from 'ethers';
+import { HomeComponent } from '../home/home.component';
+import { HeaderComponent } from '../header/header.component';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { WalletService } from '../wallet.service';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
-  walletAddress: string;
-  wallet: ethers.Wallet | undefined;
-  etherBalance: string;
-  provider: ethers.providers.BaseProvider;
+export class DashboardComponent implements OnInit, AfterViewInit, AfterContentChecked {
+  //@ViewChild(HeaderComponent, {static: true}) headerComponent!: HeaderComponent;
+  @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
-  constructor() { 
-    this.walletAddress = 'loading ...';
-    this.etherBalance = 'loading ...';
-    this.provider = ethers.getDefaultProvider('goerli');
+  walletAddress: string | undefined;
+  wallet: ethers.Wallet | undefined;
+  etherBalance: string | undefined;
+  provider: ethers.providers.JsonRpcProvider | undefined;
+  signer: ethers.providers.JsonRpcSigner | undefined;
+  
+  constructor(private walletService: WalletService) { 
+   
   }
 
   ngOnInit(): void {
-    this.wallet = ethers.Wallet.createRandom();
-    this.walletAddress = this.wallet.address;
-    this.provider.getBalance(this.walletAddress).then((balanceBN) => {
-      this.etherBalance = ethers.utils.formatEther(balanceBN) + ' ETH';
-    })
-
+    const componentRef = this.vcr.createComponent(HeaderComponent);
+    
   }
+
+  ngAfterViewInit(): void {
+   
+  }
+
+  ngAfterContentChecked(): void {
+    
+  }
+
+
 
 }
