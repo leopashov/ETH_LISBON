@@ -94,6 +94,7 @@ contract IndexContract {
 
     IAToken[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
+    uint256 public wethOnContract;
     uint256 public aWethOnContract;
     uint256 public wbtcOnContract;
     uint256 public aWbtcOnContractValue;
@@ -209,18 +210,25 @@ contract IndexContract {
         return _balance;
     }
 
+    function updateAwbtcOnContractValue() public {
+        aWbtcOnContractValue = (aWbtcOnContract * getWbtcPrice()) / (10**8); // divide by btc decimals
+    }
+
     function calculateIndexValue()
         public
         returns (uint256 valueOfIndex, uint256 valueOfVaultPositions)
     {
         uint256 wethOwnedByContract = wethBalance();
-        console.log("weth on contract: %s", wethOwnedByContract);
+        // console.log("weth on contract: %s", wethOwnedByContract);
         aWbtcOnContract = aWBtcContract.balanceOf(address(this));
-        console.log("awbtc on contract: %s", aWbtcOnContract);
-        aWbtcOnContractValue = aWbtcOnContract * getWbtcPrice();
-        console.log("awbtc on contract value: %s", aWbtcOnContractValue);
+        // console.log("awbtc on contract: %s", aWbtcOnContract);
+        updateAwbtcOnContractValue();
+        // console.log("awbtc on contract value: %s", aWbtcOnContractValue);
         aWethOnContract = aWethContract.balanceOf(address(this));
-        console.log("aweth on contract: %s", aWethOnContract);
+        console.log(
+            "aweth on contract (from 'calculateIndexValue'): %s",
+            aWethOnContract
+        );
 
         uint256 totalVaultPositionsValue = aWethOnContract +
             aWbtcOnContractValue;
@@ -362,6 +370,7 @@ contract IndexContract {
 
     function balanceFund() public {
         // check for any vault positions
+        console.log("balancing fund");
         (, uint256 vaultValue) = calculateIndexValue();
         console.log("vault value: %s", vaultValue);
         if (vaultValue == 0) {
@@ -369,7 +378,7 @@ contract IndexContract {
             // convert ETH to WETH
             // convertToWeth();
             // swap half eth for btc
-            uint256 wethOnContract = wethContract.balanceOf(address(this));
+            wethOnContract = wethContract.balanceOf(address(this));
             uint256 wethToSwap = wethOnContract / 2;
             uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
             swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
@@ -380,21 +389,36 @@ contract IndexContract {
             // deposit both to aave vaults
             aaveV2LendingPool.deposit(WETH, wethToSwap, address(this), 0);
             aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
-            // depositToAave(WETH, wethToSwap);
+
+            // update awToken holdings
+            console.log("line 423 index contract");
+            updateHoldings();
         } else {
+            // console.log("rebalancing existing vault");
             // vault value not zero
             rebalanceExistingVault();
         }
     }
 
+    function updateHoldings() public {
+        aWethOnContract = aWethContract.balanceOf(address(this));
+        aWbtcOnContract = aWBtcContract.balanceOf(address(this)); // consider making this global
+        wethOnContract = wethContract.balanceOf(address(this));
+        updateAwbtcOnContractValue();
+        console.log("weth on contract: %s", wethOnContract);
+        console.log("aWeth on contract: %s", aWethOnContract);
+        console.log("aWbtc on contract: %s", aWbtcOnContract);
+        console.log("aWbtc on contract value : %s", aWbtcOnContractValue);
+    }
+
     function rebalanceEthHeavy() public {
         // should be private / restricted
         // check for weth on contract
-        uint256 wethOnContract = wethContract.balanceOf(address(this));
-
+        wethOnContract = wethContract.balanceOf(address(this));
+        console.log("rebalancing eth heavy");
         // IAToken public aWethContract;
         // IAToken public aWBtcContract;
-
+        updateAwbtcOnContractValue();
         // check the difference in values
         uint256 indexValueDifference = aWethOnContract - aWbtcOnContractValue;
 
@@ -416,14 +440,18 @@ contract IndexContract {
                     address(this),
                     0
                 );
+                // update awToken holdings
+                console.log("line 433 index contract");
+                updateHoldings();
                 // RECURSION - not meant to do but think it's the best option here
                 // will recalculate difference and go into unstaking, swapping and restaking routine
                 // might not work
-                rebalanceExistingVault();
+                this.rebalanceExistingVault();
             } else {
                 // amount of weth on contract is enough to balance with some extra
                 // weth to swap is difference in values + half of remaining weth
                 // maybe check spare eth > threhsold (1) eth amount
+                console.log("line 441");
                 uint256 excessWeth = wethOnContract - indexValueDifference;
                 uint256 wethToSwapToBtc = indexValueDifference +
                     (excessWeth / 2);
@@ -451,10 +479,9 @@ contract IndexContract {
                     address(this),
                     0
                 );
+                console.log("line 469");
                 // update awToken holdings
-                aWethOnContract = aWethContract.balanceOf(address(this));
-                aWbtcOnContract = aWBtcContract.balanceOf(address(this)); // consider making this global
-                aWbtcOnContractValue = getWbtcPrice() * aWbtcOnContract;
+                updateHoldings();
             }
         } else {
             // no spare weth on contract so must remove weth from aave, swap and deposit btc.
@@ -470,15 +497,15 @@ contract IndexContract {
             wbtcOnContract = wbtcContract.balanceOf(address(this));
             // deposit to aave
             aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
+            console.log("line 433 index contract");
+            updateHoldings();
         }
     }
 
     function rebalanceExistingVault() public {
+        console.log("rebalancing existing vault");
         // calculate values of aWETH and aWBTC on contract
-        aWethOnContract = aWethContract.balanceOf(address(this));
-        aWbtcOnContract = aWBtcContract.balanceOf(address(this));
-        uint256 wbtcPrice = getWbtcPrice();
-        aWbtcOnContractValue = wbtcPrice * aWbtcOnContract;
+        // updateHoldings();
 
         uint256 totalAtokenValueOnContract = aWbtcOnContractValue +
             aWethOnContract;
@@ -488,6 +515,7 @@ contract IndexContract {
             aWbtcOnContractValue;
 
         if (inverseIndexProportionBTCx100 > 210) {
+            console.log("index is eth heavy!");
             // corresponds to eth appreciating ~ 2.5% relative to BTC
             // this means there is more value of aweth on contract than awbtc
             rebalanceEthHeavy();
@@ -495,6 +523,8 @@ contract IndexContract {
             // corresponds to btc appreciating ~ 2.5% relative to eth
             // this means there is more value of awbtc on contract than aweth
             //rebalanceBtcHeavy();
+        } else {
+            console.log("no rebalance required"); // remove this else statement when happy with functionality
         }
     }
 
