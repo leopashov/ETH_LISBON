@@ -48,10 +48,16 @@ interface IUniswapV2Factory {
     function getPair(address token0, address token1) external returns (address);
 }
 
-interface IWETH is IERC20 {
+interface IWETH {
     function deposit() external payable;
 
-    function withdraw(uint256) external;
+    function withdraw(uint256 wad) external payable;
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function approve(address guy, uint256 wad) external returns (bool);
+
+    function balanceOf(address owner) external view returns (uint256);
 }
 
 interface IIndexToken is IERC20 {
@@ -67,6 +73,14 @@ interface IIndexToken is IERC20 {
 }
 
 contract IndexContract {
+    // Function to receive Ether. msg.data must be empty
+    receive() external payable {}
+
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
+
+    //Ref.: https://solidity-by-example.org/sending-ether/
+
     //address of the uniswap v2 router
     address private constant UNISWAP_V2_ROUTER =
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
@@ -531,14 +545,50 @@ contract IndexContract {
     /// FUNCTONALITY WITHDRAW
     // 0. require user has balance
     // 1. Calucate worth of user index tokens #DONE
-    // 2. do a proportional withdrawal #
+    // 2. do a proportional withdrawal #DONE
     //  --> wbtc - pool
     //  --> weth - pool
-    // 3. convert btc -> weth
-    // 4. convert to weth to eth
+    // 3. convert btc -> weth #DONE
+    // 4. convert to weth to eth #DONE
     // 5. burn tokens
     // 6. return eth
 
+    // @xm3van: Still needs some partial unit testing!!!
+
+    function withdraw(uint256 tokenAmount) public {
+        // @xm3van: decided to not implement require function as the user will carry gas cost
+        // i.e. they can rebalance as much as they like, right?
+        // require(calculateIndexTokensValue(amount)>1, "Please ensure your token's are worth more than 1 ETH");
+
+        // calculates user value
+        uint256 valueUserIndexToken = calculateIndexTokensValue(tokenAmount);
+
+        // remove's 50%  from aave
+        uint256 halfDifference = valueUserIndexToken / 2;
+
+        // calculate halfdifference in terms of WBTC
+        uint256 wbtcHalfDifference = getWbtcPrice() * halfDifference;
+        // remove half difference value from aave from wbtc
+        aaveV2LendingPool.withdraw(WBTC, wbtcHalfDifference, address(this));
+        // swap WBTC on contract to WETH
+        uint256 minAmountOut = getAmountOutMin(WBTC, WETH, wbtcHalfDifference);
+        swap(WBTC, WETH, wbtcHalfDifference, minAmountOut, address(this));
+
+        // remove half difference amount from aave from weth
+        aaveV2LendingPool.withdraw(WETH, halfDifference, address(this));
+
+        // Unwrap WETH
+        uint256 wethToUnwrap = minAmountOut + halfDifference;
+        unwrapEth(wethToUnwrap);
+
+        // burn index tokens
+        tokenContract.burn(msg.sender, tokenAmount);
+
+        //return eth
+        payable(msg.sender).transfer(wethToUnwrap);
+    }
+
+    // @xm3van: Withdraw function & tested!
     function calculateIndexTokensValue(uint256 indexTokenAmount)
         public
         returns (uint256 indexTokenAmountValue)
@@ -547,48 +597,26 @@ contract IndexContract {
         /// given amount of indexToken
 
         // Value of token's send by user
-        (uint256 indexValue, ) = calculateIndexValue();
+        (uint256 indVal, ) = calculateIndexValue();
         uint256 tokenSupply = tokenContract.totalSupply();
 
         // value
         // @xm3van: Is this safe? It should be as SafeMath is implemented right?
-        withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
+        withdrawalTokenValue = (indVal / tokenSupply) * indexTokenAmount;
 
         // returns
         return (withdrawalTokenValue);
     }
 
-    // function withdrawFromPools(uint256 indexValueDifference) public {
-    //     // insert
-    //     // calculateIndexTokensValue()
-
-    //     // remove's 50%  from aave
-    //     uint256 halfDifference = indexValueDifference / 2;
-    //     // remove half difference amount from aave
-    //     aaveV2LendingPool.withdraw(WETH, halfDifference, address(this));
-    //     // now we have WETH on contract
-    //     wethOnContract = wethContract.balanceOf(address(this));
-    //     // swap WETH on contract (incl. dust (amount < 1)) to WBTC
-    //     uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethOnContract);
-    //     swap(WETH, WBTC, wethOnContract, minAmountOut, address(this));
-    //     // now we have WBTC on contract
-    //     wbtcOnContract = wbtcContract.balanceOf(address(this));
-    //     // deposit to aave
-    //     aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
-    // }
-
-    //@xm3van:  withdraw function
-    function returnIndexTokens(uint256 amount) public {
-        // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
-        require(amount > 0, "You need to return at least some tokens");
-        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amount, "Check the token allowance");
-        tokenContract.transferFrom(msg.sender, address(this), amount);
+    // @xm3van: Withdraw function & tested!
+    function unwrapEth(uint256 Amount) external payable {
+        require(Amount > 0, "Please increase the minimum Amount to unwrap!");
+        wethContract.withdraw(Amount);
     }
 
     //@xm3van:  withdraw function
     function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(address(this), amount);
+        tokenContract.burn(msg.sender, amount);
     }
 
     //@xm3van:  withdraw function
@@ -596,26 +624,35 @@ contract IndexContract {
         payable(msg.sender).transfer(amount);
     }
 
-    //@xm3van:  withdraw function
-    function removeLiquidity(uint256 amount) public {
-        // # user sends index tokens back to contract
-        require(amount > 0, "Provide amount of liquidity to remove");
-        // get allowance for this
-        // @xm3van What is the rational for allowance? Time locking contribution to pools? Else Allowance = tokenbalance
-        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amount, "check token allowance");
-        // burn index tokens straight from user wallet
-        tokenContract.burn(msg.sender, amount);
-        // #call token balancing function to decide where best to remove tokens from
-        emit liquidtyRemoved(amount);
+    // //@xm3van:  withdraw function
+    // function returnIndexTokens(uint256 amount) public {
+    //     // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
+    //     require(amount > 0, "You need to return at least some tokens");
+    //     uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+    //     require(allowance >= amount, "Check the token allowance");
+    //     tokenContract.transferFrom(msg.sender, address(this), amount);
+    // }
 
-        // getIndexBalance()
-        // get number of tokens belonging to this address in a vault.
-        // unstake tokens
-        // switch tokens to eth (if required)
-        // send eth back to function caller (msg.sender)
-        // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
-    }
+    // //@xm3van:  withdraw function
+    // function removeLiquidity(uint256 amount) public {
+    //     // # user sends index tokens back to contract
+    //     require(amount > 0, "Provide amount of liquidity to remove");
+    //     // get allowance for this
+    //     // @xm3van What is the rational for allowance? Time locking contribution to pools? Else Allowance = tokenbalance
+    //     uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+    //     require(allowance >= amount, "check token allowance");
+    //     // burn index tokens straight from user wallet
+    //     tokenContract.burn(msg.sender, amount);
+    //     // #call token balancing function to decide where best to remove tokens from
+    //     emit liquidtyRemoved(amount);
+
+    //     // getIndexBalance()
+    //     // get number of tokens belonging to this address in a vault.
+    //     // unstake tokens
+    //     // switch tokens to eth (if required)
+    //     // send eth back to function caller (msg.sender)
+    //     // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
+    // }
 
     /// ANXILIARY FUNCTIONS
     //@xm3van:  anxilary function

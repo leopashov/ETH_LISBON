@@ -53,43 +53,43 @@ describe("IndexContract", function () {
 
     });
 
-    describe("When withdraw() is called in the IndexContract.sol", async () => {
+    // describe("When withdraw() is called in the IndexContract.sol", async () => {
 
-        beforeEach(async () => {
-            const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
-            acc1Fund.wait();
-            const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("10"), });
-            acc2Fund.wait();
-            const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
-            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBal)} Tokens`);
-        })
+    //     beforeEach(async () => {
+    //         const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
+    //         acc1Fund.wait();
+    //         const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("10"), });
+    //         acc2Fund.wait();
+    //         const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
+    //         console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBal)} Tokens`);
+    //     })
 
-        it("CalculateIndexTokensValue() - calculates the value of index token balance", async () => {
-            // get index token balance of acc1 
-            const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
+    //     it("CalculateIndexTokensValue() - calculates the value of index token balance", async () => {
+    //         // get index token balance of acc1 
+    //         const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
 
-            // initial eth balance of contract
-            const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
-            await indexContract.calculateIndexTokensValue(indexTokensToWithdraw);
+    //         // initial eth balance of contract
+    //         const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
+    //         await indexContract.calculateIndexTokensValue(indexTokensToWithdraw);
 
-            // log token Value of user tokens
-            const userValue = await indexContract.userTokenValue()
-            console.log(userValue);
+    //         // log token Value of user tokens
+    //         const userValue = await indexContract.userTokenValue()
+    //         console.log(userValue);
 
-            // log total supply
-            const totalSupply = await tokenContract.totalSupply();
-            console.log(totalSupply);
+    //         // log total supply
+    //         const totalSupply = await tokenContract.totalSupply();
+    //         console.log(totalSupply);
 
-            // token value in typescript 
-            const indexValue = await indexContract.indexValue();
+    //         // token value in typescript 
+    //         const indexValue = await indexContract.indexValue();
 
-            // value typescript
-            const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw)
+    //         // value typescript
+    //         const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw)
 
-            expect(userValue).to.eq(userValueTs);
-        })
+    // //         expect(userValue).to.eq(userValueTs);
+    // //     })
 
-    })
+    // })
 
     describe("When withdraw() is called in the IndexContract.sol", async () => {
 
