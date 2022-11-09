@@ -8,6 +8,7 @@ import {UniswapExchangeInterface} from "./interfaces/IUniswapExchangeInterface.s
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {IAToken} from "./interfaces/IaTokenInterface.sol";
 import {ILendingPool} from "./interfaces/ILendingPool.sol";
+import "hardhat/console.sol";
 
 interface IUniswapV2Router {
     function getAmountsOut(uint256 amountIn, address[] memory path)
@@ -96,6 +97,7 @@ contract UniswapMockContract {
     event liquidtyRemoved(uint256 amount);
 
     constructor() {
+        console.log("beginning construction");
         // weth contract
         wethContract = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
         //wbtc contract
@@ -183,13 +185,14 @@ contract UniswapMockContract {
     }
 
     function depositToAave(address token, uint256 amount) public {
+        console.log("depositing to aave");
         aaveV2LendingPool.deposit(token, amount, address(msg.sender), 0);
     }
 
     function convertToWeth() public {
         //public for testing - should be internal
         uint256 eth = msg.sender.balance / 10;
-        wethContract.approve(address(wethContract), 2**256 - 1);
+        wethContract.approve(address(this), 2**256 - 1);
         wethContract.deposit{value: eth}();
         uint256 wethBal = wethContract.balanceOf(address(this));
         wethContract.transfer(address(msg.sender), wethBal);

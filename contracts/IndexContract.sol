@@ -9,6 +9,8 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {IAToken} from "./interfaces/IaTokenInterface.sol";
 import {ILendingPool} from "./interfaces/ILendingPool.sol";
 
+import "hardhat/console.sol";
+
 interface IUniswapV2Router {
     function getAmountsOut(uint256 amountIn, address[] memory path)
         external
@@ -92,9 +94,10 @@ contract IndexContract {
 
     IAToken[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
-    uint256 public awethOnContract;
+    uint256 public aWethOnContract;
+    uint256 public wbtcOnContract;
     uint256 public aWbtcOnContractValue;
-    uint256 wbtcOnContract;
+    uint256 public aWbtcOnContract;
 
     // @xm3van: let's denominate in wei for sake of consistency
     mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with - remove - user's token balance proportional to their funding!
@@ -201,22 +204,38 @@ contract IndexContract {
         return _balance;
     }
 
-    //@xm3van:  anxilary function
     function calculateIndexValue()
         public
-        view
         returns (uint256 valueOfIndex, uint256 valueOfVaultPositions)
     {
-        // index value is sum of eth on contract and eth value of deposited tokens
-        // uint256 ethOnContract = address(this).balance;
         uint256 wethOwnedByContract = wethBalance();
-        uint256 totalVaultPositionsValue;
-        for (uint8 i = 0; i < _vaultTokens.length; i++) {
-            totalVaultPositionsValue += getDepositedValue(_vaultTokens[i]);
-        }
+        aWbtcOnContract = aWBtcContract.balanceOf(address(this));
+        aWbtcOnContractValue = aWbtcOnContract * getWbtcPrice();
+        aWethOnContract = aWethContract.balanceOf(address(this));
+
+        uint256 totalVaultPositionsValue = aWethOnContract +
+            aWbtcOnContractValue;
         valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
         return (valueOfIndex, totalVaultPositionsValue);
     }
+
+    //@xm3van:  anxilary function
+    // @leo old version - would be nice to use mappings etc (esp. for larger indexes)
+    // function calculateIndexValue()
+    //     public
+    //     view
+    //     returns (uint256 valueOfIndex, uint256 valueOfVaultPositions)
+    // {
+    //     // index value is sum of eth on contract and eth value of deposited tokens
+    //     // uint256 ethOnContract = address(this).balance;
+    //     uint256 wethOwnedByContract = wethBalance();
+    //     uint256 totalVaultPositionsValue;
+    //     for (uint8 i = 0; i < _vaultTokens.length; i++) {
+    //         totalVaultPositionsValue += getDepositedValue(_vaultTokens[i]);
+    //     }
+    //     valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
+    //     return (valueOfIndex, totalVaultPositionsValue);
+    // }
 
     //@xm3van:  anxilary function
     function getWbtcPrice() public view returns (uint256 outPrice) {
@@ -224,29 +243,29 @@ contract IndexContract {
         return uint256(price);
     }
 
-    //@xm3van:  anxilary function
-    function getDepositedValue(IAToken aTokenContract)
-        public
-        view
-        returns (uint256 positionValue)
-    {
-        // aTokens pegged 1:1 to underlying
-        // get balance of aTokens within indexContract
-        uint256 balanceOfVaultTokenInIndex = aTokenContract.balanceOf(
-            address(this)
-        );
-        // get price per vault token
-        uint256 priceOfVaultToken;
-        if (aTokenContract == _vaultTokens[1]) {
-            // if asset is eth, return 1: 1eth = 1eth
-            priceOfVaultToken = 1;
-        } else {
-            priceOfVaultToken = getWbtcPrice();
-            // (, priceOfVaultToken, , , ) = WBtcPriceFeed.latestRoundData();
-        }
+    // //@xm3van:  anxilary function
+    // function getDepositedValue(IAToken aTokenContract)
+    //     public
+    //     view
+    //     returns (uint256 positionValue)
+    // {
+    //     // aTokens pegged 1:1 to underlying
+    //     // get balance of aTokens within indexContract
+    //     uint256 balanceOfVaultTokenInIndex = aTokenContract.balanceOf(
+    //         address(this)
+    //     );
+    //     // get price per vault token
+    //     uint256 priceOfVaultToken;
+    //     if (aTokenContract == _vaultTokens[1]) {
+    //         // if asset is eth, return 1: 1eth = 1eth
+    //         priceOfVaultToken = 1;
+    //     } else {
+    //         priceOfVaultToken = getWbtcPrice();
+    //         // (, priceOfVaultToken, , , ) = WBtcPriceFeed.latestRoundData();
+    //     }
 
-        return (uint256(priceOfVaultToken) * balanceOfVaultTokenInIndex);
-    } // CHECK updateTokenProportionsAndReturnMaxLoc() FUNCTION AFTER WRITING THIS
+    //     return (uint256(priceOfVaultToken) * balanceOfVaultTokenInIndex);
+    // } // CHECK updateTokenProportionsAndReturnMaxLoc() FUNCTION AFTER WRITING THIS
 
     //@xm3van:  Rebalance function
     function swap(
@@ -335,6 +354,7 @@ contract IndexContract {
     function balanceFund() public {
         // check for any vault positions
         (, uint256 vaultValue) = calculateIndexValue();
+        console.log("vault value: %s", vaultValue);
         if (vaultValue == 0) {
             // if vault value is zero ie all balance is just held as eth on contract
             // convert ETH to WETH
@@ -367,7 +387,7 @@ contract IndexContract {
         // IAToken public aWBtcContract;
 
         // check the difference in values
-        uint256 indexValueDifference = awethOnContract - aWbtcOnContractValue;
+        uint256 indexValueDifference = aWethOnContract - aWbtcOnContractValue;
 
         if (wethOnContract > 1) {
             // only bother swapping and depositing weth if > 1 on contract
@@ -394,6 +414,7 @@ contract IndexContract {
             } else {
                 // amount of weth on contract is enough to balance with some extra
                 // weth to swap is difference in values + half of remaining weth
+                // maybe check spare eth > threhsold (1) eth amount
                 uint256 excessWeth = wethOnContract - indexValueDifference;
                 uint256 wethToSwapToBtc = indexValueDifference +
                     (excessWeth / 2);
@@ -406,6 +427,7 @@ contract IndexContract {
                 swap(WETH, WBTC, wethToSwapToBtc, minAmountOut, address(this));
                 // get weth and btc holdings in contract
                 wethOnContract = wethContract.balanceOf(address(this));
+                // wethOnContract = (excessWeth / 2)
                 wbtcOnContract = wbtcContract.balanceOf(address(this));
                 // deposit both to aave
                 aaveV2LendingPool.deposit(
@@ -421,10 +443,8 @@ contract IndexContract {
                     0
                 );
                 // update awToken holdings
-                awethOnContract = aWethContract.balanceOf(address(this));
-                uint256 aWbtcOnContract = aWBtcContract.balanceOf(
-                    address(this)
-                ); // consider making this global
+                aWethOnContract = aWethContract.balanceOf(address(this));
+                aWbtcOnContract = aWBtcContract.balanceOf(address(this)); // consider making this global
                 aWbtcOnContractValue = getWbtcPrice() * aWbtcOnContract;
             }
         } else {
@@ -446,13 +466,13 @@ contract IndexContract {
 
     function rebalanceExistingVault() public {
         // calculate values of aWETH and aWBTC on contract
-        awethOnContract = aWethContract.balanceOf(address(this));
-        uint256 aWbtcOnContract = aWBtcContract.balanceOf(address(this));
+        aWethOnContract = aWethContract.balanceOf(address(this));
+        aWbtcOnContract = aWBtcContract.balanceOf(address(this));
         uint256 wbtcPrice = getWbtcPrice();
         aWbtcOnContractValue = wbtcPrice * aWbtcOnContract;
 
         uint256 totalAtokenValueOnContract = aWbtcOnContractValue +
-            awethOnContract;
+            aWethOnContract;
         // check if rebalance required
         inverseIndexProportionBTCx100 =
             (100 * totalAtokenValueOnContract) /

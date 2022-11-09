@@ -3,10 +3,11 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
-import WethABI from "./wethABI/wethABI.json";
+import WethABI from "./ABIs/wethABI.json";
+import lendingPoolABi from "./ABIs/LendingPoolABI.json";
 import { BigNumber, Contract } from "ethers";
 import { abi as ERC20ABI} from '../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json';
-import { UniswapMockContract } from "../typechain-types/contracts/UniswapMockContract.sol";
+import { Provider } from "@ethersproject/providers";
 
 describe("IndexContract Integration", function () {
     let tokenContract: IndexToken;
@@ -16,13 +17,14 @@ describe("IndexContract Integration", function () {
     let acc2: SignerWithAddress;
     let aWBTC: string;
     let aWEth: string;
+    let lendingPool: string;
     let wBtcContractAddress: string;
     let wEthContractAddress: string;
     let wethContract: Contract;
     let AWethContract: Contract;
     let AWbtcContract: Contract;
+    let lendingPoolContract: Contract;
 
-    let uniContract: UniswapMockContract;
 
     beforeEach(async () => {
         // console.log(`Weth abi: ${WethABI}`);
@@ -33,6 +35,7 @@ describe("IndexContract Integration", function () {
         // contract address for extra robustness
         aWBTC = "0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656";
         aWEth = "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e";
+        lendingPool = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9";
 
         // get factories 
         const tokenContractFacory = await ethers.getContractFactory('IndexToken');
@@ -65,44 +68,61 @@ describe("IndexContract Integration", function () {
         // console.log("Minter role granted!");
         wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
         AWethContract = new ethers.Contract(aWEth, WethABI, deployer); //just use WethABI as only need balance of
-        AWbtcContract = new ethers.Contract(aWBTC, ERC20ABI, deployer); //just use WethABI as only need balance of
-
-        // deploy mock uniswap contract 
-        const UniContractFactory = await ethers.getContractFactory('UniswapMockContract');
-        uniContract = await UniContractFactory.deploy();
-
+        AWbtcContract = new ethers.Contract(aWBTC, ERC20ABI, deployer);
+        lendingPoolContract = new ethers.Contract(lendingPool, lendingPoolABi, deployer);
 
     });
 
     describe("when rebalance is called on an eth heavy distribution", async () => {
+        // see integration test file for test when rebalance is called for the first time
         beforeEach(async () => {
-            // fund contract
+            // fund index contract
             const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("3"), });
             acc1Fund.wait();
             console.log(`contract funded with: ${await wethContract.balanceOf(indexContract.address)} wei`);
-            // allow uniswap mck to spend eth
-            // swap 1/10th user eth to Weth
-            const ethSwap = await wethContract.deposit({ "value": ethers.utils.parseEther("2"), })
+            // deposit eth to weth contract
+            const ethSwap = await wethContract.connect(acc1).deposit({ "value": ethers.utils.parseEther("2"), })
             ethSwap.wait();
             const wethBal = await wethContract.balanceOf(acc1.address);
+            // claim weth back into wallet
             const wethFetch = await wethContract.connect(acc1).transfer(acc1.address, wethBal);
-            // const ethSwap = await uniContract.connect(acc1).convertToWeth();
             wethFetch.wait();
-            console.log(`weth balance: ${wethBal}`);
+            
             console.log("eth swapped to weth");
-            // deposit all weth to aave
+            // show balance of weth in wallet
             const wethBalance = await wethContract.balanceOf(acc1.address);
             console.log(`wallet weth balance: ${wethBalance}`);
-            const aaveDeposit = await uniContract.connect(acc1).depositToAave(wethContract.address, wethBalance);
+            // approve weth to be spent by aave
+            const wethApprove = await wethContract.connect(acc1).approve(lendingPoolContract.address, wethBalance);
+            wethApprove.wait();
+            // deposit weth to aave and get aweth in return
+            const aaveDeposit = await lendingPoolContract.connect(acc1).deposit(wEthContractAddress, wethBalance, acc1.address, 0);
             aaveDeposit.wait();
             console.log("Aave deposited");
-            const awethOnWallet = AWethContract.balanceOf(acc1.address); 
-            console.log(`aweth on wallet: ${awethOnWallet}`);  
-            AWethContract.connect(acc1).transfer(indexContract.address, awethOnWallet);
+            const awethOnWallet = await AWethContract.balanceOf(acc1.address); 
+            console.log(`aweth on wallet: ${awethOnWallet}`); 
+            // send aweth from acc1 to index contract (ie making eth heavy index)
+            const AWethTransfer = await AWethContract.connect(acc1).transfer(indexContract.address, awethOnWallet);
+            AWethTransfer.wait();
+            const indexContractAwethBalance = await AWethContract.balanceOf(indexContract.address);
+            console.log(`${indexContractAwethBalance} aweth transferred to index contract`);
+            // index contract now has some (3) weth on it aswell as 2 aweth 
         })
+
+        it("should calculate deposited value of tokens we have deposited (calculateIndexValue)", async () => {
+            var returnedInfo = await indexContract.connect(acc1).calculateIndexValue();
+            console.log(`deposited value: ${returnedInfo}`);
+            //expect(getDepositedValuePls).to.eq(2000000000000000000);
+
+        })
+
+
         it("should give  correct amount of aweth on contract", async () => {
-            const awethOnIndexContract = AWethContract.balanceOf(indexContract.address);  
-            console.log(`aweth on wallet: ${awethOnIndexContract}`); 
+            const awethOnIndexContract = await AWethContract.balanceOf(indexContract.address);  
+            console.log(`aweth on index contract: ${awethOnIndexContract}`); 
+            // call 'balance fund'
+            const balanceFundTx = await indexContract.connect(acc1).balanceFund();
+            balanceFundTx.wait();
 
         })
 
