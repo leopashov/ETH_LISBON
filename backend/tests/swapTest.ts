@@ -58,27 +58,50 @@ describe("IndexContract", function () {
         beforeEach(async () => {
             const acc1Fund = await indexContract.connect(acc1).receive_funds({ "value": ethers.utils.parseEther("10"), });
             acc1Fund.wait();
-            console.log(`contract funded with: ${await ethers.provider.getBalance(indexContract.address)} wei`)
+            const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("30"), });
+            acc2Fund.wait();
+            console.log(`contract funded with: ${ethers.utils.formatEther(await indexContract.wethBalance())} WETH`)
         })
 
         it("should convert ETH in contract to WETH", async () => {
             // initial eth balance of contract
-            const ethBal = await ethers.provider.getBalance(indexContract.address)
-            console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`)
+            const ethBal = await ethers.provider.getBalance(indexContract.address);
+            console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`);
 
             // convert balance of smart contract to weth 
-            await indexContract.convertToWeth();
-            console.log('Conversion from ETH to WETH')
+            const toWethTx = await indexContract.convertToWeth();
+            toWethTx.wait();
+            console.log('Conversion from ETH to WETH');
 
             // retrieve weth balance 
             const wethBal = await indexContract.wethBalance();
-            console.log(`WETH Balance: ${ethers.utils.formatEther(wethBal)}`)
+            console.log(`WETH Balance: ${ethers.utils.formatEther(wethBal)}`);
 
             expect(ethBal).to.eq(wethBal);
-        })
+            // NOTE: test does not work as we changed smart contract logic and 
+            // receive_funds() automatically converts to WETH (i.e. intial eth bal=0)
+        });
 
 
-    })
+        it("should convert WETH in contract to ETH ", async () => {
+            // retrieve weth balance 
+            const wethBal = await indexContract.wethBalance();
+            console.log(`WETH Balance: ${ethers.utils.formatEther(wethBal)}`);
+
+            // convert to eth 
+            const unwrapTx = await indexContract.connect(acc1).unwrapEth(wethBal);
+            unwrapTx.wait();
+            console.log(`WETH to ETH`)
+
+            // log eth balance 
+            const ethBal = await ethers.provider.getBalance(indexContract.address);
+            console.log(`ETH Balance: ${ethers.utils.formatEther(ethBal)}`)
+
+            expect(wethBal).to.eq(ethBal);
+        });
+
+
+    });
 
     describe("When getAmountOutMin() & swap() is called", async () => {
 

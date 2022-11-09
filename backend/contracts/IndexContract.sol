@@ -48,10 +48,16 @@ interface IUniswapV2Factory {
     function getPair(address token0, address token1) external returns (address);
 }
 
-interface IWETH is IERC20 {
+interface IWETH {
     function deposit() external payable;
 
-    function withdraw(uint256) external;
+    function withdraw(uint256 wad) external payable;
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function approve(address guy, uint256 wad) external returns (bool);
+
+    function balanceOf(address owner) external view returns (uint256);
 }
 
 interface IIndexToken is IERC20 {
@@ -67,6 +73,14 @@ interface IIndexToken is IERC20 {
 }
 
 contract IndexContract {
+    // Function to receive Ether. msg.data must be empty
+    receive() external payable {}
+
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
+
+    //Ref.: https://solidity-by-example.org/sending-ether/
+
     //address of the uniswap v2 router
     address private constant UNISWAP_V2_ROUTER =
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
@@ -94,10 +108,12 @@ contract IndexContract {
 
     IAToken[] private _vaultTokens;
     uint256 public indexValue; // index value quoted in eth
+    uint256 public wethOnContract;
     uint256 public aWethOnContract;
     uint256 public wbtcOnContract;
     uint256 public aWbtcOnContractValue;
     uint256 public aWbtcOnContract;
+    uint256 public withdrawalTokenValue;
 
     // @xm3van: let's denominate in wei for sake of consistency
     mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with - remove - user's token balance proportional to their funding!
@@ -208,18 +224,25 @@ contract IndexContract {
         return _balance;
     }
 
+    function updateAwbtcOnContractValue() public {
+        aWbtcOnContractValue = (aWbtcOnContract * getWbtcPrice()) / (10**8); // divide by btc decimals
+    }
+
     function calculateIndexValue()
         public
         returns (uint256 valueOfIndex, uint256 valueOfVaultPositions)
     {
         uint256 wethOwnedByContract = wethBalance();
-        console.log("weth on contract: %s", wethOwnedByContract);
+        // console.log("weth on contract: %s", wethOwnedByContract);
         aWbtcOnContract = aWBtcContract.balanceOf(address(this));
-        console.log("awbtc on contract: %s", aWbtcOnContract);
-        aWbtcOnContractValue = aWbtcOnContract * getWbtcPrice();
-        console.log("awbtc on contract value: %s", aWbtcOnContractValue);
+        // console.log("awbtc on contract: %s", aWbtcOnContract);
+        updateAwbtcOnContractValue();
+        // console.log("awbtc on contract value: %s", aWbtcOnContractValue);
         aWethOnContract = aWethContract.balanceOf(address(this));
-        console.log("aweth on contract: %s", aWethOnContract);
+        console.log(
+            "aweth on contract (from 'calculateIndexValue'): %s",
+            aWethOnContract
+        );
 
         uint256 totalVaultPositionsValue = aWethOnContract +
             aWbtcOnContractValue;
@@ -361,6 +384,7 @@ contract IndexContract {
 
     function balanceFund() public {
         // check for any vault positions
+        console.log("balancing fund");
         (, uint256 vaultValue) = calculateIndexValue();
         console.log("vault value: %s", vaultValue);
         if (vaultValue == 0) {
@@ -368,7 +392,7 @@ contract IndexContract {
             // convert ETH to WETH
             // convertToWeth();
             // swap half eth for btc
-            uint256 wethOnContract = wethContract.balanceOf(address(this));
+            wethOnContract = wethContract.balanceOf(address(this));
             uint256 wethToSwap = wethOnContract / 2;
             uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
             swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
@@ -379,21 +403,36 @@ contract IndexContract {
             // deposit both to aave vaults
             aaveV2LendingPool.deposit(WETH, wethToSwap, address(this), 0);
             aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
-            // depositToAave(WETH, wethToSwap);
+
+            // update awToken holdings
+            console.log("line 423 index contract");
+            updateHoldings();
         } else {
+            // console.log("rebalancing existing vault");
             // vault value not zero
             rebalanceExistingVault();
         }
     }
 
+    function updateHoldings() public {
+        aWethOnContract = aWethContract.balanceOf(address(this));
+        aWbtcOnContract = aWBtcContract.balanceOf(address(this)); // consider making this global
+        wethOnContract = wethContract.balanceOf(address(this));
+        updateAwbtcOnContractValue();
+        console.log("weth on contract: %s", wethOnContract);
+        console.log("aWeth on contract: %s", aWethOnContract);
+        console.log("aWbtc on contract: %s", aWbtcOnContract);
+        console.log("aWbtc on contract value : %s", aWbtcOnContractValue);
+    }
+
     function rebalanceEthHeavy() public {
         // should be private / restricted
         // check for weth on contract
-        uint256 wethOnContract = wethContract.balanceOf(address(this));
-
+        wethOnContract = wethContract.balanceOf(address(this));
+        console.log("rebalancing eth heavy");
         // IAToken public aWethContract;
         // IAToken public aWBtcContract;
-
+        updateAwbtcOnContractValue();
         // check the difference in values
         uint256 indexValueDifference = aWethOnContract - aWbtcOnContractValue;
 
@@ -415,14 +454,18 @@ contract IndexContract {
                     address(this),
                     0
                 );
+                // update awToken holdings
+                console.log("line 433 index contract");
+                updateHoldings();
                 // RECURSION - not meant to do but think it's the best option here
                 // will recalculate difference and go into unstaking, swapping and restaking routine
                 // might not work
-                rebalanceExistingVault();
+                this.rebalanceExistingVault();
             } else {
                 // amount of weth on contract is enough to balance with some extra
                 // weth to swap is difference in values + half of remaining weth
                 // maybe check spare eth > threhsold (1) eth amount
+                console.log("line 441");
                 uint256 excessWeth = wethOnContract - indexValueDifference;
                 uint256 wethToSwapToBtc = indexValueDifference +
                     (excessWeth / 2);
@@ -450,10 +493,9 @@ contract IndexContract {
                     address(this),
                     0
                 );
+                console.log("line 469");
                 // update awToken holdings
-                aWethOnContract = aWethContract.balanceOf(address(this));
-                aWbtcOnContract = aWBtcContract.balanceOf(address(this)); // consider making this global
-                aWbtcOnContractValue = getWbtcPrice() * aWbtcOnContract;
+                updateHoldings();
             }
         } else {
             // no spare weth on contract so must remove weth from aave, swap and deposit btc.
@@ -469,15 +511,15 @@ contract IndexContract {
             wbtcOnContract = wbtcContract.balanceOf(address(this));
             // deposit to aave
             aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
+            console.log("line 433 index contract");
+            updateHoldings();
         }
     }
 
     function rebalanceExistingVault() public {
+        console.log("rebalancing existing vault");
         // calculate values of aWETH and aWBTC on contract
-        aWethOnContract = aWethContract.balanceOf(address(this));
-        aWbtcOnContract = aWBtcContract.balanceOf(address(this));
-        uint256 wbtcPrice = getWbtcPrice();
-        aWbtcOnContractValue = wbtcPrice * aWbtcOnContract;
+        // updateHoldings();
 
         uint256 totalAtokenValueOnContract = aWbtcOnContractValue +
             aWethOnContract;
@@ -487,6 +529,7 @@ contract IndexContract {
             aWbtcOnContractValue;
 
         if (inverseIndexProportionBTCx100 > 210) {
+            console.log("index is eth heavy!");
             // corresponds to eth appreciating ~ 2.5% relative to BTC
             // this means there is more value of aweth on contract than awbtc
             rebalanceEthHeavy();
@@ -494,23 +537,86 @@ contract IndexContract {
             // corresponds to btc appreciating ~ 2.5% relative to eth
             // this means there is more value of awbtc on contract than aweth
             //rebalanceBtcHeavy();
+        } else {
+            console.log("no rebalance required"); // remove this else statement when happy with functionality
         }
     }
 
     /// FUNCTONALITY WITHDRAW
+    // 0. require user has balance
+    // 1. Calucate worth of user index tokens #DONE
+    // 2. do a proportional withdrawal #DONE
+    //  --> wbtc - pool
+    //  --> weth - pool
+    // 3. convert btc -> weth #DONE
+    // 4. convert to weth to eth #DONE
+    // 5. burn tokens
+    // 6. return eth
 
-    //@xm3van:  withdraw function
-    function returnIndexTokens(uint256 amount) public {
-        // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
-        require(amount > 0, "You need to return at least some tokens");
-        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amount, "Check the token allowance");
-        tokenContract.transferFrom(msg.sender, address(this), amount);
+    // @xm3van: Still needs some partial unit testing!!!
+
+    function withdraw(uint256 tokenAmount) public {
+        // @xm3van: decided to not implement require function as the user will carry gas cost
+        // i.e. they can rebalance as much as they like, right?
+        // require(calculateIndexTokensValue(amount)>1, "Please ensure your token's are worth more than 1 ETH");
+
+        // calculates user value
+        uint256 valueUserIndexToken = calculateIndexTokensValue(tokenAmount);
+
+        // remove's 50%  from aave
+        uint256 halfDifference = valueUserIndexToken / 2;
+
+        // calculate halfdifference in terms of WBTC
+        uint256 wbtcHalfDifference = getWbtcPrice() * halfDifference;
+        // remove half difference value from aave from wbtc
+        aaveV2LendingPool.withdraw(WBTC, wbtcHalfDifference, address(this));
+        // swap WBTC on contract to WETH
+        uint256 minAmountOut = getAmountOutMin(WBTC, WETH, wbtcHalfDifference);
+        swap(WBTC, WETH, wbtcHalfDifference, minAmountOut, address(this));
+
+        // remove half difference amount from aave from weth
+        aaveV2LendingPool.withdraw(WETH, halfDifference, address(this));
+
+        // Unwrap WETH
+        uint256 wethToUnwrap = minAmountOut + halfDifference;
+        unwrapEth(wethToUnwrap);
+
+        // burn index tokens
+        tokenContract.burn(msg.sender, tokenAmount);
+
+        //return eth
+        payable(msg.sender).transfer(wethToUnwrap);
+    }
+
+    // @xm3van: Withdraw function & tested!
+    function calculateIndexTokensValue(uint256 indexTokenAmount)
+        public
+        returns (uint256 indexTokenAmountValue)
+    {
+        /// Purpose of this function is to calculate the value of a
+        /// given amount of indexToken
+
+        // Value of token's send by user
+        (uint256 indVal, ) = calculateIndexValue();
+        uint256 tokenSupply = tokenContract.totalSupply();
+
+        // value
+        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+        withdrawalTokenValue = (indVal / tokenSupply) * indexTokenAmount;
+
+        // returns
+        return (withdrawalTokenValue);
+    }
+
+    // @xm3van: Withdraw function & tested!
+    function unwrapEth(uint256 Amount) external payable {
+        require(Amount > 0, "Please increase the minimum Amount to unwrap!");
+        wethContract.withdraw(Amount);
     }
 
     //@xm3van:  withdraw function
     function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(address(this), amount);
+        tokenContract.burn(msg.sender, amount);
     }
 
     //@xm3van:  withdraw function
@@ -518,26 +624,35 @@ contract IndexContract {
         payable(msg.sender).transfer(amount);
     }
 
-    //@xm3van:  withdraw function
-    function removeLiquidity(uint256 amount) public {
-        // # user sends index tokens back to contract
-        require(amount > 0, "Provide amount of liquidity to remove");
-        // get allowance for this
-        // @xm3van What is the rational for allowance? Time locking contribution to pools? Else Allowance = tokenbalance
-        uint256 allowance = tokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amount, "check token allowance");
-        // burn index tokens straight from user wallet
-        tokenContract.burn(msg.sender, amount);
-        // #call token balancing function to decide where best to remove tokens from
-        emit liquidtyRemoved(amount);
+    // //@xm3van:  withdraw function
+    // function returnIndexTokens(uint256 amount) public {
+    //     // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality
+    //     require(amount > 0, "You need to return at least some tokens");
+    //     uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+    //     require(allowance >= amount, "Check the token allowance");
+    //     tokenContract.transferFrom(msg.sender, address(this), amount);
+    // }
 
-        // getIndexBalance()
-        // get number of tokens belonging to this address in a vault.
-        // unstake tokens
-        // switch tokens to eth (if required)
-        // send eth back to function caller (msg.sender)
-        // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
-    }
+    // //@xm3van:  withdraw function
+    // function removeLiquidity(uint256 amount) public {
+    //     // # user sends index tokens back to contract
+    //     require(amount > 0, "Provide amount of liquidity to remove");
+    //     // get allowance for this
+    //     // @xm3van What is the rational for allowance? Time locking contribution to pools? Else Allowance = tokenbalance
+    //     uint256 allowance = tokenContract.allowance(msg.sender, address(this));
+    //     require(allowance >= amount, "check token allowance");
+    //     // burn index tokens straight from user wallet
+    //     tokenContract.burn(msg.sender, amount);
+    //     // #call token balancing function to decide where best to remove tokens from
+    //     emit liquidtyRemoved(amount);
+
+    //     // getIndexBalance()
+    //     // get number of tokens belonging to this address in a vault.
+    //     // unstake tokens
+    //     // switch tokens to eth (if required)
+    //     // send eth back to function caller (msg.sender)
+    //     // payable(msg.sender).transfer(amount); //typecast 'payable' to msg.sender
+    // }
 
     /// ANXILIARY FUNCTIONS
     //@xm3van:  anxilary function
@@ -570,10 +685,10 @@ contract IndexContract {
     //     }
     // }
 
-    function calculatePoolValue() public returns (uint256 _poolValue) {
-        // function to calculate pool value, denominated in eth.
-        // get conversion from uni pools or chainlink(preferred)
-    }
+    // function calculatePoolValue() public returns (uint256 _poolValue) {
+    //     // function to calculate pool value, denominated in eth.
+    //     // get conversion from uni pools or chainlink(preferred)
+    // }
 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
