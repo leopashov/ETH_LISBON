@@ -89,6 +89,7 @@ describe("IndexContract Integration", function () {
             wethFetch.wait();
             
             console.log("eth swapped to weth");
+            const firstBalance = await indexContract.connect(acc1).balanceFund();
             // show balance of weth in wallet
             const wethBalance = await wethContract.balanceOf(acc1.address);
             console.log(`wallet weth balance: ${wethBalance}`);
@@ -109,21 +110,30 @@ describe("IndexContract Integration", function () {
             // index contract now has some (3) weth on it aswell as 2 aweth 
         })
 
-        it("should calculate deposited value of tokens we have deposited (calculateIndexValue)", async () => {
-            var returnedInfo = await indexContract.connect(acc1).calculateIndexValue();
-            console.log(`deposited value: ${returnedInfo}`);
+        it("should calculate value of tokens we have deposited (calculateIndexValue)", async () => {
+            const [valueOfIndex, totalVaultPositionsValue] = await indexContract.connect(acc1).calculateIndexValue();
+            console.log(`value of index: ${valueOfIndex}`);
+            console.log(`totalVaultPositionsValue: ${totalVaultPositionsValue}`);
+
             //expect(getDepositedValuePls).to.eq(2000000000000000000);
 
         })
 
 
-        it("should give  correct amount of aweth on contract", async () => {
-            // need to fund with some awbtc to avoid division by zero
+        it("should result in equal values of aweth and awbtc on contract", async () => {
             const awethOnIndexContract = await AWethContract.balanceOf(indexContract.address);  
             console.log(`aweth on index contract: ${awethOnIndexContract}`); 
             // call 'balance fund'
             const balanceFundTx = await indexContract.connect(acc1).balanceFund();
             balanceFundTx.wait();
+    //         aWethOnContract;
+    // uint256 public wbtcOnContract;
+    // uint256 public aWbtcOnContractValue;
+            const aWethOnContract = await indexContract.aWethOnContract();
+            const aWbtcOnContractValue = await indexContract.aWbtcOnContractValue();
+            console.log(`aWeth on contract: ${aWethOnContract}`);
+            console.log(`aWbtc value on contract: ${aWbtcOnContractValue}`);          
+            expect(aWethOnContract).to.eq(aWbtcOnContractValue);
 
         })
 

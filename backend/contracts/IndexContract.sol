@@ -485,6 +485,7 @@ contract IndexContract {
         inverseIndexProportionBTCx100 =
             (100 * totalAtokenValueOnContract) /
             aWbtcOnContractValue;
+
         if (inverseIndexProportionBTCx100 > 210) {
             // corresponds to eth appreciating ~ 2.5% relative to BTC
             // this means there is more value of aweth on contract than awbtc
