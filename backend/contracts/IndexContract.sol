@@ -98,6 +98,7 @@ contract IndexContract {
     uint256 public wbtcOnContract;
     uint256 public aWbtcOnContractValue;
     uint256 public aWbtcOnContract;
+    uint256 public withdrawalTokenValue;
 
     // @xm3van: let's denominate in wei for sake of consistency
     mapping(address => uint256) public addressToAmountFunded; // maps address to how much they have funded the index with - remove - user's token balance proportional to their funding!
@@ -498,6 +499,53 @@ contract IndexContract {
     }
 
     /// FUNCTONALITY WITHDRAW
+    // 0. require user has balance
+    // 1. Calucate worth of user index tokens #DONE
+    // 2. do a proportional withdrawal #
+    //  --> wbtc - pool
+    //  --> weth - pool
+    // 3. convert btc -> weth
+    // 4. convert to weth to eth
+    // 5. burn tokens
+    // 6. return eth
+
+    function calculateIndexTokensValue(uint256 indexTokenAmount)
+        public
+        returns (uint256 indexTokenAmountValue)
+    {
+        /// Purpose of this function is to calculate the value of a
+        /// given amount of indexToken
+
+        // Value of token's send by user
+        (uint256 indexValue, ) = calculateIndexValue();
+        uint256 tokenSupply = tokenContract.totalSupply();
+
+        // value
+        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+        withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
+
+        // returns
+        return (withdrawalTokenValue);
+    }
+
+    // function withdrawFromPools(uint256 indexValueDifference) public {
+    //     // insert
+    //     // calculateIndexTokensValue()
+
+    //     // remove's 50%  from aave
+    //     uint256 halfDifference = indexValueDifference / 2;
+    //     // remove half difference amount from aave
+    //     aaveV2LendingPool.withdraw(WETH, halfDifference, address(this));
+    //     // now we have WETH on contract
+    //     wethOnContract = wethContract.balanceOf(address(this));
+    //     // swap WETH on contract (incl. dust (amount < 1)) to WBTC
+    //     uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethOnContract);
+    //     swap(WETH, WBTC, wethOnContract, minAmountOut, address(this));
+    //     // now we have WBTC on contract
+    //     wbtcOnContract = wbtcContract.balanceOf(address(this));
+    //     // deposit to aave
+    //     aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
+    // }
 
     //@xm3van:  withdraw function
     function returnIndexTokens(uint256 amount) public {
@@ -570,10 +618,10 @@ contract IndexContract {
     //     }
     // }
 
-    function calculatePoolValue() public returns (uint256 _poolValue) {
-        // function to calculate pool value, denominated in eth.
-        // get conversion from uni pools or chainlink(preferred)
-    }
+    // function calculatePoolValue() public returns (uint256 _poolValue) {
+    //     // function to calculate pool value, denominated in eth.
+    //     // get conversion from uni pools or chainlink(preferred)
+    // }
 
     // Ref.: https://ethereum.stackexchange.com/questions/136296/how-to-deposit-and-withdraw-weth
 
