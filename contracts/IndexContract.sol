@@ -128,6 +128,10 @@ contract IndexContract {
         //wbtc contract
         wbtcContract = IWETH(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
 
+        // aToken initialisations
+        aWBtcContract = IAToken(0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656);
+        aWethContract = IAToken(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e);
+
         addressToContract[
             0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
         ] = wethContract; // probably dont need this mapping - was trying something out
@@ -209,9 +213,13 @@ contract IndexContract {
         returns (uint256 valueOfIndex, uint256 valueOfVaultPositions)
     {
         uint256 wethOwnedByContract = wethBalance();
+        console.log("weth on contract: %s", wethOwnedByContract);
         aWbtcOnContract = aWBtcContract.balanceOf(address(this));
+        console.log("awbtc on contract: %s", aWbtcOnContract);
         aWbtcOnContractValue = aWbtcOnContract * getWbtcPrice();
+        console.log("awbtc on contract value: %s", aWbtcOnContractValue);
         aWethOnContract = aWethContract.balanceOf(address(this));
+        console.log("aweth on contract: %s", aWethOnContract);
 
         uint256 totalVaultPositionsValue = aWethOnContract +
             aWbtcOnContractValue;

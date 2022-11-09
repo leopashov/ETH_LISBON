@@ -118,6 +118,7 @@ describe("IndexContract Integration", function () {
 
 
         it("should give  correct amount of aweth on contract", async () => {
+            // need to fund with some awbtc to avoid division by zero
             const awethOnIndexContract = await AWethContract.balanceOf(indexContract.address);  
             console.log(`aweth on index contract: ${awethOnIndexContract}`); 
             // call 'balance fund'
