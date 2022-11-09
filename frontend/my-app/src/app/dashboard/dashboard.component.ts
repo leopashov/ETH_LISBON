@@ -11,17 +11,12 @@ import { WalletService } from '../wallet.service';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit, AfterContentChecked {
-  //@ViewChild(HeaderComponent, {static: true}) headerComponent!: HeaderComponent;
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
-
-  walletAddress: string | undefined;
-  wallet: ethers.Wallet | undefined;
-  etherBalance: string | undefined;
-  provider: ethers.providers.JsonRpcProvider | undefined;
-  signer: ethers.providers.JsonRpcSigner | undefined;
+  
+  
   
   constructor(private walletService: WalletService) { 
-   
+   console.log(this.walletService.walletAddress)
   }
 
   ngOnInit(): void {
