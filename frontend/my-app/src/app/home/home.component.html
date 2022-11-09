@@ -21,11 +21,11 @@
             </ul>
 
             <!--Display Connected Wallet-->
-            <p class="text-right mb-md-0 px-5 text-danger">Connected wallet: 0x59f3...9zu664</p>
+            <p class="text-right mb-md-0 px-5 text-danger">Connected wallet: {{walletAddress}}</p>
             
             <!--Button Connect Wallet-->
             <div class="text-end">
-            <button type="button" class="btn text-white" style="background-color: #7030A0">Connect Wallet</button>
+            <button type="button" class="btn text-white" style="background-color: #7030A0" (click)="connectWallet()">Connect Wallet</button>
             </div>
         </div>
         </div>
