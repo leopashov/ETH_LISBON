@@ -121,7 +121,6 @@ contract IndexContract {
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
     // mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
-    mapping(address => IWETH) public addressToContract;
     uint256 public inverseIndexProportionBTCx100;
     // Define Events
     event liquidtyRemoved(uint256 amount);
@@ -148,12 +147,6 @@ contract IndexContract {
         aWBtcContract = IAToken(0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656);
         aWethContract = IAToken(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e);
 
-        addressToContract[
-            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-        ] = wethContract; // probably dont need this mapping - was trying something out
-        addressToContract[
-            0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599
-        ] = wbtcContract;
         // Aave v2 lending pool contract
         aaveV2LendingPool = ILendingPool(
             0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
@@ -609,7 +602,7 @@ contract IndexContract {
     }
 
     // @xm3van: Withdraw function & tested!
-    function unwrapEth(uint256 Amount) external payable {
+    function unwrapEth(uint256 Amount) public payable {
         require(Amount > 0, "Please increase the minimum Amount to unwrap!");
         wethContract.withdraw(Amount);
     }
