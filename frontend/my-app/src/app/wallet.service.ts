@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BigNumber, Contract, ethers, Signer } from 'ethers';
 import { GetContractAddressesService } from './get-contract-addresses.service';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +15,7 @@ export class WalletService {
   signer: ethers.providers.JsonRpcSigner | undefined;
   indexContract: Contract;
   tokenContract: Contract;
+  dipBalance: BigNumber | undefined;
   
   constructor(private getContractAddressService: GetContractAddressesService) {
     this.indexContract = this.getContractAddressService.indexContract;
@@ -32,7 +34,8 @@ export class WalletService {
     const balanceBN = await this.signer.getBalance();
     const balance = Number(ethers.utils.formatEther(balanceBN));
     this.etherBalance = balance;
-
+    // this.dipBalance = await this.getTokenBalance(this.walletAddress);
+        
   }
 
   async disconnectWallet(){
@@ -47,10 +50,10 @@ export class WalletService {
     console.log("Wallet Address after disconnect provider: " + this.walletAddress);
   }
 
-  async getTokenBalance(walletAddress: any) {
-    
-    // const balance = await this.tokenContract.balanceOf(walletAddress);
-  }
+  // getTokenBalance(walletAddress: any) {
+  //   const balance = this.tokenContract['balanceOf'](walletAddress);
+  //   return balance;
+  // }
 
 
 

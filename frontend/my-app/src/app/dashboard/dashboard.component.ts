@@ -24,6 +24,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
   signer: ethers.providers.JsonRpcSigner | undefined;
   
   indexTokenContract: Contract | undefined;
+
+  dipBalance: BigNumber | undefined | string;
   
   // indexMarketCap: BigNumber | Number;
   // 0-Address Hardhat Signer
@@ -40,7 +42,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
   // indexContract: Contract;
   
   constructor(private walletService: WalletService) { 
-    
+    this.dipBalance = "loading.. ";
   }
 
   ngOnInit(): void {
@@ -50,6 +52,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
     this.etherBalance = this.walletService.etherBalance;
     this.provider = this.walletService.provider;
     this.signer = this.walletService.signer;
+    // this.walletService.getTokenBalance(this.walletAddress).subscribe((balanceBN: string | BigNumber | undefined) => {
+    //   this. dipBalance = balanceBN;
+    // })
+   
   }
     
 
@@ -71,6 +77,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
     this.etherBalance = this.walletService.etherBalance;
     this.provider = this.walletService.provider;
     this.signer = this.walletService.signer; 
+    this.dipBalance = this.walletService.dipBalance;
   }
 
 
