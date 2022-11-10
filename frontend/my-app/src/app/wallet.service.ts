@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ethers, Signer } from 'ethers';
+import { BigNumber, ethers, Signer } from 'ethers';
 
 @Injectable({
   providedIn: 'root'
@@ -8,19 +8,22 @@ export class WalletService {
 
   walletAddress: string | undefined;
   wallet: ethers.Wallet | undefined;
-  etherBalance: string | undefined;
+  etherBalance: string | undefined | BigNumber | Number;
   provider: ethers.providers.JsonRpcProvider | undefined;
   signer: ethers.providers.JsonRpcSigner | undefined;
   
   constructor() { }
 
-  async connectWallet(){
+  async connectWallet() {
     console.log("provider: " + this.provider);
     this.provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
     await this.provider.send("eth_requestAccounts", []);
     console.log("provider: " + this.provider);
     this.signer = this.provider.getSigner();
     this.walletAddress = await this.signer.getAddress();
+    const balanceBN = await this.signer.getBalance();
+    const balance = Number(ethers.utils.formatEther(balanceBN));
+    this.etherBalance = balance;
   }
 
   async disconnectWallet(){

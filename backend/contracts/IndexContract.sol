@@ -609,7 +609,7 @@ contract IndexContract {
     }
 
     // @xm3van: Withdraw function & tested!
-    function unwrapEth(uint256 Amount) external payable {
+    function unwrapEth(uint256 Amount) public payable {
         require(Amount > 0, "Please increase the minimum Amount to unwrap!");
         wethContract.withdraw(Amount);
     }
