@@ -24,7 +24,7 @@ export class GetContractAddressesService {
   constructor() {
     this.indexContractAbi = IndexContractAbi;
     this.tokenContractAbi = TokenContractAbi;
-    this.provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
+    this.provider = new ethers.providers.Web3Provider((window as any).ethereum, 'any');
 
     this.TOKEN_CONTRACT_ADDRESS = "0x90c84237fDdf091b1E63f369AF122EB46000bc70";
     this.INDEX_CONTRACT_ADDRESS = "0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f";
@@ -33,6 +33,7 @@ export class GetContractAddressesService {
     console.log("Token Contract Address: " + this.tokenContract.address);
     console.log("Index Contract Address: " + this.indexContract.address);
     console.log("Index Contract Object: " + this.indexContract);
+
   }
 
   async getIndexBalance(contractAddress: any) {
