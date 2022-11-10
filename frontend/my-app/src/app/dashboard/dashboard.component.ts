@@ -12,6 +12,7 @@ import { WalletService } from '../wallet.service';
 })
 export class DashboardComponent implements OnInit, AfterViewInit, AfterContentChecked {
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
+  @Input() 
   
   walletAddress: string | undefined;
   wallet: ethers.Wallet | undefined;
