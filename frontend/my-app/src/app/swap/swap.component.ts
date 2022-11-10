@@ -18,6 +18,7 @@ export class SwapComponent implements OnInit, AfterViewInit {
   provider: ethers.providers.JsonRpcProvider | undefined;
   signer: ethers.providers.JsonRpcSigner | undefined;
 
+
   constructor(private walletService: WalletService) {
     this.walletAddress = this.walletService.walletAddress;
     this.wallet = this.walletService.wallet;
@@ -31,6 +32,10 @@ export class SwapComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    
+  }
+
+  buyDip() {
     
   }
 
