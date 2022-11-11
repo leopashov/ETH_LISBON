@@ -1,6 +1,10 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { BigNumber, Contract, ContractInterface, ethers } from 'ethers';
+import { GetContractAddressesService } from '../get-contract-addresses.service';
 import { HeaderComponent } from '../header/header.component';
 import { WalletService } from '../wallet.service';
+
+
 
 
 @Component({
@@ -12,17 +16,44 @@ import { WalletService } from '../wallet.service';
 export class HomeComponent implements OnInit, AfterViewInit {
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
-  constructor(private walletService: WalletService) { 
+  indexContract: Contract | undefined;
+  indexContractBalance: BigNumber | undefined;
+  tokenContract: Contract | undefined;
+  // TOKEN_CONTRACT_ADDRESS: string ;
+  // INDEX_CONTRACT_ADDRESS: string; 
+
+  provider: ethers.providers.JsonRpcProvider | undefined;
+  walletAddress: string | undefined;
+  wallet: ethers.Wallet | undefined;
+  etherBalance: string | undefined | BigNumber | Number;
+  signer: ethers.providers.JsonRpcSigner | undefined;
+  indexTokenAbi: ContractInterface | undefined;
+
+   
   
+  constructor(private walletService: WalletService, private getContractAddressService: GetContractAddressesService) { 
+    const provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const componentRef = this.vcr.createComponent(HeaderComponent);
-    
+    this.indexContractBalance = await this.getContractAddressService.getIndexBalance(this.getContractAddressService.INDEX_CONTRACT_ADDRESS);
+
+    console.log("Ethers balance of Index Contract: " + this.indexContractBalance);
+    this.etherBalance = this.indexContractBalance;
+    console.log("Calling from home: " + this.getContractAddressService.indexContract.address);
+    // console.log("Index Contract: " + this.indexContract);
+    this.walletAddress = this.walletService.walletAddress;
+    this.wallet = this.walletService.wallet;
+    this.etherBalance = this.walletService.etherBalance;
+    this.provider = this.walletService.provider;
+    this.signer = this.walletService.signer;
   }
 
   ngAfterViewInit(): void {
 
   }
+
+
 
 }

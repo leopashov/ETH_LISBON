@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { ethers, Signer } from 'ethers';
+import { BigNumber, Contract, ethers, Signer } from 'ethers';
+import { GetContractAddressesService } from './get-contract-addresses.service';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,19 +10,32 @@ export class WalletService {
 
   walletAddress: string | undefined;
   wallet: ethers.Wallet | undefined;
-  etherBalance: string | undefined;
+  etherBalance: string | undefined | BigNumber | Number;
   provider: ethers.providers.JsonRpcProvider | undefined;
   signer: ethers.providers.JsonRpcSigner | undefined;
+  indexContract: Contract;
+  tokenContract: Contract;
+  dipBalance: BigNumber | undefined;
   
-  constructor() { }
+  constructor(private getContractAddressService: GetContractAddressesService) {
+    this.indexContract = this.getContractAddressService.indexContract;
+    this.tokenContract = this.getContractAddressService.tokenContract;
+  }
 
-  async connectWallet(){
+  async connectWallet() {
+    
     console.log("provider: " + this.provider);
-    this.provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
+   // this.provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
+    this.provider = this.getContractAddressService.provider;
     await this.provider.send("eth_requestAccounts", []);
     console.log("provider: " + this.provider);
     this.signer = this.provider.getSigner();
     this.walletAddress = await this.signer.getAddress();
+    const balanceBN = await this.signer.getBalance();
+    const balance = Number(ethers.utils.formatEther(balanceBN));
+    this.etherBalance = balance;
+    // this.dipBalance = await this.getTokenBalance(this.walletAddress);
+        
   }
 
   async disconnectWallet(){
@@ -34,5 +49,12 @@ export class WalletService {
     console.log("signer after disconnect provider: " + this.signer);
     console.log("Wallet Address after disconnect provider: " + this.walletAddress);
   }
+
+  // getTokenBalance(walletAddress: any) {
+  //   const balance = this.tokenContract['balanceOf'](walletAddress);
+  //   return balance;
+  // }
+
+
 
 }

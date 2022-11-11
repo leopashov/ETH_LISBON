@@ -19,7 +19,10 @@
         <div class="row px-3 mx-0 rounded-5 shadow text-bg-dark" style="background-color:#212529; border-style: solid; border-width: 1px; border-color: black;">
             <div class="col rounded-5 px-5">
                 <p class="fs-4 pt-4 text-secondary">DIP Balance</p>
-                <h3 class="pb-4 fw-normal text-danger">$ GET DIP Balance</h3>
+                <div *ngIf="etherBalance == undefined; else elseBlock">
+                    <h3 class="pb-4 fw-normal text-white">$ --</h3>
+                </div>
+                <ng-template #elseBlock><h3 class="pb-4 fw-normal text-white"> $ {{etherBalance}}</h3></ng-template>
             </div>
 
         <!-- Table DIP token -->
@@ -50,7 +53,7 @@
                 </div>
                 </td>
                 <td>
-                    <p class="fw-normal mt-3 text-danger">% GET Balance</p>
+                    <p class="fw-normal mt-3 text-danger">{{dipBalance}}</p>
                 </td>
                 <td>
                 <!-- Get price here -->
