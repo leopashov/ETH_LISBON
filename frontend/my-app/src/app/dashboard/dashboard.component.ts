@@ -5,6 +5,7 @@ import { HeaderComponent } from '../header/header.component';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { WalletService } from '../wallet.service';
 import { abi } from '../../../../../backend/artifacts/contracts/IndexToken.sol/IndexToken.json';
+import { ApiService } from '../api.service';
 
 
 
@@ -13,7 +14,7 @@ import { abi } from '../../../../../backend/artifacts/contracts/IndexToken.sol/I
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, AfterViewInit, AfterContentChecked {
+export class DashboardComponent implements OnInit, AfterContentChecked {
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
   
   
@@ -25,7 +26,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
   
   indexTokenContract: Contract | undefined;
 
-  dipBalance: BigNumber | undefined | string;
+  dipBalance: string;
+
+  totalTokenSupply: string;
   
   // indexMarketCap: BigNumber | Number;
   // 0-Address Hardhat Signer
@@ -41,21 +44,26 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
   // tokenContract: Contract;
   // indexContract: Contract;
   
-  constructor(private walletService: WalletService) { 
+  constructor(private apiService: ApiService) { 
     this.dipBalance = "loading.. ";
+    this.totalTokenSupply = 'loading...';
   }
 
   ngOnInit(): void {
-    const componentRef = this.vcr.createComponent(HeaderComponent);
-    this.walletAddress = this.walletService.walletAddress;
-    this.wallet = this.walletService.wallet;
-    this.etherBalance = this.walletService.etherBalance;
-    this.provider = this.walletService.provider;
-    this.signer = this.walletService.signer;
+    // const componentRef = this.vcr.createComponent(HeaderComponent);
+    // this.walletAddress = this.walletService.walletAddress;
+    // this.wallet = this.walletService.wallet;
+    // this.etherBalance = this.walletService.etherBalance;
+    // this.provider = this.walletService.provider;
+    // this.signer = this.walletService.signer;
     // this.walletService.getTokenBalance(this.walletAddress).subscribe((balanceBN: string | BigNumber | undefined) => {
     //   this. dipBalance = balanceBN;
     // })
    
+    this.apiService.getTotalTokenSupply().subscribe((response) => {
+      console.log(response);
+      this.totalTokenSupply = response;
+    });
   }
     
 
@@ -72,12 +80,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, AfterContentCh
   }
 
   ngAfterViewChecked(): void {
-    this.walletAddress = this.walletService.walletAddress;
-    this.wallet = this.walletService.wallet;
-    this.etherBalance = this.walletService.etherBalance;
-    this.provider = this.walletService.provider;
-    this.signer = this.walletService.signer; 
-    this.dipBalance = this.walletService.dipBalance;
+    // this.walletAddress = this.walletService.walletAddress;
+    // this.wallet = this.walletService.wallet;
+    // this.etherBalance = this.walletService.etherBalance;
+    // this.provider = this.walletService.provider;
+    // this.signer = this.walletService.signer; 
+    // this.dipBalance = this.walletService.dipBalance;
   }
 
 
