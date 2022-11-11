@@ -371,6 +371,8 @@ contract IndexContract {
         wethContract.deposit{value: eth}();
         uint256 wethBal = wethContract.balanceOf(address(this));
         wethContract.transfer(address(this), wethBal);
+        // update global weth on contract
+        wethOnContract = wethContract.balanceOf(address(this));
     }
 
     function depositToAave(address token, uint256 amount) public {
@@ -554,6 +556,11 @@ contract IndexContract {
         // @xm3van: decided to not implement require function as the user will carry gas cost
         // i.e. they can rebalance as much as they like, right?
         // require(calculateIndexTokensValue(amount)>1, "Please ensure your token's are worth more than 1 ETH");
+        uint256 userTokenBalance = tokenContract.balanceOf(msg.sender);
+        require(
+            tokenAmount <= userTokenBalance,
+            "cannot redeem more tokens than you own!"
+        );
 
         // calculates user value
         uint256 valueUserIndexToken = calculateIndexTokensValue(tokenAmount);
@@ -569,8 +576,13 @@ contract IndexContract {
         uint256 minAmountOut = getAmountOutMin(WBTC, WETH, wbtcHalfDifference);
         swap(WBTC, WETH, wbtcHalfDifference, minAmountOut, address(this));
 
+        // remove (halfdifference - weth on contract) from aave
         // remove half difference amount from aave from weth
-        aaveV2LendingPool.withdraw(WETH, halfDifference, address(this));
+        aaveV2LendingPool.withdraw(
+            WETH,
+            (halfDifference - wethOnContract),
+            address(this)
+        );
 
         // Unwrap WETH
         uint256 wethToUnwrap = minAmountOut + halfDifference;
@@ -592,14 +604,14 @@ contract IndexContract {
         /// given amount of indexToken
 
         // Value of token's send by user
-        (uint256 indVal, ) = calculateIndexValue();
+        (indexValue, ) = calculateIndexValue();
         uint256 tokenSupply = tokenContract.totalSupply();
 
         // value
         // @xm3van: Is this safe? It should be as SafeMath is implemented right?
         // @Leo: would recommend multiplying first ie:
-        // withdrawalTokenValue = (indVal * indexTokenAmount) / tokenSupply;
-        withdrawalTokenValue = (indVal / tokenSupply) * indexTokenAmount;
+        withdrawalTokenValue = (indexValue * indexTokenAmount) / tokenSupply;
+        // withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
 
         // returns
         return (withdrawalTokenValue);

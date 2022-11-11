@@ -4,6 +4,7 @@ import { artifacts, ethers } from "hardhat";
 import { IndexContract } from '../typechain-types/contracts/IndexContract.sol'; // import other contract for local deployment 
 import { IndexToken } from '../typechain-types/contracts'; // import other contract for local deployment 
 import { abi } from '../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json';
+import { Provider } from "@ethersproject/providers";
 
 // const ERC20_Data = ERC20;
 
@@ -115,7 +116,7 @@ describe("IndexContract", function () {
             await (await indexContract.calculateIndexTokensValue(indexTokensToWithdraw)).wait();
             // log token Value of user tokens
             const userValue = await indexContract.withdrawalTokenValue();
-            console.log(`Function User Funds Vale: ${ethers.utils.formatEther(userValue)}`);
+            console.log(`Function User Funds Value: ${ethers.utils.formatEther(userValue)}`);
 
             // Alternative calcuation typescript
             // log total supply
@@ -128,10 +129,36 @@ describe("IndexContract", function () {
 
 
             // value typescript
-            const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw);
+            const userValueTs = (indexValue.mul(indexTokensToWithdraw)).div(totalSupply);
             console.log(`Typescript User Funds Vale: ${ethers.utils.formatEther(userValueTs)}`);
 
             expect(userValue).to.eq(userValueTs);
+        })
+
+        it("burns returned index tokens", async () => {
+            const initialTokenSupplyBN = await tokenContract.totalSupply();
+            const initialTokenSupply = ethers.utils.formatEther(initialTokenSupplyBN);
+            const burnTx = await tokenContract.connect(acc1).burn(ethers.utils.parseEther("5"));
+            burnTx.wait();
+            const finalTokenSupplyBN = await tokenContract.totalSupply();
+            const finalTokenSupply = ethers.utils.formatEther(finalTokenSupplyBN);
+            expect(Number(finalTokenSupply)).to.eq(Number(initialTokenSupply)-5)
+        })
+
+        it("reverts attempts to withdraw too much eth", async () => {
+            const initialAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
+            const withdrawTx = await indexContract.connect(acc1).withdraw((initialAcc1TokenBalance).add(5));
+            withdrawTx.wait();
+            console.log(withdrawTx);
+            // expect(withdrawTx).to.throw(Error);
+            
+        })
+
+        it("returns the correct amount of eth to the user", async () => {
+            const initialAcc1EthBalance = deployer.getBalance(acc1.address);
+            const initialAcc2EthBalance = deployer.getBalance(acc2.address);
+            
+
         })
 
     })
