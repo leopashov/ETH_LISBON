@@ -74,10 +74,12 @@ interface IIndexToken is IERC20 {
 
 contract IndexContract {
     // Function to receive Ether. msg.data must be empty
-    receive() external payable {}
+    receive() external payable {
+        receive_funds();
+    }
 
     // Fallback function is called when msg.data is not empty
-    fallback() external payable {}
+    //fallback() external payable {}
 
     //Ref.: https://solidity-by-example.org/sending-ether/
 
@@ -595,6 +597,8 @@ contract IndexContract {
 
         // value
         // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+        // @Leo: would recommend multiplying first ie:
+        // withdrawalTokenValue = (indVal * indexTokenAmount) / tokenSupply;
         withdrawalTokenValue = (indVal / tokenSupply) * indexTokenAmount;
 
         // returns
