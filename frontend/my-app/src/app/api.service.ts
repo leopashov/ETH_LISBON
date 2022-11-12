@@ -12,4 +12,8 @@ export class ApiService {
   getTotalTokenSupply(): Observable<any> {
     return this.http.get('http://localhost:3000/total-supply');
   }
+
+  getEthBalance(address: string): Observable<any> {
+    return this.http.get('http://localhost:3000/eth-balance/:address');
+  }
 }

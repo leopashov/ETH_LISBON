@@ -22,7 +22,6 @@ export class HomeComponent implements OnInit, AfterViewInit {
   // TOKEN_CONTRACT_ADDRESS: string ;
   // INDEX_CONTRACT_ADDRESS: string; 
 
-  provider: ethers.providers.JsonRpcProvider | undefined;
   walletAddress: string | undefined;
   wallet: ethers.Wallet | undefined;
   etherBalance: string | undefined | BigNumber | Number;
@@ -45,8 +44,6 @@ export class HomeComponent implements OnInit, AfterViewInit {
     // console.log("Index Contract: " + this.indexContract);
     this.walletAddress = this.walletService.walletAddress;
     this.wallet = this.walletService.wallet;
-    this.etherBalance = this.walletService.etherBalance;
-    this.provider = this.walletService.provider;
     this.signer = this.walletService.signer;
   }
 
