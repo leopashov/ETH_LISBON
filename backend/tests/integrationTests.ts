@@ -81,13 +81,23 @@ describe("IndexContract Integration", function () {
         });
 
         it("correctly updates index USD value", async () => {
+            var indexValueUSD = await indexContract.indexValueUSD();
+            var indexValue = await indexContract.indexValue();
+            console.log(`indexValue 1: ${indexValue}`);
+            console.log(`indexValueUSD 1: ${indexValueUSD}`);
             const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("1"), });
             acc2Fund.wait();
+            indexValueUSD = await indexContract.indexValueUSD();
+            indexValue = await indexContract.indexValue();
+            console.log(`indexValue 2: ${indexValue}`);
+            console.log(`indexValueUSD 2: ${indexValueUSD}`);
             const fundedAmount = ethers.utils.parseEther("1.11");
             const updateindexValueUSD = await indexContract.updateIndexValueUSD();
             updateindexValueUSD.wait();
-            const indexValueUSD = await indexContract.indexValueUSD();
-            console.log(`indexValueUSD: ${indexValueUSD}`);
+            indexValueUSD = await indexContract.indexValueUSD();
+            indexValue = await indexContract.indexValue();
+            console.log(`indexValue 3: ${indexValue}`);
+            console.log(`indexValueUSD 3: ${indexValueUSD}`);
 
             expect(ethers.BigNumber.from(indexValueUSD)).to.eq(fundedAmount);
         });

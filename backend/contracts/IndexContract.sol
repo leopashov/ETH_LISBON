@@ -225,7 +225,7 @@ contract IndexContract {
             // if no tokens minted, mint 1 token for each unit of eth received
             // sets index token = 1 eth at start
             indexValue += _ethReceived;
-            indexValueUSD = indexValue * getEthPrice();
+            indexValueUSD = (indexValue * getEthPrice()) / 10**8;
             return (_ethReceived);
         } else {
             // adding eth to the index returns
@@ -241,7 +241,7 @@ contract IndexContract {
 
     function updateIndexValueUSD() public {
         // call this to update index value in USD (will also update in eth terms)
-        calculateIndexValue();
+        (indexValue, ) = calculateIndexValue();
         indexValueUSD = (indexValue * getEthPrice()) / 10**8;
     }
 
