@@ -100,6 +100,7 @@ contract IndexContract {
     IAToken public aWethContract;
     IAToken public aWBtcContract;
     AggregatorV3Interface internal WBtcPriceFeed;
+    AggregatorV3Interface internal ethUsdPriceFeed;
     // AggregatorV3Interface internal WEthPriceFeed; only need WBtc
 
     // Mainnet Addresses
@@ -111,6 +112,9 @@ contract IndexContract {
     // address private constant WBTC = 0xdA4a47eDf8ab3c5EeeB537A97c5B66eA42F49CdA;
 
     IAToken[] private _vaultTokens;
+    uint256 public ethUsdPrice;
+    uint256 public btcUsdPrice;
+    uint256 public indexValueUSD; // get eth to usd conversion rate
     uint256 public indexValue; // index value quoted in eth
     uint256 public wethOnContract;
     uint256 public aWethOnContract;
@@ -162,6 +166,10 @@ contract IndexContract {
             // 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Groeli testnet address
         );
 
+        ethUsdPriceFeed = AggregatorV3Interface(
+            0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+        );
+
         // map vault tokens to underlying - careful of order!
         // think not needed as we can call function from IAToken interface to get this data
         // for (uint8 i = 0; i < tokens.length; i++) {
@@ -195,6 +203,20 @@ contract IndexContract {
         //
     }
 
+    //@xm3van:  anxilary function
+    function getWbtcPrice() public view returns (uint256 wbtcPrice) {
+        // returns price of btc in eth as a BN (ie ~13*10^18)
+        (, int256 price, , , ) = WBtcPriceFeed.latestRoundData();
+        return uint256(price);
+    }
+
+    function getEthPrice() public view returns (uint256 ethPrice) {
+        // returns ETH/USD price as price *10**8 (dont ask me why)
+        (, int256 price, , , ) = ethUsdPriceFeed.latestRoundData();
+        ethPrice = uint256(price);
+        return (ethPrice);
+    }
+
     function calculateTokensToMint(uint256 _ethReceived)
         internal
         returns (uint256 tokensToMint)
@@ -203,6 +225,7 @@ contract IndexContract {
             // if no tokens minted, mint 1 token for each unit of eth received
             // sets index token = 1 eth at start
             indexValue += _ethReceived;
+            indexValueUSD = indexValue * getEthPrice();
             return (_ethReceived);
         } else {
             // adding eth to the index returns
@@ -211,9 +234,15 @@ contract IndexContract {
             uint256 indexValueBeforeDeposit = currentIndexValue - _ethReceived;
             uint256 toMint = (currentTokenSupply * _ethReceived) /
                 indexValueBeforeDeposit;
-            (indexValue, ) = calculateIndexValue();
+            updateIndexValueUSD();
             return (toMint);
         }
+    }
+
+    function updateIndexValueUSD() public {
+        // call this to update index value in USD (will also update in eth terms)
+        calculateIndexValue();
+        indexValueUSD = (indexValue * getEthPrice()) / 10**8;
     }
 
     function wethBalance() public view returns (uint256 _balance) {
@@ -244,6 +273,7 @@ contract IndexContract {
         uint256 totalVaultPositionsValue = aWethOnContract +
             aWbtcOnContractValue;
         valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
+        indexValueUSD = (indexValue * getEthPrice()) / 10**8;
         return (valueOfIndex, totalVaultPositionsValue);
     }
 
@@ -264,13 +294,6 @@ contract IndexContract {
     //     valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
     //     return (valueOfIndex, totalVaultPositionsValue);
     // }
-
-    //@xm3van:  anxilary function
-    function getWbtcPrice() public view returns (uint256 outPrice) {
-        // returns price of btc in eth as a BN (ie ~13*10^18)
-        (, int256 price, , , ) = WBtcPriceFeed.latestRoundData();
-        return uint256(price);
-    }
 
     // //@xm3van:  anxilary function
     // function getDepositedValue(IAToken aTokenContract)
@@ -598,7 +621,8 @@ contract IndexContract {
         // uint256 wethToUnwrap = minAmountOut + halfDifference;
         // unwrapEth(wethToUnwrap);
         // console.log("Weth unwrapped");
-
+        console.log(msg.sender);
+        console.log("attempting burn from");
         tokenContract.burnFrom(msg.sender, tokenAmount);
 
         // burn index tokens
@@ -623,7 +647,8 @@ contract IndexContract {
         /// given amount of indexToken
 
         // Value of token's send by user
-        (indexValue, ) = calculateIndexValue();
+        // (indexValue, ) = calculateIndexValue();
+        updateIndexValueUSD();
         uint256 tokenSupply = tokenContract.totalSupply();
 
         // value
