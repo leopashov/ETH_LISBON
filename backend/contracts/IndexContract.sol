@@ -69,15 +69,19 @@ interface IIndexToken is IERC20 {
 
     function mint(address to, uint256 amount) external;
 
-    function burn(address from, uint256 amount) external;
+    function burn(uint256 amount) external;
+
+    function burnFrom(address account, uint256 amount) external;
 }
 
 contract IndexContract {
     // Function to receive Ether. msg.data must be empty
-    receive() external payable {}
+    receive() external payable {
+        receive_funds();
+    }
 
     // Fallback function is called when msg.data is not empty
-    fallback() external payable {}
+    //fallback() external payable {}
 
     //Ref.: https://solidity-by-example.org/sending-ether/
 
@@ -96,6 +100,7 @@ contract IndexContract {
     IAToken public aWethContract;
     IAToken public aWBtcContract;
     AggregatorV3Interface internal WBtcPriceFeed;
+    AggregatorV3Interface internal ethUsdPriceFeed;
     // AggregatorV3Interface internal WEthPriceFeed; only need WBtc
 
     // Mainnet Addresses
@@ -107,6 +112,9 @@ contract IndexContract {
     // address private constant WBTC = 0xdA4a47eDf8ab3c5EeeB537A97c5B66eA42F49CdA;
 
     IAToken[] private _vaultTokens;
+    uint256 public ethUsdPrice;
+    uint256 public btcUsdPrice;
+    uint256 public indexValueUSD; // get eth to usd conversion rate
     uint256 public indexValue; // index value quoted in eth
     uint256 public wethOnContract;
     uint256 public aWethOnContract;
@@ -121,7 +129,6 @@ contract IndexContract {
     mapping(address => uint256) public tokenIndexValues; // maps token address to value (in eth) of that token in the index
     mapping(address => address) public VaultTokenToToken; // maps aToken address to corresponding token address.
     // mapping(address => uint256) public tokenIndexProportion; // input: token address, output what proportion of total fund value is from the token.
-    mapping(address => IWETH) public addressToContract;
     uint256 public inverseIndexProportionBTCx100;
     // Define Events
     event liquidtyRemoved(uint256 amount);
@@ -148,12 +155,6 @@ contract IndexContract {
         aWBtcContract = IAToken(0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656);
         aWethContract = IAToken(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e);
 
-        addressToContract[
-            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-        ] = wethContract; // probably dont need this mapping - was trying something out
-        addressToContract[
-            0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599
-        ] = wbtcContract;
         // Aave v2 lending pool contract
         aaveV2LendingPool = ILendingPool(
             0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
@@ -163,6 +164,10 @@ contract IndexContract {
         WBtcPriceFeed = AggregatorV3Interface(
             0xdeb288F737066589598e9214E782fa5A8eD689e8 // Mainnet address
             // 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Groeli testnet address
+        );
+
+        ethUsdPriceFeed = AggregatorV3Interface(
+            0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
         );
 
         // map vault tokens to underlying - careful of order!
@@ -198,6 +203,20 @@ contract IndexContract {
         //
     }
 
+    //@xm3van:  anxilary function
+    function getWbtcPrice() public view returns (uint256 wbtcPrice) {
+        // returns price of btc in eth as a BN (ie ~13*10^18)
+        (, int256 price, , , ) = WBtcPriceFeed.latestRoundData();
+        return uint256(price);
+    }
+
+    function getEthPrice() public view returns (uint256 ethPrice) {
+        // returns ETH/USD price as price *10**8 (dont ask me why)
+        (, int256 price, , , ) = ethUsdPriceFeed.latestRoundData();
+        ethPrice = uint256(price);
+        return (ethPrice);
+    }
+
     function calculateTokensToMint(uint256 _ethReceived)
         internal
         returns (uint256 tokensToMint)
@@ -206,6 +225,7 @@ contract IndexContract {
             // if no tokens minted, mint 1 token for each unit of eth received
             // sets index token = 1 eth at start
             indexValue += _ethReceived;
+            indexValueUSD = indexValue * getEthPrice();
             return (_ethReceived);
         } else {
             // adding eth to the index returns
@@ -214,9 +234,15 @@ contract IndexContract {
             uint256 indexValueBeforeDeposit = currentIndexValue - _ethReceived;
             uint256 toMint = (currentTokenSupply * _ethReceived) /
                 indexValueBeforeDeposit;
-            (indexValue, ) = calculateIndexValue();
+            updateIndexValueUSD();
             return (toMint);
         }
+    }
+
+    function updateIndexValueUSD() public {
+        // call this to update index value in USD (will also update in eth terms)
+        calculateIndexValue();
+        indexValueUSD = (indexValue * getEthPrice()) / 10**8;
     }
 
     function wethBalance() public view returns (uint256 _balance) {
@@ -247,6 +273,7 @@ contract IndexContract {
         uint256 totalVaultPositionsValue = aWethOnContract +
             aWbtcOnContractValue;
         valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
+        indexValueUSD = (indexValue * getEthPrice()) / 10**8;
         return (valueOfIndex, totalVaultPositionsValue);
     }
 
@@ -267,12 +294,6 @@ contract IndexContract {
     //     valueOfIndex = totalVaultPositionsValue + wethOwnedByContract;
     //     return (valueOfIndex, totalVaultPositionsValue);
     // }
-
-    //@xm3van:  anxilary function
-    function getWbtcPrice() public view returns (uint256 outPrice) {
-        (, int256 price, , , ) = WBtcPriceFeed.latestRoundData();
-        return uint256(price);
-    }
 
     // //@xm3van:  anxilary function
     // function getDepositedValue(IAToken aTokenContract)
@@ -376,6 +397,8 @@ contract IndexContract {
         wethContract.deposit{value: eth}();
         uint256 wethBal = wethContract.balanceOf(address(this));
         wethContract.transfer(address(this), wethBal);
+        // update global weth on contract
+        wethOnContract = wethContract.balanceOf(address(this));
     }
 
     function depositToAave(address token, uint256 amount) public {
@@ -605,35 +628,105 @@ contract IndexContract {
         // @xm3van: decided to not implement require function as the user will carry gas cost
         // i.e. they can rebalance as much as they like, right?
         // require(calculateIndexTokensValue(amount)>1, "Please ensure your token's are worth more than 1 ETH");
+        uint256 userTokenBalance = tokenContract.balanceOf(msg.sender);
+        require(
+            tokenAmount <= userTokenBalance,
+            "cannot redeem more tokens than you own!"
+        );
+        // allow contract to spend index toknes( for burn)
+        tokenContract.approve(address(this), tokenAmount);
 
         // calculates user value
         uint256 valueUserIndexToken = calculateIndexTokensValue(tokenAmount);
 
         // remove's 50%  from aave
         uint256 halfDifference = valueUserIndexToken / 2;
-
+        console.log("HalfDifference = %s", halfDifference);
         // calculate halfdifference in terms of WBTC
-        uint256 wbtcHalfDifference = getWbtcPrice() * halfDifference;
+        // getWbtcPrice() gives price of BTC in ETH!
+        uint256 wbtcHalfDifference = (halfDifference * 10**8) / getWbtcPrice();
+        console.log("wbtcHalfDifference = %s", wbtcHalfDifference);
         // remove half difference value from aave from wbtc
         aaveV2LendingPool.withdraw(WBTC, wbtcHalfDifference, address(this));
+        console.log("WBTC withdrawal from aave completed!");
         // swap WBTC on contract to WETH
         uint256 minAmountOut = getAmountOutMin(WBTC, WETH, wbtcHalfDifference);
         swap(WBTC, WETH, wbtcHalfDifference, minAmountOut, address(this));
+        console.log("swap completed");
 
+        // remove (halfdifference - weth on contract) from aave
         // remove half difference amount from aave from weth
-        aaveV2LendingPool.withdraw(WETH, halfDifference, address(this));
+        aaveV2LendingPool.withdraw(
+            WETH,
+            (halfDifference - wethOnContract),
+            address(this)
+        );
+        console.log("WETH withdrawal from aave completed!");
 
         // Unwrap WETH
-        uint256 wethToUnwrap = minAmountOut + halfDifference;
-        unwrapEth(wethToUnwrap);
+        // uint256 wethToUnwrap = minAmountOut + halfDifference;
+        // unwrapEth(wethToUnwrap);
+        // console.log("Weth unwrapped");
+        console.log(msg.sender);
+        console.log("attempting burn from");
+        tokenContract.burnFrom(msg.sender, tokenAmount);
 
         // burn index tokens
-        tokenContract.burn(msg.sender, tokenAmount);
+        tokenContract.burn(tokenAmount);
+        console.log("index tokens burnt");
 
         //return eth
-        payable(msg.sender).transfer(wethToUnwrap);
+        // payable(msg.sender).transfer(wethToUnwrap);
+        // console.log("eth transferred back to user");
+
+        uint256 wethToUnwrap = minAmountOut + halfDifference;
+        returnWeth(wethToUnwrap);
+        console.log("weth transferred back to user");
     }
 
+    // @xm3van: Withdraw function & tested!
+    function calculateIndexTokensValue(uint256 indexTokenAmount)
+        public
+        returns (uint256 indexTokenAmountValue)
+    {
+        /// Purpose of this function is to calculate the value of a
+        /// given amount of indexToken
+
+        // Value of token's send by user
+        // (indexValue, ) = calculateIndexValue();
+        updateIndexValueUSD();
+        uint256 tokenSupply = tokenContract.totalSupply();
+
+        // value
+        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+        // @Leo: would recommend multiplying first ie:
+        withdrawalTokenValue = (indexValue * indexTokenAmount) / tokenSupply;
+        // withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
+
+        // returns
+        return (withdrawalTokenValue);
+    }
+
+    // @xm3van: Withdraw function & tested!
+    // function unwrapEth(uint256 Amount) public payable {
+    //     require(Amount > 0, "Please increase the minimum Amount to unwrap!");
+    //     wethContract.withdraw(Amount);
+    // }
+
+    //@xm3van:  withdraw function
+    // dont think we need - function specified on erc20Burnable
+    // function burnIndexTokens(uint256 amount) public {
+    //     tokenContract.burn(amount);
+    // }
+
+    //@xm3van:  withdraw function
+    function returnEth(uint256 amount) public {
+        payable(msg.sender).transfer(amount);
+    }
+
+    function returnWeth(uint256 amount) public {
+        wethContract.transfer(msg.sender, amount);
+    }
     // //@xm3van:  withdraw function
     // function returnIndexTokens(uint256 amount) public {
     //     // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality

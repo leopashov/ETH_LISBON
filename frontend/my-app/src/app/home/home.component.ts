@@ -1,5 +1,13 @@
-import { Component, OnInit } from '@angular/core';
-import { ethers, Signer } from 'ethers';
+import { AfterViewInit, Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { BigNumber, Contract, ContractInterface, ethers } from 'ethers';
+import { ApiService } from '../api.service';
+import { GetContractAddressesService } from '../get-contract-addresses.service';
+import { HeaderComponent } from '../header/header.component';
+import { WalletService } from '../wallet.service';
+
+
+const INDEX_CONTRACT_ADDRESS = '0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f';
+const ETH_USD_PRICE: number = 1237.23;
 
 @Component({
   selector: 'app-home',
@@ -7,30 +15,45 @@ import { ethers, Signer } from 'ethers';
   styleUrls: ['./home.component.scss']
 })
 
-export class HomeComponent implements OnInit {
-  walletAddress: string;
-  wallet: ethers.Wallet | undefined;
-  etherBalance: string;
-  provider: ethers.providers.JsonRpcProvider | undefined;
-  signer: ethers.providers.JsonRpcSigner | undefined;
+export class HomeComponent implements OnInit, AfterViewInit {
+  // streaming the header into this component
+  @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
+
+  tokenContractBalance: string | number;
+  totalTokenSupply: string | number;
+  provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
+  indexValue: string | number;
 
 
-  constructor() { 
-    this.walletAddress = "No Wallet connected.";
-    this.etherBalance = "0.0"
-    
+
+  constructor(private apiService: ApiService, private walletService: WalletService) { 
+    this.tokenContractBalance = "loading ...";
+    this.totalTokenSupply = "loading ...";
+    this.indexValue = "loading ...";
   }
 
   ngOnInit(): void {
+    // streaming the header into this component
+    const componentRef = this.vcr.createComponent(HeaderComponent);
     
+    this.apiService.getTotalTokenSupply().subscribe((response) => {
+      this.totalTokenSupply = response;
+    });
+      
+    this.apiService.getIndexValue().subscribe((response) => {
+      const indexValueEth = response;
+      this.indexValue = indexValueEth * ETH_USD_PRICE;
+    })
     
+    // this.provider.getBalance("0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f").then((balanceBN) => {
+    //   const tokenContractBalanceEth = Number(ethers.utils.formatEther(balanceBN));
+    //   this.tokenContractBalance =  tokenContractBalanceEth * ETH_USD_PRICE;
+    //   console.log("Inxex Value: Market Cap: " + tokenContractBalanceEth)
+    // });
+
   }
 
-  async connectWallet(){
-    this.provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
-    await this.provider.send("eth_requestAccounts", []);
-    this.signer = this.provider.getSigner();
-    this.walletAddress = await this.signer.getAddress();
+  ngAfterViewInit(): void {
 
   }
 

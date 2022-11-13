@@ -1,0 +1,35 @@
+    <!--Header-->
+    <header class="p-3 sticky-top" style="background-color: rgb(0, 0, 0);">
+        <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            
+            <!--Logo in the top left corner-->
+            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+            <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+            </a>
+            
+            <!--Header Navigation Links-->
+            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+            <li><a routerLink="" class="nav-link px-2 text-secondary">Home</a></li>
+            <li><a routerLink="/dashboard" class="nav-link px-2 text-white">Dashboard</a></li>
+            <li><a routerLink="/swap" class="nav-link px-2 text-white">Swap</a></li>
+            <li><a href="#" class="nav-link px-2 text-white">Whitepaper</a></li>
+            <li><a href="#" class="nav-link px-2 text-white">Team</a></li>
+            </ul>
+
+
+            
+            
+            <!--Button Connect Wallet-->
+            <div *ngIf="walletConnected == false" class="text-end">
+                <button type="button" id="connectWallet" class="btn text-white" style="background-color: #7030A0" (click)="this.connectWallet()">Connect Wallet</button>
+            </div>
+            <div *ngIf="walletConnected == true" class="text-end">
+                <p class="text-right mb-md-0 px-5 text-white"><small>Wallet: {{walletAddress}}</small></p>
+            </div>
+            <div *ngIf="walletConnected == true" class="text-end">
+                <button type="button" id="connectWallet" class="btn text-white" style="background-color: #7030A0" (click)="disconnectWallet()">Disconnect Wallet</button>
+            </div>          
+        </div>
+        </div>
+    </header>
