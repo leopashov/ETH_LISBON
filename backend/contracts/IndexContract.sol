@@ -555,6 +555,52 @@ contract IndexContract {
 
     // @xm3van: Still needs some partial unit testing!!!
 
+    // @xm3van: Withdraw function & tested!
+    function unwrapEth(uint256 Amount) public payable {
+        require(Amount > 0, "Please increase the minimum Amount to unwrap!");
+        wethContract.withdraw(Amount);
+    }
+
+    //@xm3van:  withdraw function
+    function burnIndexTokens(uint256 amount) public {
+        tokenContract.burn(msg.sender, amount);
+    }
+
+    //@xm3van:  withdraw function
+    function returnEth(uint256 amount) public {
+        payable(msg.sender).transfer(amount);
+    }
+
+    // @xm3van: Withdraw function & tested!
+    function calculateIndexTokensValue(uint256 indexTokenAmount)
+        public
+        returns (uint256 indexTokenAmountValue)
+    {
+        /// Purpose of this function is to calculate the value of a
+        /// given amount of indexToken
+
+        // Value of token's send by user
+        (uint256 indval, ) = calculateIndexValue();
+        uint256 indVal = (indval / 10**18);
+        uint256 tokenSupply = (tokenContract.totalSupply() / 10**18);
+        uint256 iTokenVal = ((indexTokenAmount / 10**18));
+
+        console.log("indVal: %s", indVal);
+        console.log("tokenSupply: %s", tokenSupply);
+        console.log("indexTokenAmount: %s", iTokenVal);
+
+        // value
+        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+        withdrawalTokenValue =
+            (((indVal * iTokenVal) * 10**8) / tokenSupply) *
+            10**10;
+
+        console.log("withdrawalTokenValue: %s", withdrawalTokenValue);
+
+        // returns
+        return withdrawalTokenValue;
+    }
+
     function withdraw(uint256 tokenAmount) public {
         // @xm3van: decided to not implement require function as the user will carry gas cost
         // i.e. they can rebalance as much as they like, right?
@@ -586,42 +632,6 @@ contract IndexContract {
 
         //return eth
         payable(msg.sender).transfer(wethToUnwrap);
-    }
-
-    // @xm3van: Withdraw function & tested!
-    function calculateIndexTokensValue(uint256 indexTokenAmount)
-        public
-        returns (uint256 indexTokenAmountValue)
-    {
-        /// Purpose of this function is to calculate the value of a
-        /// given amount of indexToken
-
-        // Value of token's send by user
-        (uint256 indVal, ) = calculateIndexValue();
-        uint256 tokenSupply = tokenContract.totalSupply();
-
-        // value
-        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
-        withdrawalTokenValue = (indVal / tokenSupply) * indexTokenAmount;
-
-        // returns
-        return (withdrawalTokenValue);
-    }
-
-    // @xm3van: Withdraw function & tested!
-    function unwrapEth(uint256 Amount) external payable {
-        require(Amount > 0, "Please increase the minimum Amount to unwrap!");
-        wethContract.withdraw(Amount);
-    }
-
-    //@xm3van:  withdraw function
-    function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(msg.sender, amount);
-    }
-
-    //@xm3van:  withdraw function
-    function returnEth(uint256 amount) public {
-        payable(msg.sender).transfer(amount);
     }
 
     // //@xm3van:  withdraw function

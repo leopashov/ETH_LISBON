@@ -86,8 +86,8 @@ describe("IndexContract", function () {
     //         // value typescript
     //         const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw)
 
-    // //         expect(userValue).to.eq(userValueTs);
-    // //     })
+    //         expect(userValue).to.eq(userValueTs);
+    //     })
 
     // })
 
@@ -112,7 +112,9 @@ describe("IndexContract", function () {
 
             // withdraw 50 % of funds - i.e 5 eth
             const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
-            await (await indexContract.calculateIndexTokensValue(indexTokensToWithdraw)).wait();
+            console.log(indexTokensToWithdraw);
+            const indexTokenValue = await indexContract.calculateIndexTokensValue(indexTokensToWithdraw);
+            await indexTokenValue.wait();
             // log token Value of user tokens
             const userValue = await indexContract.withdrawalTokenValue();
             console.log(`Function User Funds Vale: ${ethers.utils.formatEther(userValue)}`);
@@ -123,16 +125,56 @@ describe("IndexContract", function () {
             console.log(`Total Index Token Supply: ${totalSupply}`);
 
             // token value in typescript 
+            await (await (indexContract.calculateIndexValue())).wait();
             const indexValue = await indexContract.indexValue();
             console.log(`Total Index Value: ${indexValue}`);
 
 
             // value typescript
             const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw);
-            console.log(`Typescript User Funds Vale: ${ethers.utils.formatEther(userValueTs)}`);
+            console.log(`Typescript User Funds Value: ${ethers.utils.formatEther(userValueTs)}`);
 
-            expect(userValue).to.eq(userValueTs);
-        })
+            expect(Math.round(ethers.utils.formatEther(userValue))).to.eq(Math.round(ethers.utils.formatEther(userValueTs)));
+
+        });
+
+        it("withdraw()", async () => {
+            // get index token balance of acc1 
+            const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBal)} Tokens`);
+
+            // withdraw 50 % of funds - i.e 5 eth
+            const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
+            console.log(indexTokensToWithdraw);
+            const indexTokenValue = await indexContract.calculateIndexTokensValue(indexTokensToWithdraw);
+            await indexTokenValue.wait();
+            // log token Value of user tokens
+            const userValue = await indexContract.withdrawalTokenValue();
+            console.log(`Function User Funds Vale: ${ethers.utils.formatEther(userValue)}`);
+
+            // Alternative calcuation typescript
+            // log total supply
+            const totalSupply = await tokenContract.totalSupply();
+            console.log(`Total Index Token Supply: ${totalSupply}`);
+
+            // withdraw  
+            await (await indexContract.withdraw(indexTokensToWithdraw)).wait();
+
+            // 
+            const acc1IndexTokenBalnew = await tokenContract.balanceOf(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBalnew)} Tokens`);
+
+            // const indexValue = await indexContract.indexValue();
+            // console.log(`Total Index Value: ${indexValue}`);
+
+
+            // value typescript
+            // const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw);
+            // console.log(`Typescript User Funds Value: ${ethers.utils.formatEther(userValueTs)}`);
+
+            // expect(Math.round(ethers.utils.formatEther(userValue))).to.eq(Math.round(ethers.utils.formatEther(userValueTs)));
+
+        });
 
     })
 
