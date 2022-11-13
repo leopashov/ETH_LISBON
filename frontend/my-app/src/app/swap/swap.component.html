@@ -29,12 +29,17 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
       
-            <!-- Form -->
+            <!-- Form 
+            <form [formGroup]="claimForm" (ngSubmit)="invest()">
+              <input id="name" type="text" placeholder="0.0" formControlName="amount" >
+              <button class="button" type="submit">Purchase</button>
+            </form>-->
+
             <div class="modal-body p-5 pt-0">
-              <form class="">
-                <div class="form-group mb-3">
+              <form class="" [formGroup]="claimForm" (ngSubmit)="invest()">
+                <div class="form-group mb-3" [formGroup]="claimForm">
                     <label for="depositEth" class="fw-bold text-dark">ETH</label>
-                    <input type="text" class="form-control" id="depositEth" placeholder="0.0">
+                    <input id="name" type="text" class="form-control" formControlName="amount" placeholder="0.0">
                     <small class="text-danger">Current Balance: {{etherBalance}}.</small>
                 </div>
                 <div class="form-group mb-3">
@@ -49,7 +54,8 @@
                 <small class="text-danger">Estimated Gas Costs: XXXX </small><br>
                 <small class="text-danger">Minimum received DIP: XXXX </small>
               </form>
-            </div>
+              
+            </div> -->
           </div>
         </div>    
       </div>

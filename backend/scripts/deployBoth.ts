@@ -22,6 +22,7 @@ async function main() {
     let wBtcContractAddress: string;
     let aWBTC: string;
     let aWEth: string;
+    //let deployer: SignerWithAddress[] | { address: PromiseOrValue<string>; }[];
 
     wEthContractAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
     wBtcContractAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
@@ -29,6 +30,7 @@ async function main() {
     aWBTC = "0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656";
     aWEth = "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e";
 
+    // [deployer, acc1, acc2, token1, token2, token3, atoken1, atoken2, atoken3] = await ethers.getSigners();
     accounts = await ethers.getSigners();
     const tokenFactory = await ethers.getContractFactory("IndexToken"); // "IndexToken" matches import
     tokenContract = await tokenFactory.deploy();
@@ -45,6 +47,14 @@ async function main() {
 
     // console.log(tokenContract.deployTransaction);
     console.log("Index Contract deployed to:" + indexContract.address);
+
+      // assign minter role
+      const MINTER_ROLE = await tokenContract.MINTER_ROLE();
+      const grantRoleTx = await tokenContract.grantRole(
+          MINTER_ROLE,
+          indexContract.address
+      );
+      await grantRoleTx.wait();
 };
 
 main().catch((error) => {

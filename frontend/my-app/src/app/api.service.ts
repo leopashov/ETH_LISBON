@@ -16,4 +16,18 @@ export class ApiService {
   getEthBalance(address: string): Observable<any> {
     return this.http.get('http://localhost:3000/eth-balance/:address');
   }
+
+  getDipBalance(address: string): Observable<any> {
+    //return this.http.get(`http://localhost:3000/dip-balance?address=${address}`);
+    return this.http.get(`http://localhost:3000/dip-balance/${address}`);
+  }
+
+  getAllowance(from: string, to: string): Observable<any> {
+    return this.http.get('http://localhost:3000/allowance');
+  }
+
+  getIndexValue(): Observable<any> {
+    return this.http.get('http://localhost:3000/index-value');
+  }
 }
+

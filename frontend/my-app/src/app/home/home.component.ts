@@ -1,11 +1,13 @@
 import { AfterViewInit, Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { BigNumber, Contract, ContractInterface, ethers } from 'ethers';
+import { ApiService } from '../api.service';
 import { GetContractAddressesService } from '../get-contract-addresses.service';
 import { HeaderComponent } from '../header/header.component';
 import { WalletService } from '../wallet.service';
 
 
-
+const INDEX_CONTRACT_ADDRESS = '0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f';
+const ETH_USD_PRICE: number = 1237.23;
 
 @Component({
   selector: 'app-home',
@@ -14,43 +16,45 @@ import { WalletService } from '../wallet.service';
 })
 
 export class HomeComponent implements OnInit, AfterViewInit {
+  // streaming the header into this component
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
-  indexContract: Contract | undefined;
-  indexContractBalance: BigNumber | undefined;
-  tokenContract: Contract | undefined;
-  // TOKEN_CONTRACT_ADDRESS: string ;
-  // INDEX_CONTRACT_ADDRESS: string; 
+  tokenContractBalance: string | number;
+  totalTokenSupply: string | number;
+  provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
+  indexValue: string | number;
 
-  walletAddress: string | undefined;
-  wallet: ethers.Wallet | undefined;
-  etherBalance: string | undefined | BigNumber | Number;
-  signer: ethers.providers.JsonRpcSigner | undefined;
-  indexTokenAbi: ContractInterface | undefined;
 
-   
-  
-  constructor(private walletService: WalletService, private getContractAddressService: GetContractAddressesService) { 
-    const provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
+
+  constructor(private apiService: ApiService, private walletService: WalletService) { 
+    this.tokenContractBalance = "loading ...";
+    this.totalTokenSupply = "loading ...";
+    this.indexValue = "loading ...";
   }
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
+    // streaming the header into this component
     const componentRef = this.vcr.createComponent(HeaderComponent);
-    this.indexContractBalance = await this.getContractAddressService.getIndexBalance(this.getContractAddressService.INDEX_CONTRACT_ADDRESS);
+    
+    this.apiService.getTotalTokenSupply().subscribe((response) => {
+      this.totalTokenSupply = response;
+    });
+      
+    this.apiService.getIndexValue().subscribe((response) => {
+      const indexValueEth = response;
+      this.indexValue = indexValueEth * ETH_USD_PRICE;
+    })
+    
+    // this.provider.getBalance("0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f").then((balanceBN) => {
+    //   const tokenContractBalanceEth = Number(ethers.utils.formatEther(balanceBN));
+    //   this.tokenContractBalance =  tokenContractBalanceEth * ETH_USD_PRICE;
+    //   console.log("Inxex Value: Market Cap: " + tokenContractBalanceEth)
+    // });
 
-    console.log("Ethers balance of Index Contract: " + this.indexContractBalance);
-    this.etherBalance = this.indexContractBalance;
-    console.log("Calling from home: " + this.getContractAddressService.indexContract.address);
-    // console.log("Index Contract: " + this.indexContract);
-    this.walletAddress = this.walletService.walletAddress;
-    this.wallet = this.walletService.wallet;
-    this.signer = this.walletService.signer;
   }
 
   ngAfterViewInit(): void {
 
   }
-
-
 
 }

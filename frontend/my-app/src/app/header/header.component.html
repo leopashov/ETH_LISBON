@@ -13,21 +13,21 @@
             <li><a routerLink="" class="nav-link px-2 text-secondary">Home</a></li>
             <li><a routerLink="/dashboard" class="nav-link px-2 text-white">Dashboard</a></li>
             <li><a routerLink="/swap" class="nav-link px-2 text-white">Swap</a></li>
-            <li><a href="#" class="nav-link px-2 text-danger">Whitepaper</a></li>
-            <li><a href="#" class="nav-link px-2 text-danger">Team</a></li>
+            <li><a href="#" class="nav-link px-2 text-white">Whitepaper</a></li>
+            <li><a href="#" class="nav-link px-2 text-white">Team</a></li>
             </ul>
 
 
             
             
             <!--Button Connect Wallet-->
-            <div *ngIf="walletAddress == undefined" class="text-end">
+            <div *ngIf="walletConnected == false" class="text-end">
                 <button type="button" id="connectWallet" class="btn text-white" style="background-color: #7030A0" (click)="this.connectWallet()">Connect Wallet</button>
             </div>
-            <div *ngIf="walletAddress != undefined" class="text-end">
+            <div *ngIf="walletConnected == true" class="text-end">
                 <p class="text-right mb-md-0 px-5 text-white"><small>Wallet: {{walletAddress}}</small></p>
             </div>
-            <div *ngIf="walletAddress != undefined" class="text-end">
+            <div *ngIf="walletConnected == true" class="text-end">
                 <button type="button" id="connectWallet" class="btn text-white" style="background-color: #7030A0" (click)="disconnectWallet()">Disconnect Wallet</button>
             </div>          
         </div>

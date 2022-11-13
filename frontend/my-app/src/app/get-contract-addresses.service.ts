@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ethers, Contract, BigNumber, ContractInterface } from 'ethers';
 import * as TokenContractAbi from '../../../../backend/artifacts/contracts/IndexToken.sol/IndexToken.json';
 import * as IndexContractAbi from '../../../../backend/artifacts/contracts/IndexContract.sol/IndexContract.json';
+import { WalletService } from './wallet.service';
 
 
 @Injectable({
@@ -21,7 +22,7 @@ export class GetContractAddressesService {
   provider: ethers.providers.JsonRpcProvider;
 
 
-  constructor() {
+  constructor(private walletService: WalletService) {
     this.indexContractAbi = IndexContractAbi;
     this.tokenContractAbi = TokenContractAbi;
     this.provider = new ethers.providers.Web3Provider((window as any).ethereum, 'any');
@@ -40,6 +41,12 @@ export class GetContractAddressesService {
     let contractBalance;
       contractBalance = await this.provider.getBalance(contractAddress);
     return contractBalance;
+  }
+
+  async investEth(amount: string) {
+    console.log(amount);
+    const fundTx = await this.indexContract.connect(this.walletService.signer).receive_funds({ "value": ethers.utils.parseEther(amount) });
+    await fundTx.wait();
   }
 
   // async

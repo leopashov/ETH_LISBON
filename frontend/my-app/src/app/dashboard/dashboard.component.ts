@@ -8,6 +8,7 @@ import { abi } from '../../../../../backend/artifacts/contracts/IndexToken.sol/I
 import { ApiService } from '../api.service';
 
 
+const ETH_USD_PRICE: number = 1237.23;
 
 @Component({
   selector: 'app-dashboard',
@@ -15,55 +16,59 @@ import { ApiService } from '../api.service';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterContentChecked {
+  // streaming the header into this component
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
   
-  
-  walletAddress: string | undefined;
-  wallet: ethers.Wallet | undefined;
-  etherBalance: string | undefined | BigNumber | Number;
-  provider: ethers.providers.JsonRpcProvider | undefined;
-  signer: ethers.providers.JsonRpcSigner | undefined;
-  
-  indexTokenContract: Contract | undefined;
-
-  dipBalance: string;
-
+  etherBalance: string;
   totalTokenSupply: string;
-  
-  // indexMarketCap: BigNumber | Number;
-  // 0-Address Hardhat Signer
-  
-
-
-  // console.log("provider: " + this.provider);
-  
-  
-  // const provider = new ethers.providers.Web3Provider((window as any).ethereum, "any");
-  // const indexTokenContract = new ethers.Contract("0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f", IndexTokenAbi, provider);
-
-  // tokenContract: Contract;
-  // indexContract: Contract;
-  
-  constructor(private apiService: ApiService) { 
-    this.dipBalance = "loading.. ";
-    this.totalTokenSupply = 'loading...';
+  dipBalance: string | number;
+  walletConnected: boolean;
+  walletAddress: string | undefined;
+  allowance: string | undefined | number;
+  usdDipBalance: string | number;
+    
+  constructor(private apiService: ApiService, private walletService: WalletService) { 
+    this.totalTokenSupply = 'loading ...';
+    this.dipBalance = "loading ...";
+    this.usdDipBalance = "loading ...";
+    this.etherBalance = 'loading ...';
+    this.walletConnected = false;
   }
 
   ngOnInit(): void {
+    // streaming the header into this component
     const componentRef = this.vcr.createComponent(HeaderComponent);
-    // this.walletAddress = this.walletService.walletAddress;
-    // this.wallet = this.walletService.wallet;
-    // this.etherBalance = this.walletService.etherBalance;
-    // this.provider = this.walletService.provider;
-    // this.signer = this.walletService.signer;
-    // this.walletService.getTokenBalance(this.walletAddress).subscribe((balanceBN: string | BigNumber | undefined) => {
-    //   this. dipBalance = balanceBN;
-    // })
 
+    this.walletConnected = this.walletService.walletConnected;
+
+    // subscribe to total token supply from api service
     this.apiService.getTotalTokenSupply().subscribe((response) => {
-      console.log(response);
       this.totalTokenSupply = response;
     });
+
+    
+    // this.apiService.getAllowance("0x976EA74026E726554dB657fA54763abd0C3a0aa9", "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc").subscribe((response) => {
+    //   this.allowance = response.result;
+    //   console.log(this.allowance);
+    // });
+
+    
+    // console.log(this.allowance);
+
+    // subscribe to dip balance from api service if wallet is connected
+    if(this.walletConnected) {
+      this.walletAddress = this.walletService.walletAddress;
+      console.log(this.walletAddress);
+      this.apiService.getDipBalance(this.walletAddress).subscribe((response) => {
+        this.dipBalance = response;
+        this.usdDipBalance = Number(this.dipBalance) * ETH_USD_PRICE;
+    });
+    
+    
+    } else {
+      this.totalTokenSupply = "--";
+      this.dipBalance = "--";
+    }
 
     
   }
