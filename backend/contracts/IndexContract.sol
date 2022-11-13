@@ -69,7 +69,9 @@ interface IIndexToken is IERC20 {
 
     function mint(address to, uint256 amount) external;
 
-    function burn(address from, uint256 amount) external;
+    function burn(uint256 amount) external;
+
+    function burnFrom(address account, uint256 amount) external;
 }
 
 contract IndexContract {
@@ -265,6 +267,7 @@ contract IndexContract {
 
     //@xm3van:  anxilary function
     function getWbtcPrice() public view returns (uint256 outPrice) {
+        // returns price of btc in eth as a BN (ie ~13*10^18)
         (, int256 price, , , ) = WBtcPriceFeed.latestRoundData();
         return uint256(price);
     }
@@ -561,20 +564,26 @@ contract IndexContract {
             tokenAmount <= userTokenBalance,
             "cannot redeem more tokens than you own!"
         );
+        // allow contract to spend index toknes( for burn)
+        tokenContract.approve(address(this), tokenAmount);
 
         // calculates user value
         uint256 valueUserIndexToken = calculateIndexTokensValue(tokenAmount);
 
         // remove's 50%  from aave
         uint256 halfDifference = valueUserIndexToken / 2;
-
+        console.log("HalfDifference = %s", halfDifference);
         // calculate halfdifference in terms of WBTC
-        uint256 wbtcHalfDifference = getWbtcPrice() * halfDifference;
+        // getWbtcPrice() gives price of BTC in ETH!
+        uint256 wbtcHalfDifference = (halfDifference * 10**8) / getWbtcPrice();
+        console.log("wbtcHalfDifference = %s", wbtcHalfDifference);
         // remove half difference value from aave from wbtc
         aaveV2LendingPool.withdraw(WBTC, wbtcHalfDifference, address(this));
+        console.log("WBTC withdrawal from aave completed!");
         // swap WBTC on contract to WETH
         uint256 minAmountOut = getAmountOutMin(WBTC, WETH, wbtcHalfDifference);
         swap(WBTC, WETH, wbtcHalfDifference, minAmountOut, address(this));
+        console.log("swap completed");
 
         // remove (halfdifference - weth on contract) from aave
         // remove half difference amount from aave from weth
@@ -583,16 +592,26 @@ contract IndexContract {
             (halfDifference - wethOnContract),
             address(this)
         );
+        console.log("WETH withdrawal from aave completed!");
 
         // Unwrap WETH
-        uint256 wethToUnwrap = minAmountOut + halfDifference;
-        unwrapEth(wethToUnwrap);
+        // uint256 wethToUnwrap = minAmountOut + halfDifference;
+        // unwrapEth(wethToUnwrap);
+        // console.log("Weth unwrapped");
+
+        tokenContract.burnFrom(msg.sender, tokenAmount);
 
         // burn index tokens
-        tokenContract.burn(msg.sender, tokenAmount);
+        tokenContract.burn(tokenAmount);
+        console.log("index tokens burnt");
 
         //return eth
-        payable(msg.sender).transfer(wethToUnwrap);
+        // payable(msg.sender).transfer(wethToUnwrap);
+        // console.log("eth transferred back to user");
+
+        uint256 wethToUnwrap = minAmountOut + halfDifference;
+        returnWeth(wethToUnwrap);
+        console.log("weth transferred back to user");
     }
 
     // @xm3van: Withdraw function & tested!
@@ -618,21 +637,25 @@ contract IndexContract {
     }
 
     // @xm3van: Withdraw function & tested!
-    function unwrapEth(uint256 Amount) public payable {
-        require(Amount > 0, "Please increase the minimum Amount to unwrap!");
-        wethContract.withdraw(Amount);
-    }
+    // function unwrapEth(uint256 Amount) public payable {
+    //     require(Amount > 0, "Please increase the minimum Amount to unwrap!");
+    //     wethContract.withdraw(Amount);
+    // }
 
     //@xm3van:  withdraw function
-    function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(msg.sender, amount);
-    }
+    // dont think we need - function specified on erc20Burnable
+    // function burnIndexTokens(uint256 amount) public {
+    //     tokenContract.burn(amount);
+    // }
 
     //@xm3van:  withdraw function
     function returnEth(uint256 amount) public {
         payable(msg.sender).transfer(amount);
     }
 
+    function returnWeth(uint256 amount) public {
+        wethContract.transfer(msg.sender, amount);
+    }
     // //@xm3van:  withdraw function
     // function returnIndexTokens(uint256 amount) public {
     //     // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality

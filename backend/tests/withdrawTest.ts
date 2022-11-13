@@ -147,7 +147,9 @@ describe("IndexContract", function () {
 
         it("reverts attempts to withdraw too much eth", async () => {
             const initialAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
-            const withdrawTx = await indexContract.connect(acc1).withdraw((initialAcc1TokenBalance).add(5));
+            const approvalTx = await tokenContract.approve(indexContract.address, initialAcc1TokenBalance);
+            approvalTx.wait();
+            const withdrawTx = await indexContract.connect(acc1).withdraw((initialAcc1TokenBalance).add(0));
             withdrawTx.wait();
             console.log(withdrawTx);
             // expect(withdrawTx).to.throw(Error);
