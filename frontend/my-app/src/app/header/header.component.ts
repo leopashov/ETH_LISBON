@@ -13,7 +13,6 @@ export class HeaderComponent implements OnInit {
   walletAddress: string | undefined;
   wallet: ethers.Wallet | undefined;
   etherBalance: string | undefined | BigNumber | Number;
-  provider: ethers.providers.JsonRpcProvider | undefined;
   signer: ethers.providers.JsonRpcSigner | undefined;
 
   constructor(private walletService: WalletService) { 
@@ -23,8 +22,7 @@ export class HeaderComponent implements OnInit {
   ngOnInit(): void {
     this.walletAddress = this.walletService.walletAddress;
     this.wallet = this.walletService.wallet;
-    this.etherBalance = this.walletService.etherBalance;
-    this.provider = this.walletService.provider;
+  
     this.signer = this.walletService.signer; 
     //console.log(this.etherBalance);
   }
@@ -32,18 +30,17 @@ export class HeaderComponent implements OnInit {
   async connectWallet() {
     await this.walletService.connectWallet();
     this.walletAddress = this.walletService.walletAddress;
-    this.etherBalance = this.walletService.etherBalance;
-    console.log(this.walletAddress);
-    console.log(this.etherBalance);
-    console.log(this.provider);
-    console.log(this.signer);
-    console.log(this.wallet);
+   
+    // console.log(this.walletAddress);
+    // console.log(this.etherBalance);
+    // console.log(this.signer);
+    // console.log(this.wallet);
   }
 
   async disconnectWallet() {
     await this.walletService.disconnectWallet();
     this.walletAddress = this.walletService.walletAddress;
-    this.etherBalance = this.walletService.etherBalance;
+   
   }
 
 }

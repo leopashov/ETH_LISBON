@@ -2,6 +2,7 @@ import { AfterViewInit, Component, OnInit, ViewContainerRef, ViewChild } from '@
 import { HeaderComponent } from '../header/header.component';
 import { WalletService } from '../wallet.service';
 import { BigNumber, ethers, Signer } from 'ethers';
+import { ApiService } from '../api.service';
 
 @Component({
   selector: 'app-swap',
@@ -12,23 +13,32 @@ import { BigNumber, ethers, Signer } from 'ethers';
 export class SwapComponent implements OnInit, AfterViewInit {
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
-  walletAddress: string | undefined;
-  wallet: ethers.Wallet | undefined;
+  LOADING = "loading ..."
+  walletAddress: string;
+  wallet: ethers.Wallet | undefined | string;
   etherBalance: string | undefined | BigNumber | Number;
-  provider: ethers.providers.JsonRpcProvider | undefined;
-  signer: ethers.providers.JsonRpcSigner | undefined;
+  provider: ethers.providers.JsonRpcProvider | string;
+  signer: ethers.providers.JsonRpcSigner | undefined | string;
 
 
-  constructor(private walletService: WalletService) {
-    this.walletAddress = this.walletService.walletAddress;
-    this.wallet = this.walletService.wallet;
-    this.etherBalance = this.walletService.etherBalance;
-    this.provider = this.walletService.provider;
-    this.signer = this.walletService.signer; 
+  constructor(private apiService: ApiService, private walletService: WalletService) {
+    this.walletAddress = this.LOADING;
+    this.wallet = this.LOADING;
+    this.etherBalance = this.LOADING;
+    this.provider = this.LOADING;
+    this.signer = this.LOADING
   }
 
   ngOnInit(): void {
     const componentRef = this.vcr.createComponent(HeaderComponent);
+    
+    //if(this.walletService.walletConnected) {
+      this.apiService.getEthBalance("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266").subscribe((balanceBN) => {
+        const balance = ethers.utils.formatEther(balanceBN);
+        this.etherBalance = balance;
+      });
+    //} 
+
   }
 
   ngAfterViewInit(): void {

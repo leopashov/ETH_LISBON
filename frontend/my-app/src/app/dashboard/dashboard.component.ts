@@ -50,7 +50,7 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   }
 
   ngOnInit(): void {
-    // const componentRef = this.vcr.createComponent(HeaderComponent);
+    const componentRef = this.vcr.createComponent(HeaderComponent);
     // this.walletAddress = this.walletService.walletAddress;
     // this.wallet = this.walletService.wallet;
     // this.etherBalance = this.walletService.etherBalance;
@@ -59,11 +59,13 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     // this.walletService.getTokenBalance(this.walletAddress).subscribe((balanceBN: string | BigNumber | undefined) => {
     //   this. dipBalance = balanceBN;
     // })
-   
+
     this.apiService.getTotalTokenSupply().subscribe((response) => {
       console.log(response);
       this.totalTokenSupply = response;
     });
+
+    
   }
     
 
