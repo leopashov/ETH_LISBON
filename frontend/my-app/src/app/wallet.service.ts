@@ -14,17 +14,13 @@ export class WalletService {
   provider: ethers.providers.JsonRpcProvider | undefined;
   // newProvider: ethers.providers.Provider | undefined;
   signer: ethers.providers.JsonRpcSigner | undefined;
-  indexContract: Contract;
-  tokenContract: Contract;
   totalTokenSupply: string | undefined;
   walletConnected: boolean;
 
   
 
   
-  constructor(private getContractAddressService: GetContractAddressesService, private apiService: ApiService) {
-    this.indexContract = this.getContractAddressService.indexContract;
-    this.tokenContract = this.getContractAddressService.tokenContract;
+  constructor (private apiService: ApiService) {
     this.walletConnected = false;
     this.walletAddress = "not connected";
 
@@ -64,8 +60,7 @@ export class WalletService {
 
   }
 
-  async disconnectWallet(){
-    this.provider = undefined;
+  disconnectWallet(){
     this.walletAddress = "not connected";
     this.signer = undefined;
     this.wallet = undefined;

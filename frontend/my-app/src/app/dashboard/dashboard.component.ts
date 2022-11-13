@@ -8,7 +8,7 @@ import { abi } from '../../../../../backend/artifacts/contracts/IndexToken.sol/I
 import { ApiService } from '../api.service';
 
 
-const ETH_USD_PRICE: number = 1237;
+const ETH_USD_PRICE: number = 1237.23;
 
 @Component({
   selector: 'app-dashboard',

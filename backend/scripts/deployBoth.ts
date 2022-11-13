@@ -47,6 +47,14 @@ async function main() {
 
     // console.log(tokenContract.deployTransaction);
     console.log("Index Contract deployed to:" + indexContract.address);
+
+      // assign minter role
+      const MINTER_ROLE = await tokenContract.MINTER_ROLE();
+      const grantRoleTx = await tokenContract.grantRole(
+          MINTER_ROLE,
+          indexContract.address
+      );
+      await grantRoleTx.wait();
 };
 
 main().catch((error) => {

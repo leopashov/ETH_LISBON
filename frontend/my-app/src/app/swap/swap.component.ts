@@ -1,8 +1,10 @@
 import { AfterViewInit, Component, OnInit, ViewContainerRef, ViewChild } from '@angular/core';
 import { HeaderComponent } from '../header/header.component';
 import { WalletService } from '../wallet.service';
-import { BigNumber, ethers, Signer } from 'ethers';
+import { BigNumber, Contract, ethers, Signer } from 'ethers';
 import { ApiService } from '../api.service';
+import { GetContractAddressesService } from '../get-contract-addresses.service';
+import { FormBuilder, ReactiveFormsModule, FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-swap',
@@ -10,41 +12,42 @@ import { ApiService } from '../api.service';
   styleUrls: ['./swap.component.scss']
 })
 
-export class SwapComponent implements OnInit, AfterViewInit {
+export class SwapComponent implements OnInit {
+  // streaming the header into this component
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
   LOADING = "loading ...";
   walletAddress: string;
-  // wallet: ethers.Wallet | undefined | string;
   etherBalance: string | undefined | BigNumber | Number;
   provider: ethers.providers.Provider;
-  // signer: ethers.providers.JsonRpcSigner | undefined | string;
   totalTokenSupply: string;
+  indexContract: any;
+  investAmount: string;
+  signer: any;
+
+  claimForm = this.fb.group({
+    amount: ''
+  });
 
 
-  constructor(private apiService: ApiService, private walletService: WalletService) {
+
+  constructor(private fb: FormBuilder, private getContractAddressService: GetContractAddressesService,  private apiService: ApiService, private walletService: WalletService) {
     this.walletAddress = this.LOADING;
-    // this.walletAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
     this.etherBalance = this.LOADING;
     this.provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
-    
-    // this.signer = this.LOADING
     this.totalTokenSupply = 'loading...';
+    this.investAmount = this.LOADING;
   }
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void{
+    // streaming the header into this component
     const componentRef = this.vcr.createComponent(HeaderComponent);
-
-    
-    // console.log("Network: " + await this.provider.getNetwork());
-    // this.etherBalance = await this.provider.getBalance(this.walletAddress);
-    
+    this.indexContract = this.getContractAddressService.indexContract;
     
     this.apiService.getTotalTokenSupply().subscribe((response) => {
       console.log("Dashboard component token supply: " + response);
       this.totalTokenSupply = response;
     });
-        
 
     if(this.walletService.walletConnected) {
       this.walletAddress = this.walletService.walletAddress;
@@ -54,12 +57,11 @@ export class SwapComponent implements OnInit, AfterViewInit {
     }
   }
 
-  ngAfterViewInit(): void {
-    
-  }
 
-  buyDip() {
-    
+  invest() {
+    this.investAmount = String(this.claimForm.value.amount);
+    console.log("Invested amount: " + this.investAmount);
+    this.getContractAddressService.investEth(this.investAmount);
   }
 
 }
