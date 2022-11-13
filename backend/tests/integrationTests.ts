@@ -80,6 +80,20 @@ describe("IndexContract Integration", function () {
             expect(ethers.BigNumber.from(indexValue)).to.eq(fundedAmount);
         });
 
+        it("correctly updates index USD value", async () => {
+            const acc2Fund = await indexContract.connect(acc2).receive_funds({ "value": ethers.utils.parseEther("1"), });
+            acc2Fund.wait();
+            const fundedAmount = ethers.utils.parseEther("1.11");
+            const updateindexValueUSD = await indexContract.updateIndexValueUSD();
+            updateindexValueUSD.wait();
+            const indexValueUSD = await indexContract.indexValueUSD();
+            console.log(`indexValueUSD: ${indexValueUSD}`);
+
+            expect(ethers.BigNumber.from(indexValueUSD)).to.eq(fundedAmount);
+        });
+
+
+
         it("again mints the correct number of tokens", async () => {
             // needs looking at - both SC and here
             const acc2Deposit = 10 * Math.random();
@@ -227,6 +241,18 @@ describe("IndexContract Integration", function () {
             //expect price to be ~12.98
         })
     });
+
+    describe("get eth price in terms of usd", () => {
+
+        it("retreives the price of eth denominated in usd", async () => {
+            const ethPriceHex = await indexContract.getEthPrice();
+            const ethPriceBN = ethPriceHex.toString();
+            console.log(`ethPriceBN ${String(ethPriceBN)}`);
+            const ethPrice = ethers.utils.formatEther(String(ethPriceBN));
+            console.log(ethPrice);
+        })
+    })
+
 
     describe("When convertToWeth() is called in the IndexContract.sol", async () => {
 
