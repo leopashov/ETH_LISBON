@@ -13,32 +13,45 @@ import { ApiService } from '../api.service';
 export class SwapComponent implements OnInit, AfterViewInit {
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
-  LOADING = "loading ..."
+  LOADING = "loading ...";
   walletAddress: string;
-  wallet: ethers.Wallet | undefined | string;
+  // wallet: ethers.Wallet | undefined | string;
   etherBalance: string | undefined | BigNumber | Number;
-  provider: ethers.providers.JsonRpcProvider | string;
-  signer: ethers.providers.JsonRpcSigner | undefined | string;
+  provider: ethers.providers.Provider;
+  // signer: ethers.providers.JsonRpcSigner | undefined | string;
+  totalTokenSupply: string;
 
 
   constructor(private apiService: ApiService, private walletService: WalletService) {
     this.walletAddress = this.LOADING;
-    this.wallet = this.LOADING;
+    // this.walletAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
     this.etherBalance = this.LOADING;
-    this.provider = this.LOADING;
-    this.signer = this.LOADING
+    this.provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
+    
+    // this.signer = this.LOADING
+    this.totalTokenSupply = 'loading...';
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const componentRef = this.vcr.createComponent(HeaderComponent);
-    
-    //if(this.walletService.walletConnected) {
-      this.apiService.getEthBalance("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266").subscribe((balanceBN) => {
-        const balance = ethers.utils.formatEther(balanceBN);
-        this.etherBalance = balance;
-      });
-    //} 
 
+    
+    // console.log("Network: " + await this.provider.getNetwork());
+    // this.etherBalance = await this.provider.getBalance(this.walletAddress);
+    
+    
+    this.apiService.getTotalTokenSupply().subscribe((response) => {
+      console.log("Dashboard component token supply: " + response);
+      this.totalTokenSupply = response;
+    });
+        
+
+    if(this.walletService.walletConnected) {
+      this.walletAddress = this.walletService.walletAddress;
+      this.provider.getBalance(this.walletAddress).then((balanceBN) => {
+        this.etherBalance = ethers.utils.formatEther(balanceBN) + " ETH";
+      });
+    }
   }
 
   ngAfterViewInit(): void {

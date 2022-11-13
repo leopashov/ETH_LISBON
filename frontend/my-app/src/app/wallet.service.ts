@@ -9,9 +9,10 @@ import { ApiService } from './api.service';
 })
 export class WalletService {
 
-  walletAddress: string | undefined;
+  walletAddress: string;
   wallet: ethers.Wallet | undefined;
-  provider: ethers.providers.JsonRpcProvider | undefined;
+  provider: ethers.providers.JsonRpcProvider | undefined;
+  // newProvider: ethers.providers.Provider | undefined;
   signer: ethers.providers.JsonRpcSigner | undefined;
   indexContract: Contract;
   tokenContract: Contract;
@@ -25,6 +26,8 @@ export class WalletService {
     this.indexContract = this.getContractAddressService.indexContract;
     this.tokenContract = this.getContractAddressService.tokenContract;
     this.walletConnected = false;
+    this.walletAddress = "not connected";
+
   }
 
   async connectWallet() {
@@ -39,6 +42,8 @@ export class WalletService {
 
     this.walletAddress = await this.signer.getAddress();
     console.log("APP: wallet.service.ts wallet address: " + this.walletAddress);
+
+    // this.provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
 
     this.walletConnected = true;
 
@@ -61,7 +66,7 @@ export class WalletService {
 
   async disconnectWallet(){
     this.provider = undefined;
-    this.walletAddress = undefined;
+    this.walletAddress = "not connected";
     this.signer = undefined;
     this.wallet = undefined;
     console.log("Wallet Address after disconnect provider: " + this.walletAddress);
