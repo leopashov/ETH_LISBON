@@ -8,8 +8,6 @@ import { abi } from '../../../../../backend/artifacts/contracts/IndexToken.sol/I
 import { ApiService } from '../api.service';
 
 
-const ETH_USD_PRICE: number = 1237.23;
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -19,6 +17,8 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   // streaming the header into this component
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
   
+  ETH_USD_PRICE: string | number;
+  WBTC_USD_PRICE: string | number;
   etherBalance: string;
   totalTokenSupply: string;
   indexValueUSD: string | number;
@@ -31,6 +31,9 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   usdDipBalance: string | number;
     
   constructor(private apiService: ApiService, private walletService: WalletService) { 
+    this.ETH_USD_PRICE = "loading ...";
+    this.WBTC_USD_PRICE = "loading ...";
+    this.ETH_USD_PRICE = "loading ...";
     this.totalTokenSupply = 'loading ...';
     this.indexValueUSD = "loading ...";
     this.dipTokenValue = "loading ...";
@@ -55,25 +58,27 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     this.apiService.getIndexValue().subscribe((response) => {
       //const indexValueBN = response;
       this.indexValueUSD = ethers.utils.formatEther(response);
-
-      this.dipTokenValue = Number(this.indexValueUSD)/Number(this.totalTokenSupply);
-      this.displayDipTokenValue = this.dipTokenValue.toFixed(2);
-
+      console.log("total token supply: " + this.totalTokenSupply);
+      if (Number(this.totalTokenSupply) != 0) {
+        this.dipTokenValue = Number(this.indexValueUSD)/Number(this.totalTokenSupply);
+        this.displayDipTokenValue = this.dipTokenValue.toFixed(2);
+      } 
+      else { 
+        this.dipTokenValue = 0;
+        this.displayDipTokenValue = "--";
+        console.log("dip token value 0?: " + this.dipTokenValue);
+      }
     });
 
-    // console.log(this.totalTokenSupply);
-    // console.log(this.indexValueUSD);
+    this.apiService.getWbtcUsdPrice().subscribe((response) => {
+      this.WBTC_USD_PRICE = response.toFixed(2);
+    })
 
-    
+    this.apiService.getEthUsdPrice().subscribe((response) => {
+      this.ETH_USD_PRICE = response.toFixed(2);
+    })
 
-    
-    // this.apiService.getAllowance("0x976EA74026E726554dB657fA54763abd0C3a0aa9", "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc").subscribe((response) => {
-    //   this.allowance = response.result;
-    //   console.log(this.allowance);
-    // });
 
-    
-    // console.log(this.allowance);
 
     // subscribe to dip balance from api service if wallet is connected
     if(this.walletConnected) {
@@ -81,14 +86,13 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
       console.log(this.walletAddress);
       this.apiService.getDipBalance(this.walletAddress).subscribe((response) => {
         this.dipBalance = response;
-        this.usdDipBalance = (Number(this.dipBalance) * ETH_USD_PRICE).toFixed(2);
-    });
-    
-    
+        this.usdDipBalance = (Number(this.dipBalance) * Number(this.ETH_USD_PRICE)).toFixed(2);
+    })
     } else {
-      this.totalTokenSupply = "--";
       this.dipBalance = "--";
     }
+
+
 
     
   }

@@ -16,6 +16,7 @@ export class SwapComponent implements OnInit {
   // streaming the header into this component
   @ViewChild('header', {read: ViewContainerRef, static: true}) vcr!: ViewContainerRef;
 
+  ETH_USD_PRICE: string | number;
   LOADING = "loading ...";
   walletAddress: string;
   etherBalance: string | undefined | BigNumber | Number;
@@ -27,6 +28,8 @@ export class SwapComponent implements OnInit {
   dipTokenValue: string | number;
   displayDipTokenValue: string | number;
   indexValueUSD: string | number; 
+  dipBalance: string | number;
+  usdDipBalance: string | number;
 
   claimForm = this.fb.group({
     amount: ''
@@ -35,6 +38,7 @@ export class SwapComponent implements OnInit {
 
 
   constructor(private fb: FormBuilder, private getContractAddressService: GetContractAddressesService,  private apiService: ApiService, private walletService: WalletService) {
+    this.ETH_USD_PRICE = "loading ...";
     this.walletAddress = this.LOADING;
     this.etherBalance = this.LOADING;
     this.provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
@@ -43,6 +47,8 @@ export class SwapComponent implements OnInit {
     this.dipTokenValue = "loading ...";
     this.displayDipTokenValue = "loading ...";
     this.indexValueUSD = "loading ...";
+    this.dipBalance = "loading ...";
+    this.usdDipBalance = "loading ...";
   }
 
   ngOnInit(): void{
@@ -58,8 +64,24 @@ export class SwapComponent implements OnInit {
     if(this.walletService.walletConnected) {
       this.walletAddress = this.walletService.walletAddress;
       this.provider.getBalance(this.walletAddress).then((balanceBN) => {
-        this.etherBalance = Number(ethers.utils.formatEther(balanceBN)).toFixed(4) + " ETH";
+        this.etherBalance = Number(ethers.utils.formatEther(balanceBN)).toFixed(4);
       });
+    } 
+    else {
+      this.etherBalance = "--"
+    }
+
+    // subscribe to dip balance from api service if wallet is connected
+    if(this.walletService.walletConnected) {
+      this.walletAddress = this.walletService.walletAddress;
+      console.log(this.walletAddress);
+      this.apiService.getDipBalance(this.walletAddress).subscribe((response) => {
+        this.dipBalance = response;
+        console.log("Dip Balance: " + this.dipBalance);
+        this.usdDipBalance = (Number(this.dipBalance) * Number(this.ETH_USD_PRICE)).toFixed(2);
+    })
+    } else {
+      this.dipBalance = "--";
     }
 
     // subscribe to total token supply from api service

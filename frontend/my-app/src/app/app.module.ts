@@ -9,6 +9,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { SwapComponent } from './swap/swap.component';
 import { HeaderComponent } from './header/header.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { WithdrawComponent } from './withdraw/withdraw.component';
 
 
 @NgModule({
@@ -17,7 +18,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     HomeComponent,
     DashboardComponent,
     SwapComponent,
-    HeaderComponent
+    HeaderComponent,
+    WithdrawComponent
   ],
   imports: [
     HttpClientModule,

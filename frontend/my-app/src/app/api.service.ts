@@ -13,6 +13,14 @@ export class ApiService {
     return this.http.get('http://localhost:3000/total-supply');
   }
 
+  getWbtcUsdPrice(): Observable<any> {
+    return this.http.get('http://localhost:3000/wbtc-usd-price');
+  }
+
+  getEthUsdPrice(): Observable<any> {
+    return this.http.get('http://localhost:3000/eth-usd-price');
+  }
+
   getEthBalance(address: string): Observable<any> {
     return this.http.get('http://localhost:3000/eth-balance/:address');
   }

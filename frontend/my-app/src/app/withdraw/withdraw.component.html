@@ -17,15 +17,15 @@
             <!-- Navigation Bar of Swap Element-->
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                  <a class="nav-link active" routerLink="/swap">Invest</a>
+                  <a class="nav-link" style="color: #7030A0" routerLink="/swap">Invest</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" style="color: #7030A0" routerLink="/withdraw">Withdraw</a>
+                  <a class="nav-link active" routerLink="/withdraw">Withdraw</a>
             </ul>
             
             <!-- Headline -->
             <div class="modal-header p-5 pb-4 border-bottom-0">
-              <h1 class="fw-bold mb-0 fs-3 text-dark">Invest and get DIP</h1>
+              <h1 class="fw-bold mb-0 fs-3 text-dark">Withdraw DIP</h1>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
       
@@ -36,9 +36,9 @@
             </form>-->
 
             <div class="modal-body p-5 pt-0">
-              <form class="" [formGroup]="claimForm" (ngSubmit)="invest()">
+              <form class="" [formGroup]="claimForm" (ngSubmit)="withdraw()">
                 <div class="form-group mb-3" [formGroup]="claimForm">
-                    <label for="depositEth" class="fw-bold text-dark">ETH</label>
+                    <label for="depositEth" class="fw-bold text-dark">DIP</label>
                     <input id="name" type="text" class="form-control" formControlName="amount" placeholder="0.0">
                     <small class="text-dark">Wallet Balance DIP: {{dipBalance}}</small><br>
                     <small class="text-dark">Wallet Balance ETH: {{etherBalance}}</small>
@@ -49,8 +49,8 @@
                     <input class="form-control form-control" type="text" placeholder="{{displayDipTokenValue}}" readonly>
                 </div>
                 -->
-                <small class="text-dark">DIP Price: ${{displayDipTokenValue}}</small>
-                <button class="w-100 mb-2 mt-2 btn btn-lg rounded-3 text-white" style="background-color: #7030A0;" type="submit">Invest Now</button>
+                <small class="text-dark">DIP Price USD: ${{displayDipTokenValue}}</small>
+                <button class="w-100 mb-2 mt-2 btn btn-lg rounded-3 text-white" style="background-color: #7030A0;" type="submit">Withdraw Now</button>
                 
                 <!--
                 <br><br>

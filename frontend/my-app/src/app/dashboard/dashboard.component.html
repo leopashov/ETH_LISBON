@@ -65,8 +65,8 @@
                 </td>
                 <td>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                        <button class="btn btn-dark me-md-2 " style="background-color: #212529; border-color: #7030A0 ;" type="button">Invest</button>
-                        <button class="btn btn-dark" style="background-color: #212529; border-color: #7030A0 ;" type="button">Cash Out</button>
+                        <button routerLink="/swap" class="btn btn-dark me-md-2 " style="background-color: #212529; border-color: #7030A0 ;" type="button">Invest</button>
+                        <button routerLink="/swap" class="btn btn-dark" style="background-color: #212529; border-color: #7030A0 ;" type="button">Cash Out</button>
                     </div>
                 </td>
             </tr>
@@ -119,7 +119,7 @@
                 </td>
                 <td>
                 <!-- Get price here -->
-                <p class="fw-normal mt-3 text-danger">$ GET PRICE</p>
+                <p class="fw-normal mt-3 text-white">$ {{WBTC_USD_PRICE}}</p>
                 </td>
                 <td>
                 <p class="fw-normal mt-3 text-danger">% GET Weight</p>
@@ -144,32 +144,7 @@
                     <p class="fw-normal mt-3 text-danger">% GET Balance</p>
                 </td>
                 <td>
-                <p class="fw-normal mt-3 text-danger">$ GET PRICE</p>
-                </td>
-                <td>
-                <p class="fw-normal mt-3 text-danger">% GET Weight</p>
-                </td>
-            </tr>
-            <tr class="bg-transparent">
-                <td>
-                <div class="d-flex align-items-center">
-                    <img
-                        src="https://i.ibb.co/tzy6CXt/usdt.png"
-                        class="rounded-circle"
-                        alt="USDT"
-                        style="width: 35px; height: 35px"
-                        />
-                        <div class="ms-3">
-                        <li class="list-inline-item fw-bold">Tether</li>
-                        <li class="list-inline-item text-muted">USDT</li>
-                        </div>
-                </div>
-                </td>
-                <td>
-                    <p class="fw-normal mt-3 text-danger">% GET Balance</p>
-                </td>
-                <td>
-                <p class="fw-normal mt-3 text-danger">$ GET PRICE</p>
+                <p class="fw-normal mt-3 text-white">$ {{ETH_USD_PRICE}}</p>
                 </td>
                 <td>
                 <p class="fw-normal mt-3 text-danger">% GET Weight</p>
