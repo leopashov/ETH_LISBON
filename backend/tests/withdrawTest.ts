@@ -199,6 +199,34 @@ describe("IndexContract", function () {
 
         })
 
+        it("withdraws user's eth ", async () => {
+            const initialAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
+            console.log(`acc1 initial token balance: ${initialAcc1TokenBalance}`);
+            //const initialAcc1ethBalance = await deployer.getBalance(acc1.address);
+            //console.log(`acc1 initial eth balance: ${initialAcc1ethBalance}`);
+            const totalSupply = await tokenContract.totalSupply();
+            console.log(`Total Index Token Supply initial: ${totalSupply}`);
+            const initialIndexValue = await indexContract.indexValue();
+            console.log(`initial index value: ${initialIndexValue}`);
+            const approvalTx = await tokenContract.connect(acc1).approve(indexContract.address, initialAcc1TokenBalance);
+            approvalTx.wait();
+            console.log("approved(TS)");
+            const withdrawTx = await indexContract.connect(acc1).withdraw(initialAcc1TokenBalance);
+            withdrawTx.wait();
+            const finalAcc1TokenBalance = await tokenContract.balanceOf(acc1.address);
+            console.log(`acc1 initial token balance: ${finalAcc1TokenBalance}`);
+            //const finalAcc1ethBalance = await deployer.getBalance(acc1.address);
+            //console.log(`acc1 initial eth balance: ${finalAcc1ethBalance}`);
+            const updateIndexValue = await indexContract.updateIndexValueUSD();
+            updateIndexValue.wait();
+            const totalSupplyFinal = await tokenContract.totalSupply();
+            console.log(`Total Index Token Supply final: ${totalSupplyFinal}`);
+            const finalIndexValue = await indexContract.indexValue();
+            console.log(`final index value: ${finalIndexValue}`);
+            // expect(withdrawTx).to.throw(Error);
+
+        })
+
         it("returns the correct amount of eth to the user", async () => {
             const initialAcc1EthBalance = deployer.getBalance(acc1.address);
             const initialAcc2EthBalance = deployer.getBalance(acc2.address);

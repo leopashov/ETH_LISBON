@@ -18,6 +18,7 @@ describe("IndexContract Integration", function () {
     let wBtcContractAddress: string;
     let wEthContractAddress: string;
     let wethContract: Contract;
+    let wbtcContract:Contract;
     let AWethContract: Contract;
     let AWbtcContract: Contract;
 
@@ -59,6 +60,7 @@ describe("IndexContract Integration", function () {
         await grantRoleTx.wait();
         // console.log("Minter role granted!");
         wethContract = new ethers.Contract(wEthContractAddress, WethABI, deployer);
+        wbtcContract = new ethers.Contract(wBtcContractAddress, ERC20ABI, deployer);
         AWethContract = new ethers.Contract(aWEth, WethABI, deployer); //just use WethABI as only need balance of
         AWbtcContract = new ethers.Contract(aWBTC, ERC20ABI, deployer); //just use WethABI as only need balance of
     });
@@ -358,7 +360,6 @@ describe("IndexContract Integration", function () {
 
     })
 
-
-
+    
 
 })

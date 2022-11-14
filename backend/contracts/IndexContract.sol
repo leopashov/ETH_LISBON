@@ -263,7 +263,7 @@ contract IndexContract {
         aWbtcOnContract = aWBtcContract.balanceOf(address(this));
         // console.log("awbtc on contract: %s", aWbtcOnContract);
         updateAwbtcOnContractValue();
-        // console.log("awbtc on contract value: %s", aWbtcOnContractValue);
+        console.log("awbtc on contract value: %s", aWbtcOnContractValue);
         aWethOnContract = aWethContract.balanceOf(address(this));
         console.log(
             "aweth on contract (from 'calculateIndexValue'): %s",
@@ -586,7 +586,7 @@ contract IndexContract {
 
     //@xm3van:  withdraw function
     function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(msg.sender, amount);
+        tokenContract.burn(amount);
     }
 
     //@xm3van:  withdraw function
@@ -595,46 +595,47 @@ contract IndexContract {
     }
 
     // @xm3van: Withdraw function & tested!
-    function calculateIndexTokensValue(uint256 indexTokenAmount)
-        public
-        returns (uint256 indexTokenAmountValue)
-    {
-        /// Purpose of this function is to calculate the value of a
-        /// given amount of indexToken
+    // function calculateIndexTokensValue(uint256 indexTokenAmount)
+    //     public
+    //     returns (uint256 indexTokenAmountValue)
+    // {
+    //     /// Purpose of this function is to calculate the value of a
+    //     /// given amount of indexToken
 
-        // Value of token's send by user
-        (uint256 indval, ) = calculateIndexValue();
-        uint256 indVal = (indval / 10**18);
-        uint256 tokenSupply = (tokenContract.totalSupply() / 10**18);
-        uint256 iTokenVal = ((indexTokenAmount / 10**18));
+    //     // Value of token's send by user
+    //     (uint256 indval, ) = calculateIndexValue();
+    //     uint256 indVal = (indval / 10**18);
+    //     uint256 tokenSupply = (tokenContract.totalSupply() / 10**18);
+    //     uint256 iTokenVal = ((indexTokenAmount / 10**18));
 
-        console.log("indVal: %s", indVal);
-        console.log("tokenSupply: %s", tokenSupply);
-        console.log("indexTokenAmount: %s", iTokenVal);
+    //     console.log("indVal: %s", indVal);
+    //     console.log("tokenSupply: %s", tokenSupply);
+    //     console.log("indexTokenAmount: %s", iTokenVal);
 
-        // value
-        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
-        withdrawalTokenValue =
-            (((indVal * iTokenVal) * 10**8) / tokenSupply) *
-            10**10;
+    //     // value
+    //     // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+    //     withdrawalTokenValue =
+    //         (((indVal * iTokenVal) * 10**8) / tokenSupply) *
+    //         10**10;
 
-        console.log("withdrawalTokenValue: %s", withdrawalTokenValue);
+    //     console.log("withdrawalTokenValue: %s", withdrawalTokenValue);
 
-        // returns
-        return withdrawalTokenValue;
-    }
+    //     // returns
+    //     return withdrawalTokenValue;
+    // }
 
     function withdraw(uint256 tokenAmount) public {
         // @xm3van: decided to not implement require function as the user will carry gas cost
         // i.e. they can rebalance as much as they like, right?
         // require(calculateIndexTokensValue(amount)>1, "Please ensure your token's are worth more than 1 ETH");
         uint256 userTokenBalance = tokenContract.balanceOf(msg.sender);
+        console.log("user token balance: %s", userTokenBalance);
         require(
             tokenAmount <= userTokenBalance,
             "cannot redeem more tokens than you own!"
         );
         // allow contract to spend index toknes( for burn)
-        tokenContract.approve(address(this), tokenAmount);
+        // tokenContract.approve(address(this), tokenAmount);
 
         // calculates user value
         uint256 valueUserIndexToken = calculateIndexTokensValue(tokenAmount);
@@ -668,11 +669,11 @@ contract IndexContract {
         // unwrapEth(wethToUnwrap);
         // console.log("Weth unwrapped");
         console.log(msg.sender);
-        console.log("attempting burn from");
+        console.log("attempting burn: %s", tokenAmount);
         tokenContract.burnFrom(msg.sender, tokenAmount);
 
         // burn index tokens
-        tokenContract.burn(tokenAmount);
+        // tokenContract.burn(tokenAmount);
         console.log("index tokens burnt");
 
         //return eth
@@ -682,6 +683,7 @@ contract IndexContract {
         uint256 wethToUnwrap = minAmountOut + halfDifference;
         returnWeth(wethToUnwrap);
         console.log("weth transferred back to user");
+        updateIndexValueUSD();
     }
 
     // @xm3van: Withdraw function & tested!
@@ -704,6 +706,7 @@ contract IndexContract {
         // withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
 
         // returns
+
         return (withdrawalTokenValue);
     }
 
@@ -720,9 +723,9 @@ contract IndexContract {
     // }
 
     //@xm3van:  withdraw function
-    function returnEth(uint256 amount) public {
-        payable(msg.sender).transfer(amount);
-    }
+    // function returnEth(uint256 amount) public {
+    //     payable(msg.sender).transfer(amount);
+    // }
 
     function returnWeth(uint256 amount) public {
         wethContract.transfer(msg.sender, amount);
