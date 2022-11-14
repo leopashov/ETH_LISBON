@@ -40,13 +40,15 @@
                 <div class="form-group mb-3" [formGroup]="claimForm">
                     <label for="depositEth" class="fw-bold text-dark">ETH</label>
                     <input id="name" type="text" class="form-control" formControlName="amount" placeholder="0.0">
-                    <small class="text-danger">Current Balance: {{etherBalance}}.</small>
+                    <small class="text-dark">Current Balance: {{etherBalance}}.</small>
                 </div>
+                <!--
                 <div class="form-group mb-3">
                     <label for="receivedDIP" class="fw-bold text-danger">DIP</label>
-                    <input class="form-control form-control" type="text" placeholder="AUTO CALCULATE DIP HERE" readonly>
+                    <input class="form-control form-control" type="text" placeholder="{{displayDipTokenValue}}" readonly>
                 </div>
-                <small class="text-danger">Price: XXXX ETH per DIP</small>
+                -->
+                <small class="text-dark">Price: ${{displayDipTokenValue}} per DIP</small>
                 <button class="w-100 mb-2 mt-2 btn btn-lg rounded-3 text-white" style="background-color: #7030A0;" type="submit">Invest Now</button>
                 
 

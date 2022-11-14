@@ -24,6 +24,9 @@ export class SwapComponent implements OnInit {
   indexContract: any;
   investAmount: string;
   signer: any;
+  dipTokenValue: string | number;
+  displayDipTokenValue: string | number;
+  indexValueUSD: string | number; 
 
   claimForm = this.fb.group({
     amount: ''
@@ -37,6 +40,9 @@ export class SwapComponent implements OnInit {
     this.provider = ethers.getDefaultProvider('http://127.0.0.1:8545/');
     this.totalTokenSupply = 'loading...';
     this.investAmount = this.LOADING;
+    this.dipTokenValue = "loading ...";
+    this.displayDipTokenValue = "loading ...";
+    this.indexValueUSD = "loading ...";
   }
 
   ngOnInit(): void{
@@ -52,14 +58,33 @@ export class SwapComponent implements OnInit {
     if(this.walletService.walletConnected) {
       this.walletAddress = this.walletService.walletAddress;
       this.provider.getBalance(this.walletAddress).then((balanceBN) => {
-        this.etherBalance = ethers.utils.formatEther(balanceBN) + " ETH";
+        this.etherBalance = Number(ethers.utils.formatEther(balanceBN)).toFixed(4) + " ETH";
       });
     }
+
+    // subscribe to total token supply from api service
+    this.apiService.getTotalTokenSupply().subscribe((response) => {
+    this.totalTokenSupply = response;
+    });
+
+    this.apiService.getIndexValue().subscribe((response) => {
+    //const indexValueBN = response;
+    this.indexValueUSD = ethers.utils.formatEther(response);
+
+    this.dipTokenValue = Number(this.indexValueUSD)/Number(this.totalTokenSupply);
+    this.displayDipTokenValue = this.dipTokenValue.toFixed(2);
+
+    });
+
   }
+
+  
 
 
   invest() {
     this.investAmount = String(this.claimForm.value.amount);
+    // const ethDipRatio = this.totalTokenSupply
+    // const receivedDip = this.claimForm.value.amount;
     console.log("Invested amount: " + this.investAmount);
     this.getContractAddressService.investEth(this.investAmount);
   }

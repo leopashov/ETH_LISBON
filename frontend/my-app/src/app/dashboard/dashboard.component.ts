@@ -21,6 +21,9 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   
   etherBalance: string;
   totalTokenSupply: string;
+  indexValueUSD: string | number;
+  dipTokenValue: string | number;
+  displayDipTokenValue: string | number;
   dipBalance: string | number;
   walletConnected: boolean;
   walletAddress: string | undefined;
@@ -29,6 +32,9 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     
   constructor(private apiService: ApiService, private walletService: WalletService) { 
     this.totalTokenSupply = 'loading ...';
+    this.indexValueUSD = "loading ...";
+    this.dipTokenValue = "loading ...";
+    this.displayDipTokenValue = "loading ...";
     this.dipBalance = "loading ...";
     this.usdDipBalance = "loading ...";
     this.etherBalance = 'loading ...';
@@ -46,6 +52,20 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
       this.totalTokenSupply = response;
     });
 
+    this.apiService.getIndexValue().subscribe((response) => {
+      //const indexValueBN = response;
+      this.indexValueUSD = ethers.utils.formatEther(response);
+
+      this.dipTokenValue = Number(this.indexValueUSD)/Number(this.totalTokenSupply);
+      this.displayDipTokenValue = this.dipTokenValue.toFixed(2);
+
+    });
+
+    // console.log(this.totalTokenSupply);
+    // console.log(this.indexValueUSD);
+
+    
+
     
     // this.apiService.getAllowance("0x976EA74026E726554dB657fA54763abd0C3a0aa9", "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc").subscribe((response) => {
     //   this.allowance = response.result;
@@ -61,7 +81,7 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
       console.log(this.walletAddress);
       this.apiService.getDipBalance(this.walletAddress).subscribe((response) => {
         this.dipBalance = response;
-        this.usdDipBalance = Number(this.dipBalance) * ETH_USD_PRICE;
+        this.usdDipBalance = (Number(this.dipBalance) * ETH_USD_PRICE).toFixed(2);
     });
     
     

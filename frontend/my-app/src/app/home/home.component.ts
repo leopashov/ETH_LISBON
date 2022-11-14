@@ -41,8 +41,9 @@ export class HomeComponent implements OnInit, AfterViewInit {
     });
       
     this.apiService.getIndexValue().subscribe((response) => {
-      const indexValueEth = response;
-      this.indexValue = indexValueEth * ETH_USD_PRICE;
+      //const indexValueBN = response;
+      this.indexValue = (Number(ethers.utils.formatEther(response))).toFixed(2);
+      console.log(this.indexValue);
     })
     
     // this.provider.getBalance("0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f").then((balanceBN) => {

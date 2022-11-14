@@ -9,7 +9,7 @@
 
 <!-- Headline -->
 <div class="container px-5 py-5" id="featured-3">
-    <h2 class="pb-2 border-bottom">Decentralized Index Protocol</h2>
+    <h2 class="pb-2 border-bottom">Dashboard</h2>
 </div>
 
 
@@ -22,7 +22,7 @@
                 <div *ngIf="walletConnected == false; else elseBlock">
                     <h3 class="pb-4 fw-normal text-white">$ --</h3>
                 </div>
-                <ng-template #elseBlock><h3 class="pb-4 fw-normal text-white"> $ {{usdDipBalance}}</h3></ng-template>
+                <ng-template #elseBlock><h3 class="pb-4 fw-normal text-white"> $ {{usdDipBalance}}</h3></ng-template>
             </div>
 
         <!-- Table DIP token -->
@@ -61,7 +61,7 @@
                 </td>
                 <td>
                 <!-- Get price here -->
-                <p class="fw-normal mt-3 text-danger">$ GET PRICE</p>
+                <p class="fw-normal mt-3 text-white">$ {{displayDipTokenValue}}</p>
                 </td>
                 <td>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-start">
