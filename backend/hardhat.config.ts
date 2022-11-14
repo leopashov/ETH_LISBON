@@ -10,6 +10,7 @@ const config: HardhatUserConfig = {
   paths: { tests: "tests" },
   networks: {
     hardhat: {
+      allowUnlimitedContractSize: true,
       forking: {
         url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`
       },
