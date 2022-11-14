@@ -35,9 +35,9 @@ export class GetContractAddressesService {
     this.INDEX_CONTRACT_ADDRESS = "0x3D63c50AD04DD5aE394CAB562b7691DD5de7CF6f";
     this.tokenContract = new ethers.Contract(this.TOKEN_CONTRACT_ADDRESS, this.tokenContractAbi.abi, this.provider);
     this.indexContract = new ethers.Contract(this.INDEX_CONTRACT_ADDRESS, this.indexContractAbi.abi, this.provider);
-    console.log("Token Contract Address: " + this.tokenContract.address);
-    console.log("Index Contract Address: " + this.indexContract.address);
-    console.log("Index Contract Object: " + this.indexContract);
+    console.log("Wallet Service: Token Contract Address: " + this.tokenContract.address);
+    console.log("Wallet Service: Index Contract Address: " + this.indexContract.address);
+    console.log("Wallet Service: Index Contract Object: " + this.indexContract);
 
     this.signerAddress = "loading ...";
     this.walletConnected = false;
@@ -55,10 +55,25 @@ export class GetContractAddressesService {
     await fundTx.wait();
   }
 
-  async withdrawEth(amount: string) {
-    const amountBN = ethers.utils.parseEther(amount);
-    
+  async balance() {
+    const balanceTX = await this.indexContract.connect(this.walletService.signer).balanceFund();
+    await balanceTX.wait();
+  }
+
+  async getAwbtsOnContractValue() {
+    const aWbtcOnContractValue = await this.indexContract.aWbtcOnContractValue();
+    return aWbtcOnContractValue;
+  }
+
+
+
+  async withdrawEth(wdAmount: string) {
+    const wdAmountBN = ethers.utils.parseEther(wdAmount);
+    console.log("Withdraw amount BN: " + wdAmountBN);
+
     this.signer = this.walletService.signer;
+    this.signerAddress = await this.signer.getAddress();
+    console.log(this.signerAddress);
     const initialAcc1TokenBalance = await this.tokenContract.balanceOf(this.signer.getAddress());
     console.log(`Signer initial token balance: ${initialAcc1TokenBalance}`);
     //const initialAcc1ethBalance = await deployer.getBalance(acc1.address);
@@ -67,11 +82,11 @@ export class GetContractAddressesService {
     console.log(`Total DIP Token Supply initial: ${totalSupply}`);
     const initialIndexValue = await this.indexContract.indexValue();
     console.log(`initial index value: ${initialIndexValue}`);
-    const approvalTx = await this.tokenContract.connect(this.signer).approve(this.indexContract.address, amountBN);
-    approvalTx.wait();
+    const approvalTx = await this.tokenContract.connect(this.signer).approve(this.indexContract.address, wdAmountBN.mul(10));
+    await approvalTx.wait();
     console.log("approved(TS)");
-    const withdrawTx = await this.indexContract.connect(this.signer).withdraw(amountBN, {"gasLimit": "10000000"});
-    withdrawTx.wait();
+    const withdrawTx = await this.indexContract.connect(this.signer).withdraw(wdAmountBN);
+    await withdrawTx.wait();
     const finalAcc1TokenBalance = await this.tokenContract.balanceOf(this.signer.address);
     console.log(`acc1 initial token balance: ${finalAcc1TokenBalance}`);
     //const finalAcc1ethBalance = await deployer.getBalance(acc1.address);

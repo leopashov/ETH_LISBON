@@ -6,6 +6,7 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { WalletService } from '../wallet.service';
 import { abi } from '../../../../../backend/artifacts/contracts/IndexToken.sol/IndexToken.json';
 import { ApiService } from '../api.service';
+import { GetContractAddressesService } from '../get-contract-addresses.service';
 
 
 @Component({
@@ -29,8 +30,14 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   walletAddress: string | undefined;
   allowance: string | undefined | number;
   usdDipBalance: string | number;
+  displayTotalTokenSupply: string;
+  displayDipBalance: string 
+  wethOnContract: string | number;
+  aWethOnContract: string | number;
+  aWbtcOnContract: string | number;
+
     
-  constructor(private apiService: ApiService, private walletService: WalletService) { 
+  constructor(private getContractAddressesService: GetContractAddressesService, private apiService: ApiService, private walletService: WalletService) { 
     this.ETH_USD_PRICE = "loading ...";
     this.WBTC_USD_PRICE = "loading ...";
     this.ETH_USD_PRICE = "loading ...";
@@ -42,6 +49,12 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     this.usdDipBalance = "loading ...";
     this.etherBalance = 'loading ...';
     this.walletConnected = false;
+    this.displayTotalTokenSupply = "loading ...";
+    this.displayDipBalance = "loading ...";
+
+    this.wethOnContract = "loading ...";
+    this.aWethOnContract = "loading ...";
+    this.aWbtcOnContract = "loading ...";
   }
 
   ngOnInit(): void {
@@ -53,6 +66,7 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     // subscribe to total token supply from api service
     this.apiService.getTotalTokenSupply().subscribe((response) => {
       this.totalTokenSupply = response;
+      this.displayTotalTokenSupply = Number(this.totalTokenSupply).toFixed(2);
     });
 
     this.apiService.getIndexValue().subscribe((response) => {
@@ -86,15 +100,36 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
       console.log(this.walletAddress);
       this.apiService.getDipBalance(this.walletAddress).subscribe((response) => {
         this.dipBalance = response;
+        this.displayDipBalance = Number(this.dipBalance).toFixed(2);
         this.usdDipBalance = (Number(this.dipBalance) * Number(this.ETH_USD_PRICE)).toFixed(2);
     })
     } else {
-      this.dipBalance = "--";
+      this.displayDipBalance = "--";
     }
 
+    this.apiService.getWethOnContract().subscribe((response) => {
+      this.wethOnContract = response;
+      console.log("weth on contract ETH: " + this.wethOnContract);
+    })
 
+    this.apiService.getaWethOnContract().subscribe((response) => {
+      this.aWethOnContract = response;
+      console.log("aWeth on contract ETH: " + this.aWethOnContract);
+    })
+
+    this.apiService.getaWbtcOnContract().subscribe((response) => {
+      this.aWbtcOnContract = response;
+      console.log("aWbtc on contract ETH: " + this.aWbtcOnContract);
+    })
 
     
+  }
+
+  async balance() {
+    await this.getContractAddressesService.balance();
+    const aWbtcOnContractValueBN = await this.getContractAddressesService.getAwbtsOnContractValue();
+    const aWbtcOnContractValue = ethers.utils.formatEther(aWbtcOnContractValueBN);
+    console.log("aWbtcOnContractValue: " + aWbtcOnContractValue);
   }
     
 

@@ -37,5 +37,17 @@ export class ApiService {
   getIndexValue(): Observable<any> {
     return this.http.get('http://localhost:3000/index-value');
   }
+
+  getaWbtcOnContract(): Observable<any> {
+    return this.http.get('http://localhost:3000/awbtc-on-contract');
+  }
+
+  getaWethOnContract(): Observable<any> {
+    return this.http.get('http://localhost:3000/aweth-on-contract');
+  }
+
+  getWethOnContract(): Observable<any> {
+    return this.http.get('http://localhost:3000/weth-on-contract');
+  }
 }
 

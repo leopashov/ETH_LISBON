@@ -78,6 +78,7 @@ contract IndexContract {
     // Function to receive Ether. msg.data must be empty
     receive() external payable {
         receive_funds();
+        
     }
 
     // Fallback function is called when msg.data is not empty
@@ -643,10 +644,21 @@ contract IndexContract {
         // remove's 50%  from aave
         uint256 halfDifference = valueUserIndexToken / 2;
         console.log("HalfDifference = %s", halfDifference);
+        uint256 halfDifferenceETH = halfDifference / (10**18);
+        console.log("HalfDifference in ETH = %s", halfDifferenceETH);
+        uint256 wbtcHalfDifferenceNew = (halfDifference * getWbtcPrice()) / (10**18);
+        console.log("WbtcHalfDifferenceNew: ", wbtcHalfDifferenceNew);
+
         // calculate halfdifference in terms of WBTC
         // getWbtcPrice() gives price of BTC in ETH!
         uint256 wbtcHalfDifference = (halfDifference * 10**8) / getWbtcPrice();
-        console.log("wbtcHalfDifference = %s", wbtcHalfDifference);
+        uint256 wbtcHalfDifferenceETH = wbtcHalfDifference / (10**18);
+
+
+        uint256 wbtcPrice = getWbtcPrice() / (10**18);
+        console.log("wbtcPrice in ETH: ", wbtcPrice);
+        console.log("wbtcHalfDifference Wrong? = %s", wbtcHalfDifference);
+        console.log("wbtcHalfDifference in ETH Wrong? = %s", wbtcHalfDifferenceETH);
         // remove half difference value from aave from wbtc
         aaveV2LendingPool.withdraw(WBTC, wbtcHalfDifference, address(this));
         console.log("WBTC withdrawal from aave completed!");
@@ -654,12 +666,20 @@ contract IndexContract {
         uint256 minAmountOut = getAmountOutMin(WBTC, WETH, wbtcHalfDifference);
         swap(WBTC, WETH, wbtcHalfDifference, minAmountOut, address(this));
         console.log("swap completed");
+        console.log("Half Difference: ");
+        console.log(halfDifference);
+        console.log("weth on Contract: ");
+        console.log(wethOnContract);
 
+        console.log("Withdraw halfDifference - wethOnContract");
         // remove (halfdifference - weth on contract) from aave
         // remove half difference amount from aave from weth
+
+        
+
         aaveV2LendingPool.withdraw(
             WETH,
-            (halfDifference - wethOnContract),
+            (halfDifference),
             address(this)
         );
         console.log("WETH withdrawal from aave completed!");

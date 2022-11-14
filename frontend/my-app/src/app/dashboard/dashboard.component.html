@@ -54,10 +54,10 @@
                 </div>
                 </td>
                 <td>
-                    <p class="fw-normal mt-3 text-white">{{totalTokenSupply}}</p>
+                    <p class="fw-normal mt-3 text-white">{{displayTotalTokenSupply}}</p>
                 </td>
                 <td>
-                    <p class="fw-normal mt-3 text-white">{{dipBalance}}</p>
+                    <p class="fw-normal mt-3 text-white">{{displayDipBalance}}</p>
                 </td>
                 <td>
                 <!-- Get price here -->
@@ -84,7 +84,7 @@
         <div class="row px-3 mx-0 rounded-5 shadow text-bg-dark" style="background-color:#212529; border-style: solid; border-width: 1px; border-color: black;">
             <div class="col rounded-5 px-5">
                 <p class="fs-4 pt-4 text-secondary">DIP Assets Data</p>
-                <button type="button" class="btn text-white btn-outline-success btn mt-3 mb-4 px-4" style="border-color: #7030a0; border-width: 1px">Rebalance Asset Weights</button>
+                <button type="button" class="btn text-white btn-outline-success btn mt-3 mb-4 px-4" style="border-color: #7030a0; border-width: 1px" (click)="balance()">Rebalance Asset Weights</button>
             </div>
 
         <!-- Table with tokens in the index -->
