@@ -53,6 +53,8 @@ interface IWETH {
 
     function withdraw(uint256 wad) external payable;
 
+    // function withdraw(uint256 amount, address user) external payable;
+
     function transfer(address to, uint256 value) external returns (bool);
 
     function approve(address guy, uint256 wad) external returns (bool);
@@ -75,13 +77,8 @@ interface IIndexToken is IERC20 {
 }
 
 contract IndexContract {
-    // Function to receive Ether. msg.data must be empty
-    receive() external payable {
-        receive_funds();
-    }
-
     // Fallback function is called when msg.data is not empty
-    //fallback() external payable {}
+    fallback() external payable {}
 
     //Ref.: https://solidity-by-example.org/sending-ether/
 
@@ -579,14 +576,17 @@ contract IndexContract {
     // @xm3van: Still needs some partial unit testing!!!
 
     // @xm3van: Withdraw function & tested!
-    function unwrapEth(uint256 Amount) public payable {
+    function unwrapEth(uint256 Amount) public {
         require(Amount > 0, "Please increase the minimum Amount to unwrap!");
+        wethContract.approve(address(this), Amount);
         wethContract.withdraw(Amount);
+        console.log("Amount", Amount);
+        // payable().transfer(Amount);
     }
 
     //@xm3van:  withdraw function
     function burnIndexTokens(uint256 amount) public {
-        tokenContract.burn(msg.sender, amount);
+        tokenContract.burnFrom(msg.sender, amount);
     }
 
     //@xm3van:  withdraw function
@@ -603,20 +603,19 @@ contract IndexContract {
         /// given amount of indexToken
 
         // Value of token's send by user
-        (uint256 indval, ) = calculateIndexValue();
-        uint256 indVal = (indval / 10**18);
-        uint256 tokenSupply = (tokenContract.totalSupply() / 10**18);
-        uint256 iTokenVal = ((indexTokenAmount / 10**18));
+        calculateIndexValue();
+        updateIndexValueUSD();
+        uint256 indVal = (indexValue);
+        uint256 tokenSupply = (tokenContract.totalSupply());
+        uint256 iTokenVal = ((indexTokenAmount));
 
-        console.log("indVal: %s", indVal);
-        console.log("tokenSupply: %s", tokenSupply);
-        console.log("indexTokenAmount: %s", iTokenVal);
+        console.log("indVal: %s", indVal / 10**18);
+        console.log("tokenSupply: %s", tokenSupply / 10**18);
+        console.log("indexTokenAmount: %s", iTokenVal / 10**18);
 
         // value
         // @xm3van: Is this safe? It should be as SafeMath is implemented right?
-        withdrawalTokenValue =
-            (((indVal * iTokenVal) * 10**8) / tokenSupply) *
-            10**10;
+        withdrawalTokenValue = ((indVal * iTokenVal) / tokenSupply);
 
         console.log("withdrawalTokenValue: %s", withdrawalTokenValue);
 
@@ -671,41 +670,47 @@ contract IndexContract {
         console.log("attempting burn from");
         tokenContract.burnFrom(msg.sender, tokenAmount);
 
-        // burn index tokens
-        tokenContract.burn(tokenAmount);
-        console.log("index tokens burnt");
+        // // burn index tokens
+        // tokenContract.burn(tokenAmount);
+        // console.log("index tokens burnt");
 
         //return eth
         // payable(msg.sender).transfer(wethToUnwrap);
         // console.log("eth transferred back to user");
 
         uint256 wethToUnwrap = minAmountOut + halfDifference;
-        returnWeth(wethToUnwrap);
-        console.log("weth transferred back to user");
+        // payable(msg.sender).transfer(wethToUnwrap);
+        // console.log("weth transferred back to user");
+
+        unwrapEth(wethToUnwrap);
+        console.log("weth unwrapped");
+
+        payable(msg.sender).transfer(wethToUnwrap);
+        console.log("eth transferred back to user");
     }
 
-    // @xm3van: Withdraw function & tested!
-    function calculateIndexTokensValue(uint256 indexTokenAmount)
-        public
-        returns (uint256 indexTokenAmountValue)
-    {
-        /// Purpose of this function is to calculate the value of a
-        /// given amount of indexToken
+    // // @xm3van: Withdraw function & tested!
+    // function calculateIndexTokensValue(uint256 indexTokenAmount)
+    //     public
+    //     returns (uint256 indexTokenAmountValue)
+    // {
+    //     /// Purpose of this function is to calculate the value of a
+    //     /// given amount of indexToken
 
-        // Value of token's send by user
-        // (indexValue, ) = calculateIndexValue();
-        updateIndexValueUSD();
-        uint256 tokenSupply = tokenContract.totalSupply();
+    //     // Value of token's send by user
+    //     // (indexValue, ) = calculateIndexValue();
 
-        // value
-        // @xm3van: Is this safe? It should be as SafeMath is implemented right?
-        // @Leo: would recommend multiplying first ie:
-        withdrawalTokenValue = (indexValue * indexTokenAmount) / tokenSupply;
-        // withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
+    //     uint256 tokenSupply = tokenContract.totalSupply();
 
-        // returns
-        return (withdrawalTokenValue);
-    }
+    //     // value
+    //     // @xm3van: Is this safe? It should be as SafeMath is implemented right?
+    //     // @Leo: would recommend multiplying first ie:
+    //     withdrawalTokenValue = (indexValue * indexTokenAmount) / tokenSupply;
+    //     // withdrawalTokenValue = (indexValue / tokenSupply) * indexTokenAmount;
+
+    //     // returns
+    //     return (withdrawalTokenValue);
+    // }
 
     // @xm3van: Withdraw function & tested!
     // function unwrapEth(uint256 Amount) public payable {
@@ -719,14 +724,14 @@ contract IndexContract {
     //     tokenContract.burn(amount);
     // }
 
-    //@xm3van:  withdraw function
-    function returnEth(uint256 amount) public {
-        payable(msg.sender).transfer(amount);
-    }
+    // //@xm3van:  withdraw function
+    // function returnEth(uint256 amount) public {
+    //     payable(msg.sender).transfer(amount);
+    // }
 
-    function returnWeth(uint256 amount) public {
-        wethContract.transfer(msg.sender, amount);
-    }
+    // function returnWeth(uint256 amount) public {
+    //     wethContract.transfer(msg.sender, amount);
+    // }
     // //@xm3van:  withdraw function
     // function returnIndexTokens(uint256 amount) public {
     //     // function to facilitate return of Index Tokens to Index contract. Will be part of 'remove Liquidity' functionality

@@ -29,7 +29,7 @@ describe("IndexContract", function () {
         const indexContractFactory = await ethers.getContractFactory('IndexContract');
 
         // deploy contract 
-        /// token contract 
+        /// token contract 2
         tokenContract = await tokenContractFacory.deploy();
         await tokenContract.deployed();
         // console.log("tokenContract deployed!");
@@ -139,43 +139,135 @@ describe("IndexContract", function () {
 
         });
 
-        it("withdraw()", async () => {
+        it("withdraw() - Account 1 loses balance ", async () => {
+
+            /// Log values 
             // get index token balance of acc1 
             const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
             console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBal)} Tokens`);
 
-            // withdraw 50 % of funds - i.e 5 eth
-            const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
-            console.log(indexTokensToWithdraw);
-            const indexTokenValue = await indexContract.calculateIndexTokensValue(indexTokensToWithdraw);
-            await indexTokenValue.wait();
-            // log token Value of user tokens
-            const userValue = await indexContract.withdrawalTokenValue();
-            console.log(`Function User Funds Vale: ${ethers.utils.formatEther(userValue)}`);
+            // get eth balance of account 1 
+            const ethBalAcc1 = await deployer.getBalance(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(ethBalAcc1)} ETH`);
 
-            // Alternative calcuation typescript
             // log total supply
             const totalSupply = await tokenContract.totalSupply();
             console.log(`Total Index Token Supply: ${totalSupply}`);
 
+
+            /// Withdraw 
+            // withdraw 50 % of funds - i.e 5 eth
+            const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
+            console.log(indexTokensToWithdraw);
+
             // withdraw  
             await (await indexContract.withdraw(indexTokensToWithdraw)).wait();
 
-            // 
-            const acc1IndexTokenBalnew = await tokenContract.balanceOf(acc1.address);
-            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBalnew)} Tokens`);
+            /// Log values again for comparision
+            // get index token balance of acc1 
+            const acc1IndexTokenBalNew = await tokenContract.balanceOf(acc1.address);
+            console.log(`New User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBalNew)} Tokens`);
 
-            // const indexValue = await indexContract.indexValue();
-            // console.log(`Total Index Value: ${indexValue}`);
+            // get eth balance of account 1 
+            const ethBalAcc1New = await deployer.getBalance(acc1.address);
+            console.log(`New User IndexToken Balance is: ${ethers.utils.formatEther(ethBalAcc1New)} ETH`);
+
+            // log total supply
+            const totalSupplyNew = await tokenContract.totalSupply();
+            console.log(`New Total Index Token Supply: ${totalSupplyNew}`);
 
 
-            // value typescript
-            // const userValueTs = (indexValue.div(totalSupply)).mul(indexTokensToWithdraw);
-            // console.log(`Typescript User Funds Value: ${ethers.utils.formatEther(userValueTs)}`);
+            /// Checks  
+            // check Tokens are burned 
+            expect(acc1IndexTokenBalNew).to.eq(acc1IndexTokenBal.div(2));
 
-            // expect(Math.round(ethers.utils.formatEther(userValue))).to.eq(Math.round(ethers.utils.formatEther(userValueTs)));
+        })
 
-            expect(userValue).to.eq(userValueTs);
+        it("withdraw() - total supply adjusts ", async () => {
+
+            /// Log values 
+            // get index token balance of acc1 
+            const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBal)} Tokens`);
+
+            // get eth balance of account 1 
+            const ethBalAcc1 = await deployer.getBalance(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(ethBalAcc1)} ETH`);
+
+            // log total supply
+            const totalSupply = await tokenContract.totalSupply();
+            console.log(`Total Index Token Supply: ${totalSupply}`);
+
+
+            /// Withdraw 
+            // withdraw 50 % of funds - i.e 5 eth
+            const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
+            console.log(indexTokensToWithdraw);
+
+            // withdraw  
+            await (await indexContract.withdraw(indexTokensToWithdraw)).wait();
+
+            /// Log values again for comparision
+            // get index token balance of acc1 
+            const acc1IndexTokenBalNew = await tokenContract.balanceOf(acc1.address);
+            console.log(`New User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBalNew)} Tokens`);
+
+            // get eth balance of account 1 
+            const ethBalAcc1New = await deployer.getBalance(acc1.address);
+            console.log(`New User IndexToken Balance is: ${ethers.utils.formatEther(ethBalAcc1New)} ETH`);
+
+            // log total supply
+            const totalSupplyNew = await tokenContract.totalSupply();
+            console.log(`New Total Index Token Supply: ${totalSupplyNew}`);
+
+            // check Tokens are remove from total supply
+            expect(totalSupplyNew).to.eq(totalSupply.sub(indexTokensToWithdraw));
+
+            // ETH is returned
+            expect(ethBalAcc1).greaterThan(ethBalAcc1New);
+        })
+
+        it("withdraw() - ETH is returned", async () => {
+
+            /// Log values 
+            // get index token balance of acc1 
+            const acc1IndexTokenBal = await tokenContract.balanceOf(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBal)} Tokens`);
+
+            // get eth balance of account 1 
+            const ethBalAcc1 = await deployer.getBalance(acc1.address);
+            console.log(`User IndexToken Balance is: ${ethers.utils.formatEther(ethBalAcc1)} ETH`);
+
+            // log total supply
+            const totalSupply = await tokenContract.totalSupply();
+            console.log(`Total Index Token Supply: ${totalSupply}`);
+
+
+            /// Withdraw 
+            // withdraw 50 % of funds - i.e 5 eth
+            const indexTokensToWithdraw = acc1IndexTokenBal.div(2)
+            console.log(indexTokensToWithdraw);
+
+            // withdraw  
+            const tx = await indexContract.withdraw(indexTokensToWithdraw);
+            const txReceipt = await tx.wait();
+            console.log(`Tx-hash ${txReceipt.transactionHash}`)
+
+            /// Log values again for comparision
+            // get index token balance of acc1 
+            const acc1IndexTokenBalNew = await tokenContract.balanceOf(acc1.address);
+            console.log(`New User IndexToken Balance is: ${ethers.utils.formatEther(acc1IndexTokenBalNew)} Tokens`);
+
+            // get eth balance of account 1 
+            const ethBalAcc1New = await deployer.getBalance(acc1.address);
+            console.log(`New User IndexToken Balance is: ${ethers.utils.formatEther(ethBalAcc1New)} ETH`);
+
+            // log total supply
+            const totalSupplyNew = await tokenContract.totalSupply();
+            console.log(`New Total Index Token Supply: ${totalSupplyNew}`);
+
+            // ETH is returned
+            expect(ethBalAcc1).greaterThan(ethBalAcc1New);
         })
 
         it("burns returned index tokens", async () => {
@@ -199,12 +291,12 @@ describe("IndexContract", function () {
 
         })
 
-        it("returns the correct amount of eth to the user", async () => {
-            const initialAcc1EthBalance = deployer.getBalance(acc1.address);
-            const initialAcc2EthBalance = deployer.getBalance(acc2.address);
+        // it("returns the correct amount of eth to the user", async () => {
+        //     const initialAcc1EthBalance = deployer.getBalance(acc1.address);
+        //     const initialAcc2EthBalance = deployer.getBalance(acc2.address);
 
 
-        })
+        // })
 
     })
 
