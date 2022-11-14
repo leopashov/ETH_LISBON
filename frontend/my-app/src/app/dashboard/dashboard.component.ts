@@ -36,6 +36,14 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   aWethOnContract: string | number;
   aWbtcOnContract: string | number;
   aWbtcOnContractInEth: string | number;
+  displayAwethOnContract: string | number;
+  displayAwbtcOnContract: string | number;
+  walletShareDipPercent: string | number;
+  walletShareAwbtc: string | number;
+  walletShareAweth: string | number;
+  walletShareWeth: string | number;
+  
+
   ethWeight: string | number;
   btcWeight: string | number;
 
@@ -59,9 +67,15 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     this.wethOnContract = "loading ...";
     this.aWethOnContract = "loading ...";
     this.aWbtcOnContract = "loading ...";
+    this.displayAwethOnContract = "loading ...";
+    this.displayAwbtcOnContract = "loading ...";
     this.ethWeight = "loading ...";
     this.btcWeight = "loading ...";
     this.aWbtcOnContractInEth = "loading ...";
+    this.walletShareDipPercent = "loading ...";
+    this.walletShareAwbtc = "loading ...";
+    this.walletShareAweth = "loading ...";
+    this.walletShareWeth = "loading ...";
   }
 
   ngOnInit(): void {
@@ -93,11 +107,11 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
 
     this.apiService.getWbtcUsdPrice().subscribe((response) => {
       this.WBTC_USD_PRICE = response.toFixed(2);
-    })
+    });
 
     this.apiService.getEthUsdPrice().subscribe((response) => {
       this.ETH_USD_PRICE = response.toFixed(2);
-    })
+    });
 
 
 
@@ -117,24 +131,65 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     this.apiService.getWethOnContract().subscribe((response) => {
       this.wethOnContract = response;
       console.log("weth on contract ETH: " + this.wethOnContract);
-    })
+    });
 
     this.apiService.getaWethOnContract().subscribe((response) => {
       this.aWethOnContract = response;
+      this.displayAwethOnContract = Number(this.aWethOnContract).toFixed(4);
       console.log("aWeth on contract ETH: " + this.aWethOnContract);
-    })
+    });
 
     this.apiService.getaWbtcOnContract().subscribe((response) => {
       this.aWbtcOnContract = response;
+      this.displayAwbtcOnContract = Number(this.aWbtcOnContract).toFixed(4);
       console.log("aWbtc on contract: " + this.aWbtcOnContract);
-    })
+    });
 
-    this.aWbtcOnContractInEth = ethers.utils.formatUnits(this.aWbtcOnContract, 8);
-    console.log("aWbtcOnContractInEth: " + this.aWbtcOnContractInEth);
-    //if (Number(this.aWbtcOnContractInEth) != 0) {
-      this.ethWeight = Number(this.aWethOnContract) / (Number(this.aWbtcOnContractInEth) + Number(this.aWethOnContract));
-      console.log("Eth Weiht: " + this.ethWeight);
-    //}
+    this.apiService.getaWbtcOnContract().subscribe((response) => {
+      this.aWbtcOnContract = response;
+      this.displayAwbtcOnContract = Number(this.aWbtcOnContract).toFixed(4);
+      console.log("aWbtc on contract: " + this.aWbtcOnContract);
+    });
+
+
+    if(this.walletConnected) {
+      this.walletAddress = this.walletService.walletAddress;
+      this.apiService.getDipBalance(this.walletAddress).subscribe(async (response) => {
+        this.dipBalance = response;
+        this.walletShareDipPercent = Number(this.dipBalance) / Number(this.totalTokenSupply);
+        this.walletShareAwbtc = (Number(this.aWbtcOnContract) * Number(this.walletShareDipPercent)).toFixed(4);
+        this.walletShareAweth = (Number(this.aWethOnContract) * Number(this.walletShareDipPercent)).toFixed(4);
+        const aWbtcOnContractInEthBN = await this.getContractAddressesService.getAwbtsOnContractValue();
+        this.aWbtcOnContractInEth = ethers.utils.formatEther(aWbtcOnContractInEthBN);
+        console.log("aWbtc on contract in ETH: " + this.aWbtcOnContractInEth);
+        this.ethWeight = ((Number(this.aWbtcOnContractInEth) / (Number(this.aWbtcOnContractInEth) + Number(this.aWethOnContract)))*100).toFixed(2);
+        this.btcWeight = 100-Number(this.ethWeight);
+
+        this.walletShareWeth = (Number(this.wethOnContract) * Number(this.walletShareDipPercent)).toFixed(4);
+    })
+    } else {
+      this.walletShareAwbtc = "--";
+      this.walletShareAweth = "--";
+      this.ethWeight = "--";
+      this.btcWeight = "--";
+    }
+
+    // console.log("This Display Dip Balance: " + this.displayDipBalance);
+    // console.log("This Dip Balance: " + this.dipBalance);
+    // console.log("This Total token supply: " + this.totalTokenSupply);
+    // this.walletShareDipPercent = Number(this.dipBalance) / Number(this.totalTokenSupply);
+    // console.log("DIP Share of wallet: " + this.walletShareDipPercent);
+    // this.walletShareAwbtc = (Number(this.aWbtcOnContract) * Number(this.walletShareDipPercent)).toFixed(4);
+    // this.walletShareAweth = (Number(this.aWethOnContract) * Number(this.walletShareDipPercent)).toFixed(4);
+    // this.walletShareWeth = (Number(this.wethOnContract) * Number(this.walletShareDipPercent)).toFixed(4);
+
+
+    // this.aWbtcOnContractInEth = ethers.utils.parseUnits(Number(this.aWbtcOnContract), 8);
+    // console.log("aWbtcOnContractInEth: " + this.aWbtcOnContractInEth);
+    // //if (Number(this.aWbtcOnContractInEth) != 0) {
+    // this.ethWeight = Number(this.aWethOnContract) / (Number(this.aWbtcOnContractInEth) + Number(this.aWethOnContract));
+    // console.log("Eth Weiht: " + this.ethWeight);
+    // //}
 
     
   }

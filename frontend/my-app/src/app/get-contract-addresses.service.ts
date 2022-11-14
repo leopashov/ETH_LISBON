@@ -62,6 +62,7 @@ export class GetContractAddressesService {
 
   async getAwbtsOnContractValue() {
     const aWbtcOnContractValue = await this.indexContract.aWbtcOnContractValue();
+   
     return aWbtcOnContractValue;
   }
 
@@ -97,42 +98,7 @@ export class GetContractAddressesService {
     console.log(`Total Index Token Supply final: ${totalSupplyFinal}`);
     const finalIndexValue = await this.indexContract.indexValue();
     console.log(`final index value: ${finalIndexValue}`);
-    // expect(withdrawTx).to.throw(Error);
-    
-    
-    // console.log("getService amount: " + amount);
-    // const amountBN = ethers.utils.parseEther(amount);
-    // const gasLimit = ethers.utils.parseEther("0.000000000001");
-    // console.log("gas Limit: " + gasLimit + " wei");
-    // console.log("withdraw amount BN: " + amountBN);
-
-    // this.walletConnected = this.walletService.walletConnected;
-
-    // this.signer = this.walletService.signer;
-    // this.signerAddress = await this.signer.getAddress();
-    // console.log("Signer: " + this.signerAddress);
-    
-
-    // const approvalTx = await this.tokenContract.connect(this.signer).approve(this.indexContract.address, amountBN.mul(10000));
-    // await approvalTx.wait();
-    // const fundTx = await this.indexContract.connect(this.signer).withdraw(amountBN, {"gasLimit": gasLimit});
-    // // const fundTx = await this.indexContract.connect(this.signer).withdraw(amountBN);
-    // console.log("receipt: " + fundTx);
-    // await fundTx.wait();
   }
-
-  // async rebalance() {
-  //   console.log("getService amount: " + amount);
-  //   const amountBN = ethers.utils.parseEther(amount);
-  //   const gasLimit = ethers.utils.parseEther("0.1");
-  //   console.log("gas Limit: " + gasLimit);
-  //   const fundTx = await this.indexContract.connect(this.walletService.signer).withdraw(amountBN, {"gasLimit": ethers.utils.parseEther("0.1")});
-  //   await fundTx.wait();
-  // }
-
-  // async
-  //   this.indexContractBalance = this.getIndexBalance(this.INDEX_CONTRACT_ADDRESS);
-  //     console.log("Ethers balance of Index Contract: " + this.indexContractBalance);
 
 
 

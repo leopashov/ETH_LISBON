@@ -93,8 +93,8 @@
             <thead class="text-white border-bottom">
             <tr class="text-secondary fw-light">
                 <th>Asset</th>
-                <th>Balance</th>
-                <th>Value</th>
+                <th>Vault Balance</th>
+                <th>Token Value</th>
                 <th>Index Weight</th>
             </tr>
             </thead>
@@ -115,14 +115,14 @@
                 </div>
                 </td>
                 <td>
-                    <p class="fw-normal mt-3 text-danger">% GET Balance</p>
+                    <p class="fw-normal mt-3 text-white">{{walletShareAwbtc}}</p>
                 </td>
                 <td>
                 <!-- Get price here -->
                 <p class="fw-normal mt-3 text-white">$ {{WBTC_USD_PRICE}}</p>
                 </td>
                 <td>
-                <p class="fw-normal mt-3 text-danger">% GET Weight</p>
+                <p class="fw-normal mt-3 text-white">{{btcWeight}} %</p>
                 </td>
             </tr>
             <tr class="bg-transparent">
@@ -141,13 +141,13 @@
                 </div>
                 </td>
                 <td>
-                    <p class="fw-normal mt-3 text-danger">% GET Balance</p>
+                    <p class="fw-normal mt-3 text-white">{{walletShareAweth}}</p>
                 </td>
                 <td>
                 <p class="fw-normal mt-3 text-white">$ {{ETH_USD_PRICE}}</p>
                 </td>
                 <td>
-                <p class="fw-normal mt-3 text-danger">% GET Weight</p>
+                <p class="fw-normal mt-3 text-white">{{ethWeight}} %</p>
                 </td>
             </tr>
             </tbody>
