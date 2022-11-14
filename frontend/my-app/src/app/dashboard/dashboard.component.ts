@@ -35,6 +35,10 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
   wethOnContract: string | number;
   aWethOnContract: string | number;
   aWbtcOnContract: string | number;
+  aWbtcOnContractInEth: string | number;
+  ethWeight: string | number;
+  btcWeight: string | number;
+
 
     
   constructor(private getContractAddressesService: GetContractAddressesService, private apiService: ApiService, private walletService: WalletService) { 
@@ -55,6 +59,9 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
     this.wethOnContract = "loading ...";
     this.aWethOnContract = "loading ...";
     this.aWbtcOnContract = "loading ...";
+    this.ethWeight = "loading ...";
+    this.btcWeight = "loading ...";
+    this.aWbtcOnContractInEth = "loading ...";
   }
 
   ngOnInit(): void {
@@ -119,8 +126,15 @@ export class DashboardComponent implements OnInit, AfterContentChecked {
 
     this.apiService.getaWbtcOnContract().subscribe((response) => {
       this.aWbtcOnContract = response;
-      console.log("aWbtc on contract ETH: " + this.aWbtcOnContract);
+      console.log("aWbtc on contract: " + this.aWbtcOnContract);
     })
+
+    this.aWbtcOnContractInEth = ethers.utils.formatUnits(this.aWbtcOnContract, 8);
+    console.log("aWbtcOnContractInEth: " + this.aWbtcOnContractInEth);
+    //if (Number(this.aWbtcOnContractInEth) != 0) {
+      this.ethWeight = Number(this.aWethOnContract) / (Number(this.aWbtcOnContractInEth) + Number(this.aWethOnContract));
+      console.log("Eth Weiht: " + this.ethWeight);
+    //}
 
     
   }
