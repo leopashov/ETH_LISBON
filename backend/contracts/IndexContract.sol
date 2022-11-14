@@ -78,7 +78,6 @@ contract IndexContract {
     // Function to receive Ether. msg.data must be empty
     receive() external payable {
         receive_funds();
-        
     }
 
     // Fallback function is called when msg.data is not empty
@@ -449,6 +448,20 @@ contract IndexContract {
         console.log("aWbtc on contract value : %s", aWbtcOnContractValue);
     }
 
+    function equalDeposit(uint256 wethToSwap) public {
+        uint256 minAmountOut = getAmountOutMin(WETH, WBTC, wethToSwap);
+        swap(WETH, WBTC, wethToSwap, minAmountOut, address(this));
+        // get weth and btc holdings in contract
+        wethOnContract = wethContract.balanceOf(address(this));
+        // wethOnContract = (excessWeth / 2)
+        wbtcOnContract = wbtcContract.balanceOf(address(this));
+        // deposit both to aave
+        aaveV2LendingPool.deposit(WETH, wethOnContract, address(this), 0);
+        aaveV2LendingPool.deposit(WBTC, wbtcOnContract, address(this), 0);
+        // update awToken holdings
+        updateHoldings();
+    }
+
     function rebalanceEthHeavy() public {
         // should be private / restricted
         // check for weth on contract
@@ -457,6 +470,7 @@ contract IndexContract {
         // IAToken public aWethContract;
         // IAToken public aWBtcContract;
         updateAwbtcOnContractValue();
+        updateHoldings();
         // check the difference in values
         uint256 indexValueDifference = aWethOnContract - aWbtcOnContractValue;
 
@@ -493,33 +507,9 @@ contract IndexContract {
                 uint256 excessWeth = wethOnContract - indexValueDifference;
                 uint256 wethToSwapToBtc = indexValueDifference +
                     (excessWeth / 2);
+
+                equalDeposit(wethToSwapToBtc);
                 // do swap from weth to wbtc
-                uint256 minAmountOut = getAmountOutMin(
-                    WETH,
-                    WBTC,
-                    wethToSwapToBtc
-                );
-                swap(WETH, WBTC, wethToSwapToBtc, minAmountOut, address(this));
-                // get weth and btc holdings in contract
-                wethOnContract = wethContract.balanceOf(address(this));
-                // wethOnContract = (excessWeth / 2)
-                wbtcOnContract = wbtcContract.balanceOf(address(this));
-                // deposit both to aave
-                aaveV2LendingPool.deposit(
-                    WETH,
-                    wethOnContract,
-                    address(this),
-                    0
-                );
-                aaveV2LendingPool.deposit(
-                    WBTC,
-                    wbtcOnContract,
-                    address(this),
-                    0
-                );
-                console.log("line 469");
-                // update awToken holdings
-                updateHoldings();
             }
         } else {
             // no spare weth on contract so must remove weth from aave, swap and deposit btc.
@@ -544,6 +534,7 @@ contract IndexContract {
         console.log("rebalancing existing vault");
         // calculate values of aWETH and aWBTC on contract
         // updateHoldings();
+        updateHoldings();
 
         uint256 totalAtokenValueOnContract = aWbtcOnContractValue +
             aWethOnContract;
@@ -562,7 +553,8 @@ contract IndexContract {
             // this means there is more value of awbtc on contract than aweth
             //rebalanceBtcHeavy();
         } else {
-            console.log("no rebalance required"); // remove this else statement when happy with functionality
+            // add any weth on the contract equally to weth and wbtc vaults
+            equalDeposit(wethOnContract / 2);
         }
     }
 
@@ -646,7 +638,8 @@ contract IndexContract {
         console.log("HalfDifference = %s", halfDifference);
         uint256 halfDifferenceETH = halfDifference / (10**18);
         console.log("HalfDifference in ETH = %s", halfDifferenceETH);
-        uint256 wbtcHalfDifferenceNew = (halfDifference * getWbtcPrice()) / (10**18);
+        uint256 wbtcHalfDifferenceNew = (halfDifference * getWbtcPrice()) /
+            (10**18);
         console.log("WbtcHalfDifferenceNew: ", wbtcHalfDifferenceNew);
 
         // calculate halfdifference in terms of WBTC
@@ -654,11 +647,13 @@ contract IndexContract {
         uint256 wbtcHalfDifference = (halfDifference * 10**8) / getWbtcPrice();
         uint256 wbtcHalfDifferenceETH = wbtcHalfDifference / (10**18);
 
-
         uint256 wbtcPrice = getWbtcPrice() / (10**18);
         console.log("wbtcPrice in ETH: ", wbtcPrice);
         console.log("wbtcHalfDifference Wrong? = %s", wbtcHalfDifference);
-        console.log("wbtcHalfDifference in ETH Wrong? = %s", wbtcHalfDifferenceETH);
+        console.log(
+            "wbtcHalfDifference in ETH Wrong? = %s",
+            wbtcHalfDifferenceETH
+        );
         // remove half difference value from aave from wbtc
         aaveV2LendingPool.withdraw(WBTC, wbtcHalfDifference, address(this));
         console.log("WBTC withdrawal from aave completed!");
@@ -675,13 +670,7 @@ contract IndexContract {
         // remove (halfdifference - weth on contract) from aave
         // remove half difference amount from aave from weth
 
-        
-
-        aaveV2LendingPool.withdraw(
-            WETH,
-            (halfDifference),
-            address(this)
-        );
+        aaveV2LendingPool.withdraw(WETH, (halfDifference), address(this));
         console.log("WETH withdrawal from aave completed!");
 
         // Unwrap WETH
