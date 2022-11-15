@@ -1,6 +1,7 @@
-## Presentation
+## Supplementary Materials
 
-https://docs.google.com/presentation/d/1Sfn-H8GhxNbEyPe8hgma-1Tqg-hPGAXWC9BWlXFlBqk/edit?usp=sharing
+Presentation Deck: https://docs.google.com/presentation/d/1Sfn-H8GhxNbEyPe8hgma-1Tqg-hPGAXWC9BWlXFlBqk/edit?usp=sharing
+Public Reference: https://medium.com/encode-club/encode-solidity-bootcamp-september-7-pm-summary-7c9140fdf7a9
 
 ## Installation
 
